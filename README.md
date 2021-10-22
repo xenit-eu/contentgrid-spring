@@ -1,6 +1,6 @@
 # ContentCloud Spring Boot Starters
 
-[![Apache License 2](https://img.shields.io/github/license/xenit-eu/contentcloud-spring-boot?color=blue)](LICENSE)
+[![Apache License 2](https://img.shields.io/github/license/xenit-eu/contentcloud-spring-boot-starter?color=blue)](LICENSE)
 
 ContentCloud's Spring Boot Starters provide a set of Spring Boot Starters to jumpstart your ContentCloud application.
 
