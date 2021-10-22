@@ -12,7 +12,7 @@ repositories {
 
 
 dependencies {
-    implementation platform(project(":contentcloud-spring-boot-dependencies"))
+    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
 
     implementation 'com.querydsl:querydsl-apt::jpa'
     implementation 'jakarta.annotation:jakarta.annotation-api'

@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-    implementation platform(project(":contentcloud-spring-boot-dependencies"))
+    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
