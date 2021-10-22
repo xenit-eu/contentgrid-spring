@@ -1,0 +1,19 @@
+plugins {
+    id 'java-library'
+}
+
+group = 'eu.xenit.contentcloud.starter'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+    mavenCentral()
+}
+
+
+dependencies {
+    implementation platform(project(":contentcloud-spring-boot-dependencies"))
+
+    implementation 'com.querydsl:querydsl-apt::jpa'
+    implementation 'jakarta.annotation:jakarta.annotation-api'
+}

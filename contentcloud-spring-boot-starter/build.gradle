@@ -2,9 +2,14 @@ plugins {
     id 'java-library'
 }
 
+group = 'eu.xenit.contentcloud.starter'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
 repositories {
     mavenCentral()
 }
+
 
 dependencies {
     implementation platform(project(":contentcloud-spring-boot-dependencies"))
@@ -12,9 +17,9 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
     api 'org.springframework.boot:spring-boot-starter-data-rest'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-}
+    api 'com.querydsl:querydsl-core'
+    api 'com.querydsl:querydsl-jpa'
 
-tasks.named('test') {
-    useJUnitPlatform()
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
 }
