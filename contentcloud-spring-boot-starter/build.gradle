@@ -2,8 +2,8 @@ plugins {
     id 'java-library'
 }
 
-group = 'eu.xenit.contentcloud.starter'
-version = '0.0.1-SNAPSHOT'
+apply from: "${rootDir}/gradle/publish.gradle"
+
 sourceCompatibility = '11'
 
 repositories {

@@ -1,0 +1,55 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+publishing {
+    publications {
+        library(MavenPublication) {
+            from components.java
+        }
+
+        all {
+            pom {
+                url = 'https://github.com/xenit-eu/contentcloud-spring-boot-starter'
+                name = project.name
+                description = project.description
+
+                scm {
+                    url = 'https://github.com/xenit-eu/contentcloud-spring-boot-starter.git'
+                }
+
+                developers {
+                    developer {
+                        name = "XeniT"
+                        organization = "XeniT Solutions NV"
+                    }
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                }
+            }
+        }
+    }
+
+
+    repositories {
+        if (version.version.isSignificant()) {
+            sonatypeMavenCentral {
+                credentials {
+                    username = project.findProperty('sonatype_username')
+                    password = project.findProperty('sonatype_password')
+                }
+            }
+        } else {
+            sonatypeSnapshots {
+                credentials {
+                    username = project.findProperty('sonatype_username')
+                    password = project.findProperty('sonatype_password')
+                }
+            }
+        }
+    }
+}
