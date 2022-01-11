@@ -9,7 +9,7 @@ repositories {
 
 
 dependencies {
-    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    api platform(project(':contentcloud-spring-boot-platform'))
 
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
     api 'org.springframework.boot:spring-boot-starter-data-rest'

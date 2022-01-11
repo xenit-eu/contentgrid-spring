@@ -3,16 +3,14 @@ plugins {
     id 'maven-publish'
 }
 
-sourceCompatibility = '11'
-
 repositories {
     mavenCentral()
 }
 
-
 dependencies {
-    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    api platform(project(':contentcloud-spring-boot-platform'))
 
-    implementation 'com.querydsl:querydsl-apt::jpa'
-    implementation 'jakarta.annotation:jakarta.annotation-api'
+    api 'com.querydsl:querydsl-apt::jpa'
+    api 'jakarta.persistence:jakarta.persistence-api'
+    api 'jakarta.annotation:jakarta.annotation-api'
 }
