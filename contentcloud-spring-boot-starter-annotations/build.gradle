@@ -14,3 +14,13 @@ dependencies {
     api 'jakarta.persistence:jakarta.persistence-api'
     api 'jakarta.annotation:jakarta.annotation-api'
 }
+
+publishing {
+    publications.all {
+        versionMapping {
+            allVariants {
+                fromResolutionResult()
+            }
+        }
+    }
+}
