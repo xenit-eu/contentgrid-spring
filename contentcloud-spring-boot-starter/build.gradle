@@ -1,25 +1,27 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
 }
-
-apply from: "${rootDir}/gradle/publish.gradle"
-
-sourceCompatibility = '11'
 
 repositories {
     mavenCentral()
 }
 
-
 dependencies {
-    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    api platform(project(':contentcloud-spring-boot-platform'))
 
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
+    api 'org.springframework.boot:spring-boot-starter-actuator'
     api 'org.springframework.boot:spring-boot-starter-data-rest'
+    api 'org.springframework.data:spring-data-rest-hal-explorer'
 
-    api 'com.querydsl:querydsl-core'
+    api "com.github.paulcwarren:spring-content-rest-boot-starter"
+    api "com.github.paulcwarren:spring-content-fs-boot-starter"
+    api "com.github.paulcwarren:spring-content-s3-boot-starter"
+
     api 'com.querydsl:querydsl-jpa'
 
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }

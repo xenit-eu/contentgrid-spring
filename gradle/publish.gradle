@@ -3,9 +3,6 @@ apply plugin: 'signing'
 
 publishing {
     publications {
-        library(MavenPublication) {
-            from components.java
-        }
 
         all {
             pom {
@@ -49,6 +46,26 @@ publishing {
                     username = project.findProperty('sonatype_username')
                     password = project.findProperty('sonatype_password')
                 }
+            }
+        }
+    }
+}
+
+pluginManager.withPlugin('java') {
+    publishing {
+        publications {
+            library(MavenPublication) {
+                from components.java
+            }
+        }
+    }
+}
+
+pluginManager.withPlugin('java-platform') {
+    publishing {
+        publications {
+            platform(MavenPublication) {
+                from components.javaPlatform
             }
         }
     }
