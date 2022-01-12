@@ -11,12 +11,20 @@ dependencies {
     api platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
 
     constraints {
-        ['rest', 'fs', 'jpa', 'mongo', 'rest', 's3', 'renditions', 'solr', 'elasticsearch'].each {
-            api "com.github.paulcwarren:spring-content-${it}-boot-starter:${springContentVersion}"
-        }
-
         api project(':contentcloud-spring-boot-starter')
         api project(':contentcloud-spring-boot-starter-annotations')
+
+        ['rest', 'fs', 'jpa', 'mongo', 'rest', 's3', 'renditions', 'solr', 'elasticsearch'].each {
+            api "com.github.paulcwarren:spring-content-${it}:${springContentVersion}"
+            api "com.github.paulcwarren:spring-content-${it}-boot-starter:${springContentVersion}"
+        }
+        ['autoconfigure', 'azure-storage', 'commons', 'docx4j', 'gcs', 'cmis'].each {
+            api "com.github.paulcwarren:spring-content-${it}:${springContentVersion}"
+        }
+        ['common', 'jpa', 'jpa-boot-starter'].each {
+            api "com.github.paulcwarren:spring-versions-${it}:${springContentVersion}"
+        }
+
     }
 
 }
