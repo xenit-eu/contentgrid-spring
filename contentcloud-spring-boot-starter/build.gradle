@@ -21,6 +21,8 @@ dependencies {
 
     api 'com.querydsl:querydsl-jpa'
 
+    implementation project(':contentcloud-spring-boot-autoconfigure')
+
     runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'

@@ -1,15 +1,27 @@
 plugins {
     id 'java-library'
+    id 'maven-publish'
 }
-
-// apply from: "${rootDir}/gradle/publish.gradle"
 
 repositories {
     mavenCentral()
 }
 
+configurations {
+    compileOnly {
+        extendsFrom(annotationProcessor)
+    }
+}
+
 dependencies {
-    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    annotationProcessor platform(project(':contentcloud-spring-boot-platform'))
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation platform(project(':contentcloud-spring-boot-platform'))
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+
+    compileOnly "com.github.paulcwarren:spring-content-autoconfigure"
+    compileOnly "com.github.paulcwarren:spring-content-s3"
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }

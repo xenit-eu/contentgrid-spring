@@ -8,11 +8,13 @@ def springBootVersion = startParameter.getProjectProperties().get('springBootVer
 
 includeBuild('./integration-tests-spring') {
     name = "it-spring"
-    it.dependencySubstitution {
-        it.all { dependency ->
-            if(dependency.requested instanceof ModuleComponentSelector && dependency.requested.group == "org.springframework.boot" && dependency.requested.module == "org.springframework.boot.gradle.plugin") {
-                System.out.println("${dependency.requested} -> ${springBootVersion}")
-                dependency.useTarget("${dependency.requested.moduleIdentifier}:${springBootVersion}")
+    if(springBootVersion) {
+        it.dependencySubstitution {
+            it.all { dependency ->
+                if (dependency.requested instanceof ModuleComponentSelector && dependency.requested.group == "org.springframework.boot" && dependency.requested.module == "org.springframework.boot.gradle.plugin") {
+                    System.out.println("${dependency.requested} -> ${springBootVersion}")
+                    dependency.useTarget("${dependency.requested.moduleIdentifier}:${springBootVersion}")
+                }
             }
         }
     }

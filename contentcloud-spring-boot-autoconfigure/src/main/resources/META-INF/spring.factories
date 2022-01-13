@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+eu.xenit.contentcloud.spring.autoconfigure.s3.S3RegionAutoConfiguration
