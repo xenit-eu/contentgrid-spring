@@ -11,6 +11,10 @@ configurations {
     compileOnly {
         extendsFrom(annotationProcessor)
     }
+
+    testAnnotationProcessor {
+        extendsFrom(annotationProcessor)
+    }
 }
 
 dependencies {
@@ -24,6 +28,8 @@ dependencies {
     compileOnly "com.github.paulcwarren:spring-content-s3"
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.springframework:spring-test'
+    testImplementation 'com.github.paulcwarren:spring-content-s3-boot-starter'
 }
 
 tasks.named('test') {
