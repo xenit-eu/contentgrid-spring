@@ -1,20 +1,18 @@
 package eu.xenit.contentcloud.spring.autoconfigure.s3;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.parallel.Resources.SYSTEM_PROPERTIES;
 
 import java.util.Arrays;
-import java.util.Properties;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
-import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.boot.test.context.FilteredClassLoader;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.awscore.client.config.AwsClientOption;
 import software.amazon.awssdk.core.client.config.SdkClientConfiguration;
@@ -23,18 +21,10 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 class S3RegionAutoConfigurationTest {
-    private Properties systemPropertiesBackup;
 
-    @BeforeEach
-    void backupSystemProperties() {
-        systemPropertiesBackup = new Properties();
-        systemPropertiesBackup.putAll(System.getProperties());
-    }
-
-    @AfterEach
-    void restoreSystemProperties() {
-        System.setProperties(systemPropertiesBackup);
-    }
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(S3RegionAutoConfiguration.class))
+            .withUserConfiguration(TestConfig.class);
 
     @SneakyThrows
     private static SdkClientConfiguration extractConfiguration(S3Client s3Client) {
@@ -49,62 +39,63 @@ class S3RegionAutoConfigurationTest {
     }
 
     @Test
-    @ResourceLock(value = SYSTEM_PROPERTIES)
+    @ResourceLock(SYSTEM_PROPERTIES)
     void setsRegionWhenConfiguredExplicitly() {
-        System.setProperty("spring.content.s3.region", "my-region");
+        contextRunner
+                .withPropertyValues("spring.content.s3.region=my-region")
+                .run(context -> {
+                    S3Client client = context.getBean(S3Client.class);
 
-        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-        applicationContext.register(TestConfig.class);
-        applicationContext.refresh();
+                    SdkClientConfiguration configuration = extractConfiguration(client);
 
-        S3Client client = applicationContext.getBean(S3Client.class);
-
-        SdkClientConfiguration configuration = extractConfiguration(client);
-
-        assertEquals(Region.of("my-region"), configuration.option(AwsClientOption.AWS_REGION));
+                    assertEquals(Region.of("my-region"), configuration.option(AwsClientOption.AWS_REGION));
+                });
     }
 
     @Test
-    @ResourceLock(value = SYSTEM_PROPERTIES)
+    @ResourceLock(SYSTEM_PROPERTIES)
     void setsFakeRegionWhenConfiguredWithEndpoint() {
-        System.setProperty("spring.content.s3.endpoint", "https://some-endpoint:1234/");
+        contextRunner
+                .withPropertyValues("spring.content.s3.endpoint=http://some-endpoint:1234/")
+                .run(context -> {
+                    S3Client client = context.getBean(S3Client.class);
 
-        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-        applicationContext.register(TestConfig.class);
-        applicationContext.refresh();
+                    SdkClientConfiguration configuration = extractConfiguration(client);
 
-        S3Client client = applicationContext.getBean(S3Client.class);
-
-        SdkClientConfiguration configuration = extractConfiguration(client);
-
-        assertEquals(Region.of("fake"), configuration.option(AwsClientOption.AWS_REGION));
+                    assertEquals(Region.of("none"), configuration.option(AwsClientOption.AWS_REGION));
+                });
     }
 
 
     @Test
-    @ResourceLock(value = SYSTEM_PROPERTIES)
+    @ResourceLock(SYSTEM_PROPERTIES)
     void setsNoRegionWhenNotConfigured() {
-        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-        applicationContext.register(TestConfig.class);
-
-        BeanCreationException beanCreationException = assertThrows(BeanCreationException.class, () -> {
-            applicationContext.refresh();
-        });
-
-        assertInstanceOf(SdkClientException.class, beanCreationException.getRootCause());
+        contextRunner
+                .run(context -> {
+                    assertThat(context).getFailure().hasRootCauseInstanceOf(SdkClientException.class);
+                });
     }
 
     @Test
-    @ResourceLock(value = SYSTEM_PROPERTIES)
-    void setsNoRegionWhenS3NotEnabled() {
-        System.setProperty("spring.content.storage.type.default", "fs");
-        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-        applicationContext.register(TestConfig.class);
-        applicationContext.refresh();
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void setsNoRegionWhenS3NotOnClasspath() {
+        contextRunner
+                .withClassLoader(new FilteredClassLoader(S3Client.class))
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).doesNotHaveBean(S3Client.class);
+                });
+    }
 
-        assertThrows(NoSuchBeanDefinitionException.class, () -> {
-            applicationContext.getBean(S3Client.class);
-        });
+    @Test
+    @ResourceLock(SYSTEM_PROPERTIES)
+    void setsNoRegionWhenS3NotEnabled() {
+        contextRunner
+                .withPropertyValues("spring.content.storage.type.default=fs")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).doesNotHaveBean(S3Client.class);
+                });
     }
 
 
