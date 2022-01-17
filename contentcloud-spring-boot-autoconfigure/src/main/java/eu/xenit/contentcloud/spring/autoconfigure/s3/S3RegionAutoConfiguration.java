@@ -2,28 +2,14 @@ package eu.xenit.contentcloud.spring.autoconfigure.s3;
 
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration.S3Properties;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -52,19 +38,45 @@ public class S3RegionAutoConfiguration {
      * and is thus able to set a property that is later picked up by the S3Client.
      */
     @Component
-    @AllArgsConstructor(onConstructor_= @Autowired)
-    static class S3RegionConfigurer implements InitializingBean {
+    @RequiredArgsConstructor
+    static class S3RegionConfigurer implements InitializingBean, DisposableBean {
         private final S3Properties s3Properties;
         private final S3AdditionalProperties s3AdditionalProperties;
 
+        private final static Object AWS_REGION_SENTINEL = new Object();
+        private final static Object AWS_REGION_NON_EXISTENT = new Object();
+
+        private Object previousAwsRegionProperty = AWS_REGION_SENTINEL;
+
+        private void replaceRegion(String newRegion) {
+            if(previousAwsRegionProperty == AWS_REGION_SENTINEL) {
+                if(System.getProperties().contains("aws.region")) {
+                    previousAwsRegionProperty = System.getProperty("aws.region");
+                } else {
+                    previousAwsRegionProperty = AWS_REGION_NON_EXISTENT;
+                }
+
+            }
+            System.setProperty("aws.region", newRegion);
+        }
+
         @Override
         public void afterPropertiesSet() throws Exception {
-            if(StringUtils.hasText(s3Properties.endpoint)) {
-                System.setProperty("aws.region", "fake");
-            }
             if(StringUtils.hasText(s3AdditionalProperties.getRegion())) {
-                System.setProperty("aws.region", s3AdditionalProperties.getRegion());
+                replaceRegion(s3AdditionalProperties.getRegion());
+            } else if(StringUtils.hasText(s3Properties.endpoint)) {
+                replaceRegion("none");
             }
+        }
+
+        @Override
+        public void destroy() throws Exception {
+            if (AWS_REGION_NON_EXISTENT.equals(previousAwsRegionProperty)) {
+                System.getProperties().remove("aws.region");
+            } else if(previousAwsRegionProperty != AWS_REGION_SENTINEL) {
+                System.setProperty("aws.region", (String)previousAwsRegionProperty);
+            }
+
         }
     }
 }
