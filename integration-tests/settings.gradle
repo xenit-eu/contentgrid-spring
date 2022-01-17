@@ -1,0 +1,21 @@
+rootProject.name = 'contentcloud-spring-boot-integration-tests'
+
+includeBuild('..') {
+    name = 'cc-spring-boot'
+}
+
+def springBootVersion = startParameter.getProjectProperties().get('springBootVersion')
+
+includeBuild('./integration-tests-spring') {
+    name = "it-spring"
+    if(springBootVersion) {
+        it.dependencySubstitution {
+            it.all { dependency ->
+                if (dependency.requested instanceof ModuleComponentSelector && dependency.requested.group == "org.springframework.boot" && dependency.requested.module == "org.springframework.boot.gradle.plugin") {
+                    System.out.println("${dependency.requested} -> ${springBootVersion}")
+                    dependency.useTarget("${dependency.requested.moduleIdentifier}:${springBootVersion}")
+                }
+            }
+        }
+    }
+}

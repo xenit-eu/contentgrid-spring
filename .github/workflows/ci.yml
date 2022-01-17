@@ -16,8 +16,44 @@ jobs:
           java-version: 11
       - name: Build with Gradle
         run: ./gradlew build
+
+  integration-test:
+    name: "integration-test (Spring Boot version ${{ matrix.spring-boot-version }})"
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      matrix:
+        include:
+          - spring-boot-version: 2.5.+
+            experimental: false
+          - spring-boot-version: 2.6.+
+            experimental: false
+          - spring-boot-version: 2.+
+            experimental: true
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Run integration test
+        run: ./gradlew check -p integration-tests -PspringBootVersion=${{ matrix.spring-boot-version }}
+
+  publish:
+    needs:
+      - build
+      - integration-test
+    if: ${{ github.ref == 'refs/heads/main' || startswith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 11
       - name: Publish
-        if: ${{ github.ref == 'refs/heads/main' || startswith(github.ref, 'refs/tags/') }}
         env:
           SIGNING_PRIVATE_KEY: ${{ secrets.MAVEN_CENTRAL_GPG_KEY }}
           SIGNING_PASSWORD: ${{ secrets.MAVEN_CENTRAL_GPG_PASSWORD }}
