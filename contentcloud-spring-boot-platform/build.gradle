@@ -14,6 +14,11 @@ dependencies {
         api project(':contentcloud-spring-boot-starter')
         api project(':contentcloud-spring-boot-starter-annotations')
 
+        ['api-spring-boot-starter', 'visitor-reducer', 'spring', 'predicates-querydsl', 'pdp-opa', 'pdp', 'model',
+         'gateway-spring-boot-starter', 'encoding-json', 'autoconfigure'].each {
+            api "eu.xenit.contentcloud.thunx:thunx-${it}:${thunxVersion}"
+        }
+
         ['rest', 'fs', 'jpa', 'mongo', 'rest', 's3', 'renditions', 'solr', 'elasticsearch'].each {
             api "com.github.paulcwarren:spring-content-${it}:${springContentVersion}"
             api "com.github.paulcwarren:spring-content-${it}-boot-starter:${springContentVersion}"
