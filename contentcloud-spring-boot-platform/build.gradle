@@ -13,6 +13,7 @@ dependencies {
     constraints {
         api project(':contentcloud-spring-boot-starter')
         api project(':contentcloud-spring-boot-starter-annotations')
+        api "eu.xenit.contentcloud.thunx:thunx-api-spring-boot-starter:${thunxVersion}"
 
         ['rest', 'fs', 'jpa', 'mongo', 'rest', 's3', 'renditions', 'solr', 'elasticsearch'].each {
             api "com.github.paulcwarren:spring-content-${it}:${springContentVersion}"
