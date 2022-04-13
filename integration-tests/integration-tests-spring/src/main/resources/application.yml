@@ -5,3 +5,7 @@ spring:
     properties:
       hibernate:
         globally_quoted_identifiers: true
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: DEFERRED
