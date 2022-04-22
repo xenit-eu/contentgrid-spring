@@ -30,6 +30,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.github.paulcwarren:spring-content-s3-boot-starter'
+
+    testCompileOnly 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {
