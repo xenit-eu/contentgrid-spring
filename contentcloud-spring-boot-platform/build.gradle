@@ -8,7 +8,7 @@ javaPlatform {
 }
 
 ext {
-    thunxVersion = "0.3.2"
+    thunxVersion = "0.3.3"
 }
 
 dependencies {
