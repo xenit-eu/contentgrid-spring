@@ -14,10 +14,16 @@ dependencies {
         api project(':contentcloud-spring-boot-starter')
         api project(':contentcloud-spring-boot-starter-annotations')
 
-        ['api-spring-boot-starter', 'visitor-reducer', 'spring', 'predicates-querydsl', 'pdp-opa', 'pdp', 'model',
-         'gateway-spring-boot-starter', 'encoding-json', 'autoconfigure'].each {
-            api "eu.xenit.contentcloud.thunx:thunx-${it}:${thunxVersion}"
-        }
+        api "eu.xenit.contentcloud.thunx:thunx-api-spring-boot-starter:${thunxVersion}"
+        api "eu.xenit.contentcloud.thunx:thunx-visitor-reducer:${thunxVersion}"
+        api "eu.xenit.contentcloud.thunx:thunx-spring:${thunxVersion}"
+        api "eu.xenit.contentcloud.thunx:thunx-predicates-querydsl:${thunxVersion}"
+        api "eu.xenit.contentcloud.thunx:thunx-pdp-opa:${thunxVersion}"
+        api "eu.xenit.contentcloud.thunx:thunx-pdp:${thunxVersion}"
+        api "eu.xenit.contentcloud.thunx:thunx-model:${thunxVersion}"
+        api "eu.xenit.contentcloud.thunx:thunx-gateway-spring-boot-starter:${thunxVersion}"
+        api "eu.xenit.contentcloud.thunx:thunx-encoding-json:${thunxVersion}"
+        api "eu.xenit.contentcloud.thunx:thunx-autoconfigure:${thunxVersion}"
 
         ['rest', 'fs', 'jpa', 'mongo', 'rest', 's3', 'renditions', 'solr', 'elasticsearch'].each {
             api "com.github.paulcwarren:spring-content-${it}:${springContentVersion}"
