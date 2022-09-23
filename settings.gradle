@@ -2,9 +2,9 @@ plugins {
     id "eu.xenit.enterprise-conventions.oss" version "0.2.0"
 }
 
-rootProject.name = 'contentcloud-spring-boot'
+rootProject.name = 'contentgrid-spring-boot'
 
-include 'contentcloud-spring-boot-autoconfigure'
-include 'contentcloud-spring-boot-starter'
-include 'contentcloud-spring-boot-starter-annotations'
-include 'contentcloud-spring-boot-platform'
+include 'contentgrid-spring-boot-autoconfigure'
+include 'contentgrid-spring-boot-starter'
+include 'contentgrid-spring-boot-starter-annotations'
+include 'contentgrid-spring-boot-platform'

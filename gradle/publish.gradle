@@ -6,12 +6,12 @@ publishing {
 
         all {
             pom {
-                url = 'https://github.com/xenit-eu/contentcloud-spring-boot-starter'
+                url = 'https://github.com/xenit-eu/contentgrid-spring-boot-starter'
                 name = project.name
                 description = project.description
 
                 scm {
-                    url = 'https://github.com/xenit-eu/contentcloud-spring-boot-starter.git'
+                    url = 'https://github.com/xenit-eu/contentgrid-spring-boot-starter.git'
                 }
 
                 developers {

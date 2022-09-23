@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    api platform(project(':contentcloud-spring-boot-platform'))
+    api platform(project(':contentgrid-spring-boot-platform'))
 
     api 'com.querydsl:querydsl-apt::jpa'
     api 'jakarta.persistence:jakarta.persistence-api'
