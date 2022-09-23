@@ -15,8 +15,8 @@ dependencies {
     api platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
 
     constraints {
-        api project(':contentcloud-spring-boot-starter')
-        api project(':contentcloud-spring-boot-starter-annotations')
+        api project(':contentgrid-spring-boot-starter')
+        api project(':contentgrid-spring-boot-starter-annotations')
 
         api "eu.xenit.contentcloud.thunx:thunx-api-spring-boot-starter:${thunxVersion}"
         api "eu.xenit.contentcloud.thunx:thunx-visitor-reducer:${thunxVersion}"

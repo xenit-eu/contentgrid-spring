@@ -18,10 +18,10 @@ configurations {
 }
 
 dependencies {
-    annotationProcessor platform(project(':contentcloud-spring-boot-platform'))
+    annotationProcessor platform(project(':contentgrid-spring-boot-platform'))
     annotationProcessor 'org.projectlombok:lombok'
 
-    implementation platform(project(':contentcloud-spring-boot-platform'))
+    implementation platform(project(':contentgrid-spring-boot-platform'))
     implementation 'org.springframework.boot:spring-boot-autoconfigure'
 
     compileOnly "com.github.paulcwarren:spring-content-autoconfigure"
