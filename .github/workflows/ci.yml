@@ -44,7 +44,7 @@ jobs:
     needs:
       - build
       - integration-test
-    if: ${{ github.ref == 'refs/heads/main' || startswith(github.ref, 'refs/tags/') }}
+    if: ${{ github.ref == 'refs/heads/main' || startswith(github.ref, 'refs/tags/') || startswith(github.ref, 'refs/heads/publish-as-contentgrid')}}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
