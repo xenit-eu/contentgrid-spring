@@ -41,7 +41,8 @@ publishing {
                 }
             }
         } else {
-            sonatypeSnapshots {
+            maven {
+                url = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
                 credentials {
                     username = project.findProperty('sonatype_username')
                     password = project.findProperty('sonatype_password')
