@@ -1,4 +1,4 @@
-package eu.xenit.contentcloud.userapps.holmes.dcm;
+package com.contentgrid.userapps.holmes.dcm;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

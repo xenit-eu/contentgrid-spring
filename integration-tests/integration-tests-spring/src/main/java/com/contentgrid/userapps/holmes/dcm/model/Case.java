@@ -1,4 +1,4 @@
-package eu.xenit.contentcloud.userapps.holmes.dcm.model;
+package com.contentgrid.userapps.holmes.dcm.model;
 
 import java.lang.String;
 import java.util.UUID;
@@ -14,12 +14,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class Person {
+public class Case {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private UUID id;
 
 	private String name;
 
-	private String notes;
+	private String description;
 }

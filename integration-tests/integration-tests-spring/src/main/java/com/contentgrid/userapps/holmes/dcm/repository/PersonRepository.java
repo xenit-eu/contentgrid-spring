@@ -1,12 +1,11 @@
-package eu.xenit.contentcloud.userapps.holmes.dcm.repository;
+package com.contentgrid.userapps.holmes.dcm.repository;
 
-import eu.xenit.contentcloud.userapps.holmes.dcm.model.Case;
+import com.contentgrid.userapps.holmes.dcm.model.Person;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-
 @RepositoryRestResource
-interface CaseRepository extends JpaRepository<Case, UUID>, QuerydslPredicateExecutor<Case> {
+interface PersonRepository extends JpaRepository<Person, UUID>, QuerydslPredicateExecutor<Person> {
 }
