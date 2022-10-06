@@ -1,4 +1,4 @@
-package eu.xenit.contentcloud.spring.autoconfigure.s3;
+package com.contentgrid.spring.boot.autoconfigure.s3;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;

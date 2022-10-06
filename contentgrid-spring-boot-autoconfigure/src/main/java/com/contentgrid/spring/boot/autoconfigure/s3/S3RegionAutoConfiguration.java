@@ -1,4 +1,4 @@
-package eu.xenit.contentcloud.spring.autoconfigure.s3;
+package com.contentgrid.spring.boot.autoconfigure.s3;
 
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration.S3Properties;
