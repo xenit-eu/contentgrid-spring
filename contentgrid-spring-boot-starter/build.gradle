@@ -9,7 +9,7 @@ repositories {
 
 dependencies {
     api platform(project(':contentgrid-spring-boot-platform'))
-    api "eu.xenit.contentcloud.thunx:thunx-api-spring-boot-starter"
+    api "com.contentcloud.thunx:thunx-api-spring-boot-starter"
 
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
     api 'org.springframework.boot:spring-boot-starter-actuator'

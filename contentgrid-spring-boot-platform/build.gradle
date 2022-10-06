@@ -8,27 +8,16 @@ javaPlatform {
 }
 
 ext {
-    thunxVersion = '0.3.3'
     springContentVersion = '1.2.7'
 }
 
 dependencies {
     api platform("org.springframework.boot:spring-boot-dependencies:2.6.6")
+    api platform("com.contentgrid.thunx:thunx-dependencies:0.4.0")
 
     constraints {
         api project(':contentgrid-spring-boot-starter')
         api project(':contentgrid-spring-boot-starter-annotations')
-
-        api "eu.xenit.contentcloud.thunx:thunx-api-spring-boot-starter:${thunxVersion}"
-        api "eu.xenit.contentcloud.thunx:thunx-visitor-reducer:${thunxVersion}"
-        api "eu.xenit.contentcloud.thunx:thunx-spring:${thunxVersion}"
-        api "eu.xenit.contentcloud.thunx:thunx-predicates-querydsl:${thunxVersion}"
-        api "eu.xenit.contentcloud.thunx:thunx-pdp-opa:${thunxVersion}"
-        api "eu.xenit.contentcloud.thunx:thunx-pdp:${thunxVersion}"
-        api "eu.xenit.contentcloud.thunx:thunx-model:${thunxVersion}"
-        api "eu.xenit.contentcloud.thunx:thunx-gateway-spring-boot-starter:${thunxVersion}"
-        api "eu.xenit.contentcloud.thunx:thunx-encoding-json:${thunxVersion}"
-        api "eu.xenit.contentcloud.thunx:thunx-autoconfigure:${thunxVersion}"
 
         ['rest', 'fs', 'jpa', 'mongo', 'rest', 's3', 'renditions', 'solr', 'elasticsearch'].each {
             api "com.github.paulcwarren:spring-content-${it}:${springContentVersion}"
