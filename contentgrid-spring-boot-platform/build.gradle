@@ -8,11 +8,12 @@ javaPlatform {
 }
 
 ext {
-    thunxVersion = "0.3.3"
+    thunxVersion = '0.3.3'
+    springContentVersion = '1.2.7'
 }
 
 dependencies {
-    api platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    api platform("org.springframework.boot:spring-boot-dependencies:2.6.6")
 
     constraints {
         api project(':contentgrid-spring-boot-starter')
