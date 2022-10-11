@@ -4,6 +4,7 @@ plugins {
 
 rootProject.name = 'contentgrid-spring-boot'
 
+include 'contentgrid-spring-boot-actuators'
 include 'contentgrid-spring-boot-autoconfigure'
 include 'contentgrid-spring-boot-starter'
 include 'contentgrid-spring-boot-starter-annotations'
