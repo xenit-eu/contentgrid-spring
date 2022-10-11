@@ -5,5 +5,5 @@ import lombok.Data;
 
 @Data
 public class PolicyTemplatingProperties {
-    private Map<String, String> policy;
+    private Map<String, String> variables;
 }

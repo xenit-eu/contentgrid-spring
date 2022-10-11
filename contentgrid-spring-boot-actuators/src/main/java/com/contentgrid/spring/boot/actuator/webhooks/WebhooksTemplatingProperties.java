@@ -5,5 +5,5 @@ import lombok.Data;
 
 @Data
 public class WebhooksTemplatingProperties {
-    private Map<String, String> webhook;
+    private Map<String, String> variables;
 }

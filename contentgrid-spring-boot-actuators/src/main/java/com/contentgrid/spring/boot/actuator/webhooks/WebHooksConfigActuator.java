@@ -21,7 +21,7 @@ public class WebHooksConfigActuator {
         Resource resource = new ClassPathResource(path);
         if (resource.exists()) {
             String contents = Files.readString(resource.getFile().toPath());
-            return this.helper.replacePlaceholders(contents, (property) -> properties.getWebhook().get(property));
+            return this.helper.replacePlaceholders(contents, (property) -> properties.getVariables().get(property));
         }
         throw new IllegalStateException("webhook config file at " + path + " is not present");
     }

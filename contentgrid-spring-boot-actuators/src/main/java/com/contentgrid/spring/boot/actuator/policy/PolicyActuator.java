@@ -21,7 +21,7 @@ public class PolicyActuator {
         Resource resource = new ClassPathResource(path);
         if (resource.exists()) {
             String contents = Files.readString(resource.getFile().toPath());
-            return this.helper.replacePlaceholders(contents, (property) -> properties.getPolicy().get(property));
+            return this.helper.replacePlaceholders(contents, (property) -> properties.getVariables().get(property));
         } else {
             throw new IllegalStateException("rego file at " + path + " is not present");
         }

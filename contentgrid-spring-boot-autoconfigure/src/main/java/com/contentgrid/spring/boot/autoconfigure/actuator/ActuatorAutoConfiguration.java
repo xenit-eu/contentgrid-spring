@@ -26,13 +26,13 @@ public class ActuatorAutoConfiguration {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "contentgrid")
+    @ConfigurationProperties(prefix = "contentgrid.webhook")
     WebhooksTemplatingProperties webhooksTemplatingProperties() {
         return new WebhooksTemplatingProperties();
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "contentgrid")
+    @ConfigurationProperties(prefix = "contentgrid.policy")
     PolicyTemplatingProperties policyTemplatingProperties() {
         return new PolicyTemplatingProperties();
     }
