@@ -1,5 +1,6 @@
 package com.contentgrid.spring.boot.actuator.policy;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class PolicyActuator {
             String contents = Files.readString(resource.getFile().toPath());
             return this.helper.replacePlaceholders(contents, (property) -> properties.getVariables().get(property));
         } else {
-            throw new IllegalStateException("rego file at " + path + " is not present");
+            throw new FileNotFoundException("rego file at " + path + " is not present");
         }
     }
 }

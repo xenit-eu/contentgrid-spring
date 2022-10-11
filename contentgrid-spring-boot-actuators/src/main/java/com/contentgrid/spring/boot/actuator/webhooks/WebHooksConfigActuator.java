@@ -1,5 +1,6 @@
 package com.contentgrid.spring.boot.actuator.webhooks;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,6 @@ public class WebHooksConfigActuator {
             String contents = Files.readString(resource.getFile().toPath());
             return this.helper.replacePlaceholders(contents, (property) -> properties.getVariables().get(property));
         }
-        throw new IllegalStateException("webhook config file at " + path + " is not present");
+        throw new FileNotFoundException("webhook config file at " + path + " is not present");
     }
 }
