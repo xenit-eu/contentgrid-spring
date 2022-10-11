@@ -1,0 +1,35 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    compileOnly {
+        extendsFrom(annotationProcessor)
+    }
+
+    testAnnotationProcessor {
+        extendsFrom(annotationProcessor)
+    }
+}
+
+dependencies {
+    annotationProcessor platform(project(':contentgrid-spring-boot-platform'))
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation platform(project(':contentgrid-spring-boot-platform'))
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    testCompileOnly 'org.projectlombok:lombok'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
