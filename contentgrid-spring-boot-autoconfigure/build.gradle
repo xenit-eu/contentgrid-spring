@@ -22,9 +22,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     implementation platform(project(':contentgrid-spring-boot-platform'))
-    implementation project(':contentgrid-spring-boot-actuators')
     implementation 'org.springframework.boot:spring-boot-autoconfigure'
 
+    compileOnly project(':contentgrid-spring-boot-actuators')
     compileOnly "com.github.paulcwarren:spring-content-autoconfigure"
     compileOnly "com.github.paulcwarren:spring-content-s3"
 

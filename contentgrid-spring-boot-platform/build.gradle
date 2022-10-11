@@ -15,8 +15,6 @@ dependencies {
     api platform("org.springframework.boot:spring-boot-dependencies:2.6.12")
     api platform("com.contentgrid.thunx:thunx-bom:0.4.2")
 
-    api "org.springframework.boot:spring-boot-actuator"
-
     constraints {
         api project(':contentgrid-spring-boot-starter')
         api project(':contentgrid-spring-boot-starter-annotations')

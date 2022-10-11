@@ -24,6 +24,8 @@ dependencies {
     implementation platform(project(':contentgrid-spring-boot-platform'))
     implementation 'org.springframework.boot:spring-boot-autoconfigure'
 
+    api 'org.springframework.boot:spring-boot-actuator'
+
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 

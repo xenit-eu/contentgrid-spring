@@ -4,6 +4,7 @@ import com.contentgrid.spring.boot.actuator.policy.PolicyActuator;
 import com.contentgrid.spring.boot.actuator.policy.PolicyTemplatingProperties;
 import com.contentgrid.spring.boot.actuator.webhooks.WebHooksConfigActuator;
 import com.contentgrid.spring.boot.actuator.webhooks.WebhooksTemplatingProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,7 @@ import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.util.SystemPropertyUtils;
 
 @Configuration
+@ConditionalOnClass({PolicyActuator.class, WebHooksConfigActuator.class})
 public class ActuatorAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(PolicyActuator.class)
