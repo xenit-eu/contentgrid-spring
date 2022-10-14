@@ -24,13 +24,10 @@ dependencies {
     implementation platform(project(':contentgrid-spring-boot-platform'))
     implementation 'org.springframework.boot:spring-boot-autoconfigure'
 
-    compileOnly project(':contentgrid-spring-boot-actuators')
-    compileOnly "com.github.paulcwarren:spring-content-autoconfigure"
-    compileOnly "com.github.paulcwarren:spring-content-s3"
+    api 'org.springframework.boot:spring-boot-actuator'
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'com.github.paulcwarren:spring-content-s3-boot-starter'
 
     testCompileOnly 'org.projectlombok:lombok'
 }
