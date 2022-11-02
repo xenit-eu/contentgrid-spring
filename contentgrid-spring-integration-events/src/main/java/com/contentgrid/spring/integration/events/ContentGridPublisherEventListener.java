@@ -43,7 +43,6 @@ public class ContentGridPublisherEventListener
 
     @Override
     public void onPostInsert(PostInsertEvent event) {
-        System.out.println("ADDING ENTITY: " + event.getEntity().getClass());
         contentGridEventPublisher.publish(new ContentGridMessage().application("applicationName")
                 .type(ContentGridMessageType.create).entity(event.getEntity()));
     }

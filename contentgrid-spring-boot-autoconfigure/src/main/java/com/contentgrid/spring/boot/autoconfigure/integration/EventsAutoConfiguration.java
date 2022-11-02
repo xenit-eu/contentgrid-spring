@@ -31,41 +31,37 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 @IntegrationComponentScan(basePackageClasses = ContentGridEventPublisher.class)
+@EnableConfigurationProperties(EventConfigurationProperties.class)
 public class EventsAutoConfiguration {
 
-    @Configuration
-    @EnableConfigurationProperties(EventConfigurationProperties.class)
-    static class IntegrationConfiguration {
+    @Bean
+    IntegrationFlow toOutboundQueueFlow(EventConfigurationProperties config,
+            ObjectProvider<ContentGridMessageHandler> handlers,
+            @Qualifier("halJacksonHttpMessageConverter") TypeConstrainedMappingJackson2HttpMessageConverter typeConstrainedMappingJackson2HttpMessageConverter,
+            ApplicationContext context) {
 
-        @Bean
-        IntegrationFlow toOutboundQueueFlow(EventConfigurationProperties config,
-                ObjectProvider<ContentGridMessageHandler> handlers,
-                @Qualifier("halJacksonHttpMessageConverter") TypeConstrainedMappingJackson2HttpMessageConverter typeConstrainedMappingJackson2HttpMessageConverter,
-                ApplicationContext context) {
+        ObjectMapper halObjectMapper = typeConstrainedMappingJackson2HttpMessageConverter
+                .getObjectMapper();
 
-            ObjectMapper halObjectMapper = typeConstrainedMappingJackson2HttpMessageConverter
-                    .getObjectMapper();
+        IntegrationFlowBuilder builder = IntegrationFlows
+                .from(ContentGridEventPublisher.CONTENTGRID_EVENT_CHANNEL)
+                .transform(new EntityToPersistentEntityResourceTransformer(
+                        new ContentGridHalAssembler(context)))
+                .transform(Transformers.toJson(new Jackson2JsonObjectMapper(halObjectMapper),
+                        MediaTypes.HAL_JSON_VALUE));
 
-            IntegrationFlowBuilder builder = IntegrationFlows
-                    .from(ContentGridEventPublisher.CONTENTGRID_EVENT_CHANNEL)
-                    .transform(new EntityToPersistentEntityResourceTransformer(
-                            new ContentGridHalAssembler(context)))
-                    .transform(Transformers.toJson(new Jackson2JsonObjectMapper(halObjectMapper),
-                            MediaTypes.HAL_JSON_VALUE));
+        handlers.stream().map(ContentGridMessageHandler::get).forEach(builder::handle);
+        return builder.get();
+    }
 
-            handlers.stream().map(ContentGridMessageHandler::get).forEach(builder::handle);
-            return builder.get();
-        }
-
-        @Bean
-        @ConditionalOnMissingBean
-        // TODO we can exclude this autoconfig by configuration property
-        ContentGridPublisherEventListener contentGridPublisherEventListener(
-                ContentGridEventPublisher contentGridEventPublisher,
-                EntityManagerFactory entityManagerFactory) {
-            return new ContentGridPublisherEventListener(contentGridEventPublisher,
-                    entityManagerFactory);
-        }
+    @Bean
+    @ConditionalOnMissingBean
+    // TODO we can exclude this autoconfig by configuration property
+    ContentGridPublisherEventListener contentGridPublisherEventListener(
+            ContentGridEventPublisher contentGridEventPublisher,
+            EntityManagerFactory entityManagerFactory) {
+        return new ContentGridPublisherEventListener(contentGridEventPublisher,
+                entityManagerFactory);
     }
 
     @Configuration
