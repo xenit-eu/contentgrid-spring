@@ -25,8 +25,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-autoconfigure'
 
     compileOnly project(':contentgrid-spring-boot-actuators')
+    compileOnly project(':contentgrid-spring-integration-events')
+    compileOnly 'org.springframework.integration:spring-integration-core'
     compileOnly "com.github.paulcwarren:spring-content-autoconfigure"
     compileOnly "com.github.paulcwarren:spring-content-s3"
+    compileOnly 'org.springframework.data:spring-data-rest-webmvc'
+    compileOnly 'javax.persistence:javax.persistence-api'
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
