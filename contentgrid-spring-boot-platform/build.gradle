@@ -18,6 +18,7 @@ dependencies {
     constraints {
         api project(':contentgrid-spring-boot-starter')
         api project(':contentgrid-spring-boot-starter-annotations')
+        api project(':contentgrid-spring-boot-actuators')
 
         ['rest', 'fs', 'jpa', 'mongo', 'rest', 's3', 'renditions', 'solr', 'elasticsearch'].each {
             api "com.github.paulcwarren:spring-content-${it}:${springContentVersion}"
