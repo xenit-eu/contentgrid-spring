@@ -16,12 +16,11 @@ configurations {
 
 repositories {
 	mavenCentral()
-	maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 
 dependencies {
-	implementation 'eu.xenit.contentcloud.starter:contentcloud-spring-boot-starter:0.1.0-SNAPSHOT'
-	annotationProcessor 'eu.xenit.contentcloud.starter:contentcloud-spring-boot-starter-annotations:0.1.0-SNAPSHOT'
+	implementation 'com.contentgrid.starter:contentgrid-spring-boot-starter:0.1.0-SNAPSHOT'
+	annotationProcessor 'com.contentgrid.starter:contentgrid-spring-boot-starter-annotations:0.1.0-SNAPSHOT'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
