@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.parallel.Resources.SYSTEM_PROPERTIES;
 
+import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import java.util.Arrays;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.parallel.ResourceLock;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +25,14 @@ import software.amazon.awssdk.services.s3.S3Client;
 class S3RegionAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(S3RegionAutoConfiguration.class))
+            .withConfiguration(AutoConfigurations.of(S3RegionAutoConfiguration.class, S3ContentAutoConfiguration.class))
             .withUserConfiguration(TestConfig.class);
+
+    @Configuration
+    @AutoConfigurationPackage
+    public static class TestConfig {
+
+    }
 
     @SneakyThrows
     private static SdkClientConfiguration extractConfiguration(S3Client s3Client) {
@@ -99,11 +107,6 @@ class S3RegionAutoConfigurationTest {
     }
 
 
-    @Configuration
-    @EnableAutoConfiguration
-    @AutoConfigurationPackage
-    public static class TestConfig {
 
-    }
 
 }

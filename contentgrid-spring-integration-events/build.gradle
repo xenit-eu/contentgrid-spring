@@ -21,8 +21,10 @@ dependencies {
     implementation platform(project(':contentgrid-spring-boot-platform')) 
     
     api 'org.springframework.integration:spring-integration-amqp'
-    compileOnly 'org.springframework.data:spring-data-rest-webmvc'
-    compileOnly 'org.hibernate:hibernate-core'
+
+    implementation 'org.hibernate:hibernate-core'
+    implementation 'org.springframework.data:spring-data-rest-webmvc'
+
 }
 
 tasks.named('test') {

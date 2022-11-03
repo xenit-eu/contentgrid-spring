@@ -6,8 +6,12 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +34,9 @@ import com.contentgrid.spring.integration.events.EntityToPersistentEntityResourc
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
+@ConditionalOnClass(ContentGridPublisherEventListener.class)
+@ConditionalOnBean(TypeConstrainedMappingJackson2HttpMessageConverter.class)
+@AutoConfigureAfter(RepositoryRestMvcAutoConfiguration.class)
 @IntegrationComponentScan(basePackageClasses = ContentGridEventPublisher.class)
 @EnableConfigurationProperties(EventConfigurationProperties.class)
 public class EventsAutoConfiguration {
