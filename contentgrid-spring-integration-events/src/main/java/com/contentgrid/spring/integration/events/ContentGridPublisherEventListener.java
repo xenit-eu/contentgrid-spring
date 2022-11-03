@@ -48,7 +48,13 @@ public class ContentGridPublisherEventListener
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean requiresPostCommitHanding(EntityPersister persister) {
+        return this.requiresPostCommitHandling(persister);
+    }
+
+    @Override
+    public boolean requiresPostCommitHandling(EntityPersister persister) {
         return false;
     }
 
