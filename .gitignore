@@ -1,3 +1,7 @@
+integration-tests/gradlew
+integration-tests/gradlew.bat
+integration-tests/gradle/
+
 # Ignore Gradle project-specific cache directory
 .gradle
 
