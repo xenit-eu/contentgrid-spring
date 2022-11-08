@@ -15,14 +15,18 @@ configurations {
 }
 
 repositories {
+    mavenLocal()
 	mavenCentral()
 }
 
 dependencies {
-	implementation 'com.contentgrid.starter:contentgrid-spring-boot-starter:0.1.0-SNAPSHOT'
+	implementation 'com.contentgrid.starter:contentgrid-spring-boot-starter:0.1.0-SNAPSHOT'	
+	
 	annotationProcessor 'com.contentgrid.starter:contentgrid-spring-boot-starter-annotations:0.1.0-SNAPSHOT'
 	annotationProcessor 'org.projectlombok:lombok'
+	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'com.contentgrid.starter:contentgrid-spring-integration-events:0.1.0-SNAPSHOT'
 }
 
 test {

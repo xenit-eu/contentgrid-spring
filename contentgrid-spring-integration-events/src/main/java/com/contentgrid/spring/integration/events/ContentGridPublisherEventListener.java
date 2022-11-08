@@ -10,29 +10,35 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
+import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.persister.entity.EntityPersister;
+import org.springframework.beans.factory.InitializingBean;
 
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageType;
 
-public class ContentGridPublisherEventListener
-        implements PostInsertEventListener, PostUpdateEventListener, PostDeleteEventListener {
+public class ContentGridPublisherEventListener implements PostInsertEventListener,
+        PostUpdateEventListener, PostDeleteEventListener, InitializingBean {
 
     private final ContentGridEventPublisher contentGridEventPublisher;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public ContentGridPublisherEventListener(ContentGridEventPublisher contentGridEventPublisher, EntityManagerFactory entityManagerFactory) {
+    public ContentGridPublisherEventListener(ContentGridEventPublisher contentGridEventPublisher,
+            EntityManagerFactory entityManagerFactory) {
         this.contentGridEventPublisher = contentGridEventPublisher;
-        
+        this.entityManagerFactory = entityManagerFactory;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
         SessionFactoryImpl sessionFactory = entityManagerFactory.unwrap(SessionFactoryImpl.class);
         EventListenerRegistry registry = sessionFactory.getServiceRegistry()
                 .getService(EventListenerRegistry.class);
-        registry.getEventListenerGroup(EventType.POST_INSERT)
-                .appendListener(this);
-        registry.getEventListenerGroup(EventType.POST_UPDATE)
-                .appendListener(this);
-        registry.getEventListenerGroup(EventType.POST_DELETE)
-                .appendListener(this);
+        registry.getEventListenerGroup(EventType.POST_INSERT).appendListener(this);
+        registry.getEventListenerGroup(EventType.POST_UPDATE).appendListener(this);
+        registry.getEventListenerGroup(EventType.POST_DELETE).appendListener(this);
     }
 
 //    @PrePersist
