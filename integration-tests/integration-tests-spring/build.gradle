@@ -27,6 +27,8 @@ dependencies {
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'com.contentgrid.starter:contentgrid-spring-integration-events:0.1.0-SNAPSHOT'
+	
+	testImplementation 'org.springframework.integration:spring-integration-test'
 }
 
 test {

@@ -10,14 +10,14 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
-import org.hibernate.event.spi.PreUpdateEvent;
-import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.persister.entity.EntityPersister;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageType;
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
 
 public class ContentGridPublisherEventListener implements PostInsertEventListener,
         PostUpdateEventListener, PostDeleteEventListener, InitializingBean {
@@ -41,16 +41,11 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         registry.getEventListenerGroup(EventType.POST_DELETE).appendListener(this);
     }
 
-//    @PrePersist
-//    @PreUpdate
-//    @PreRemove
-//    private void beforeAnyUpdate(Object entity) {
-//    }
-
     @Override
     public void onPostInsert(PostInsertEvent event) {
-        contentGridEventPublisher.publish(new ContentGridMessage().application("applicationName")
-                .type(ContentGridMessageType.create).entity(event.getEntity()));
+        contentGridEventPublisher
+                .publish(new ContentGridMessage("applicationName", ContentGridMessageType.create,
+                        event.getEntity().getClass(), new DataEntity(null, event.getEntity())));
     }
 
     @Override
@@ -66,17 +61,25 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
 
     @Override
     public void onPostUpdate(PostUpdateEvent event) {
-        contentGridEventPublisher.publish(new ContentGridMessage().application("applicationName")
-                .type(ContentGridMessageType.update).entity(event.getEntity()));
+        Object entity = event.getEntity();
+        Object oldEntity = BeanUtils.instantiateClass(entity.getClass());
+        BeanUtils.copyProperties(entity, oldEntity);
+        event.getPersister().setPropertyValues(oldEntity, event.getOldState());
+
+        // String identifierPropertyName =
+        // event.getPersister().getIdentifierPropertyName();
+        // event.getPersister().setIdentifier(oldEntity, identifierPropertyName,
+        // event.getSession());
+
+        contentGridEventPublisher.publish(new ContentGridMessage("applicationName",
+                ContentGridMessageType.update, event.getEntity().getClass(),
+                new DataEntity(oldEntity, event.getEntity())));
     }
 
     @Override
     public void onPostDelete(PostDeleteEvent event) {
-        contentGridEventPublisher.publish(new ContentGridMessage().application("applicationName")
-                .type(ContentGridMessageType.delete).entity(event.getEntity()));
+        contentGridEventPublisher
+                .publish(new ContentGridMessage("applicationName", ContentGridMessageType.delete,
+                        event.getEntity().getClass(), new DataEntity(event.getEntity(), null)));
     }
-
-//    @PostLoad
-//    private void afterLoad(Object entity) {
-//    }
 }
