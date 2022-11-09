@@ -42,7 +42,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class EventsAutoConfiguration {
 
     @Bean
-    IntegrationFlow toOutboundQueueFlow(EventConfigurationProperties config,
+    IntegrationFlow contentGridEventsFlow(EventConfigurationProperties config,
             ObjectProvider<ContentGridMessageHandler> handlers,
             @Qualifier("halJacksonHttpMessageConverter") TypeConstrainedMappingJackson2HttpMessageConverter typeConstrainedMappingJackson2HttpMessageConverter,
             ApplicationContext context) {

@@ -1,5 +1,5 @@
 plugins {
-	id 'org.springframework.boot' version '2.6.2'
+	id 'org.springframework.boot' version '2.7.0'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
 }
@@ -15,20 +15,22 @@ configurations {
 }
 
 repositories {
-    mavenLocal()
 	mavenCentral()
 }
 
 dependencies {
-	implementation 'com.contentgrid.starter:contentgrid-spring-boot-starter:0.1.0-SNAPSHOT'	
+	implementation 'com.contentgrid.starter:contentgrid-spring-boot-starter'	
 	
-	annotationProcessor 'com.contentgrid.starter:contentgrid-spring-boot-starter-annotations:0.1.0-SNAPSHOT'
+	annotationProcessor 'com.contentgrid.starter:contentgrid-spring-boot-starter-annotations'
 	annotationProcessor 'org.projectlombok:lombok'
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'com.contentgrid.starter:contentgrid-spring-integration-events:0.1.0-SNAPSHOT'
+	testImplementation 'com.contentgrid.starter:contentgrid-spring-integration-events'
 	
 	testImplementation 'org.springframework.integration:spring-integration-test'
+	
+	implementation 'org.testcontainers:postgresql:1.17.3'
+	//testRuntimeOnly 'com.h2database:h2:1.4.200'
 }
 
 test {

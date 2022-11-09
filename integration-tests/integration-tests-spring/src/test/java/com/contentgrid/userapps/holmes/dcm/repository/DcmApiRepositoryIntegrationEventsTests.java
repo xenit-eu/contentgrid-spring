@@ -1,8 +1,6 @@
 package com.contentgrid.userapps.holmes.dcm.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -53,27 +51,27 @@ class DcmApiRepositoryIntegrationEventsTests {
             MessageHandler messageHandler = MockIntegration.mockMessageHandler().handleNext(m -> {
                 Object payload = m.getPayload();
                 assertThat(payload).isInstanceOf(String.class);
-                
+
                 try {
-                    HashMap<String, Object> readValue = objectMapper.readValue((String) payload, new TypeReference<HashMap<String, Object>>() {
-                    });
-                    
+                    HashMap<String, Object> readValue = objectMapper.readValue((String) payload,
+                            new TypeReference<HashMap<String, Object>>() {
+                            });
+
                     assertThat(readValue).containsKey("application");
                     assertThat(readValue).containsKey("type");
                     assertThat(readValue).containsKey("old");
                     assertThat(readValue).containsKey("new");
                     assertThat(readValue).containsKey("entity");
                 } catch (JsonProcessingException e) {
-                   throw new RuntimeException(e);
+                    throw new RuntimeException(e);
                 }
             });
 
             MessageHandlerSpec mockMessageHandlerSpec = mock(MessageHandlerSpec.class);
-            when(mockMessageHandlerSpec.get()).thenReturn(messageHandler);                        
+            when(mockMessageHandlerSpec.get()).thenReturn(messageHandler);
 
             return () -> mockMessageHandlerSpec;
         }
-
     }
 
     @Autowired
@@ -149,6 +147,7 @@ class DcmApiRepositoryIntegrationEventsTests {
     @Test
     void whenCaseIsDeleted_postUpdateShouldBeCalledOnce_ok() {
         Case saved = repository.save(new Case());
+
         saved.setDescription("description for update");
         repository.save(saved);
 
