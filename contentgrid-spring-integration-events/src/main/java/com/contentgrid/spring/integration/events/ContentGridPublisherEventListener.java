@@ -66,14 +66,9 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         BeanUtils.copyProperties(entity, oldEntity);
         event.getPersister().setPropertyValues(oldEntity, event.getOldState());
 
-        // String identifierPropertyName =
-        // event.getPersister().getIdentifierPropertyName();
-        // event.getPersister().setIdentifier(oldEntity, identifierPropertyName,
-        // event.getSession());
-
-        contentGridEventPublisher.publish(new ContentGridMessage("applicationName",
-                ContentGridMessageType.update, event.getEntity().getClass(),
-                new DataEntity(oldEntity, event.getEntity())));
+        contentGridEventPublisher
+                .publish(new ContentGridMessage("applicationName", ContentGridMessageType.update,
+                        entity.getClass(), new DataEntity(oldEntity, entity)));
     }
 
     @Override
