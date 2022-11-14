@@ -2,7 +2,6 @@ package com.contentgrid.spring.boot.autoconfigure.integration;
 
 import javax.persistence.EntityManagerFactory;
 
-import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -63,7 +62,6 @@ public class EventsAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    // TODO we can exclude this autoconfig by configuration property
     ContentGridPublisherEventListener contentGridPublisherEventListener(
             ContentGridEventPublisher contentGridEventPublisher,
             EntityManagerFactory entityManagerFactory) {
@@ -76,16 +74,10 @@ public class EventsAutoConfiguration {
     static class EventsRabbitMqAutoConfiguration {
 
         @Bean
-        @ConditionalOnProperty(value = { "contentgrid.events.queueName" })
-        Queue queue(EventConfigurationProperties config) {
-            return new Queue(config.getQueueName(), false);
-        }
-
-        @Bean
-        // TODO do we need a conditional here?
         ContentGridMessageHandler messageHandler(RabbitTemplate rabbitTemplate,
                 EventConfigurationProperties config) {
-            return () -> Amqp.outboundAdapter(rabbitTemplate).routingKey(config.getQueueName());
+            return () -> Amqp.outboundAdapter(rabbitTemplate)
+                    .routingKey(config.getRabbitmq().getRoutingKey());
         }
     }
 
