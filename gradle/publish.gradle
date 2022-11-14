@@ -11,6 +11,8 @@ publishing {
                 description = project.description
 
                 scm {
+                    connection = 'scm:git:git@github.com:xenit-eu/contentgrid-spring-boot-starter.git'
+                    developerConnection = 'scm:git:git@github.com:xenit-eu/contentgrid-spring-boot-starter.git'
                     url = 'https://github.com/xenit-eu/contentgrid-spring-boot-starter.git'
                 }
 
