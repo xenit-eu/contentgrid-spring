@@ -19,7 +19,7 @@ configurations {
 
 dependencies {
     implementation platform(project(':contentgrid-spring-boot-platform')) 
-    
+
     api 'org.springframework.integration:spring-integration-amqp'
 
     implementation 'org.hibernate:hibernate-core'
