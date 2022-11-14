@@ -1,11 +1,15 @@
 server:
   port: ${PORT:8080}
 spring:
+  datasource:
+    url: jdbc:tc:postgresql:14:///
   jpa:
+    hibernate:
+      ddl-auto: create-drop
     properties:
       hibernate:
         globally_quoted_identifiers: true
   data:
-    jpa:
+    jpa:      
       repositories:
         bootstrap-mode: DEFERRED

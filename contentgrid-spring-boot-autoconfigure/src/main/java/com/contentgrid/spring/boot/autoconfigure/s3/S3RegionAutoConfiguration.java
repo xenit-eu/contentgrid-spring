@@ -1,5 +1,7 @@
 package com.contentgrid.spring.boot.autoconfigure.s3;
 
+import com.contentgrid.spring.boot.autoconfigure.integration.EventConfigurationProperties;
+import com.contentgrid.spring.boot.autoconfigure.s3.S3RegionAutoConfiguration.S3AdditionalProperties;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration.S3Properties;
 import lombok.Data;
@@ -10,6 +12,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -25,10 +28,11 @@ import software.amazon.awssdk.services.s3.S3Client;
         name = "default",
         havingValue = "s3",
         matchIfMissing=true)
+@EnableConfigurationProperties(S3AdditionalProperties.class)
 public class S3RegionAutoConfiguration {
-    @Component
-    @ConfigurationProperties(prefix = "spring.content.s3")
+
     @Data
+    @ConfigurationProperties(prefix = "spring.content.s3")
     public static class S3AdditionalProperties {
         private String region;
     }
