@@ -1,9 +1,9 @@
 package com.contentgrid.spring.boot.autoconfigure.actuator;
 
+import com.contentgrid.spring.boot.actuator.SystemProperties;
+import com.contentgrid.spring.boot.actuator.TemplateHelper;
 import com.contentgrid.spring.boot.actuator.policy.PolicyActuator;
-import com.contentgrid.spring.boot.actuator.policy.PolicyTemplatingProperties;
 import com.contentgrid.spring.boot.actuator.webhooks.WebHooksConfigActuator;
-import com.contentgrid.spring.boot.actuator.webhooks.WebhooksTemplatingProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -17,27 +17,22 @@ import org.springframework.util.SystemPropertyUtils;
 public class ActuatorAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(PolicyActuator.class)
-    PolicyActuator policyActuator(PolicyTemplatingProperties properties, PropertyPlaceholderHelper helper) {
-        return new PolicyActuator("rego/policy.rego", properties, helper);
+    PolicyActuator policyActuator(TemplateHelper templateHelper) {
+        return new PolicyActuator("rego/policy.rego", templateHelper);
     }
 
     @Bean
     @ConditionalOnMissingBean(WebHooksConfigActuator.class)
-    WebHooksConfigActuator webHooksConfigActuator(WebhooksTemplatingProperties properties, PropertyPlaceholderHelper helper) {
-        return new WebHooksConfigActuator("webhooks/config.json",  properties, helper);
+    WebHooksConfigActuator webHooksConfigActuator(TemplateHelper templateHelper) {
+        return new WebHooksConfigActuator("webhooks/config.json", templateHelper);
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "contentgrid.webhook")
-    WebhooksTemplatingProperties webhooksTemplatingProperties() {
-        return new WebhooksTemplatingProperties();
+    @ConfigurationProperties(prefix = "contentgrid")
+    SystemProperties systemTemplatingProperties() {
+        return new SystemProperties();
     }
 
-    @Bean
-    @ConfigurationProperties(prefix = "contentgrid.policy")
-    PolicyTemplatingProperties policyTemplatingProperties() {
-        return new PolicyTemplatingProperties();
-    }
 
     @Bean
     @ConditionalOnMissingBean(PropertyPlaceholderHelper.class)
@@ -46,5 +41,10 @@ public class ActuatorAutoConfiguration {
                 SystemPropertyUtils.PLACEHOLDER_PREFIX,
                 SystemPropertyUtils.PLACEHOLDER_SUFFIX
         );
+    }
+
+    @Bean
+    TemplateHelper templateHelper(PropertyPlaceholderHelper propertyPlaceholderHelper, SystemProperties system) {
+        return new TemplateHelper(propertyPlaceholderHelper, system);
     }
 }
