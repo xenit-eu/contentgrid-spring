@@ -19,14 +19,23 @@ public class TemplateHelper {
     public TemplateHelper(PropertyPlaceholderHelper propertyPlaceholderHelper, SystemProperties systemProperties) {
         this.propertyPlaceholderHelper = propertyPlaceholderHelper;
 
-        this.systemVariables.put(SYSTEM_DEPLOYMENT_ID, systemProperties.getDeploymentId());
-        this.systemVariables.put(SYSTEM_DEPLOYMENT_ID_SAFE, makeSafeId("deployment", systemProperties.getDeploymentId()));
-        this.systemVariables.put(SYSTEM_APPLICATION_ID, systemProperties.getApplicationId());
-        this.systemVariables.put(SYSTEM_APPLICATION_ID_SAFE, makeSafeId("application", systemProperties.getApplicationId()));
+        String deploymentId = systemProperties.getDeploymentId();
+        String applicationId = systemProperties.getApplicationId();
+
+        if (deploymentId != null) {
+            this.systemVariables.put(SYSTEM_DEPLOYMENT_ID, deploymentId);
+            this.systemVariables.put(SYSTEM_DEPLOYMENT_ID_SAFE, makeSafeId("deployment", deploymentId));
+        }
+        if (applicationId != null) {
+            this.systemVariables.put(SYSTEM_APPLICATION_ID, applicationId);
+            this.systemVariables.put(SYSTEM_APPLICATION_ID_SAFE, makeSafeId("application", applicationId));
+        }
 
         this.systemAndUserVariables.putAll(systemVariables);
-        systemProperties.getVariables().forEach((key, value) ->
-                this.systemAndUserVariables.put(VARIABLES_PREFIX + key, value));
+        if (systemProperties.getVariables() != null) {
+            systemProperties.getVariables().forEach((key, value) ->
+                    this.systemAndUserVariables.put(VARIABLES_PREFIX + key, value));
+        }
     }
 
     private String makeSafeId(String prefix, String id) {
