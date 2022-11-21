@@ -1,6 +1,6 @@
 package com.contentgrid.spring.boot.autoconfigure.actuator;
 
-import com.contentgrid.spring.boot.actuator.SystemProperties;
+import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties;
 import com.contentgrid.spring.boot.actuator.TemplateHelper;
 import com.contentgrid.spring.boot.actuator.policy.PolicyActuator;
 import com.contentgrid.spring.boot.actuator.webhooks.WebHooksConfigActuator;
@@ -29,8 +29,8 @@ public class ActuatorAutoConfiguration {
 
     @Bean
     @ConfigurationProperties(prefix = "contentgrid")
-    SystemProperties systemTemplatingProperties() {
-        return new SystemProperties();
+    ContentGridApplicationProperties contentgridApplicationProperties() {
+        return new ContentGridApplicationProperties();
     }
 
 
@@ -44,7 +44,7 @@ public class ActuatorAutoConfiguration {
     }
 
     @Bean
-    TemplateHelper templateHelper(PropertyPlaceholderHelper propertyPlaceholderHelper, SystemProperties system) {
-        return new TemplateHelper(propertyPlaceholderHelper, system);
+    TemplateHelper templateHelper(PropertyPlaceholderHelper propertyPlaceholderHelper, ContentGridApplicationProperties props) {
+        return new TemplateHelper(propertyPlaceholderHelper, props);
     }
 }

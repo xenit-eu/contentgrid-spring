@@ -16,11 +16,11 @@ public class TemplateHelper {
     private final Map<String, String> systemVariables = new HashMap<>();
     private final Map<String, String> systemAndUserVariables = new HashMap<>();
 
-    public TemplateHelper(PropertyPlaceholderHelper propertyPlaceholderHelper, SystemProperties systemProperties) {
+    public TemplateHelper(PropertyPlaceholderHelper propertyPlaceholderHelper, ContentGridApplicationProperties contentGridApplicationProperties) {
         this.propertyPlaceholderHelper = propertyPlaceholderHelper;
 
-        String deploymentId = systemProperties.getDeploymentId();
-        String applicationId = systemProperties.getApplicationId();
+        String deploymentId = contentGridApplicationProperties.getDeploymentId();
+        String applicationId = contentGridApplicationProperties.getApplicationId();
 
         if (deploymentId != null) {
             this.systemVariables.put(SYSTEM_DEPLOYMENT_ID, deploymentId);
@@ -32,8 +32,8 @@ public class TemplateHelper {
         }
 
         this.systemAndUserVariables.putAll(systemVariables);
-        if (systemProperties.getVariables() != null) {
-            systemProperties.getVariables().forEach((key, value) ->
+        if (contentGridApplicationProperties.getVariables() != null) {
+            contentGridApplicationProperties.getVariables().forEach((key, value) ->
                     this.systemAndUserVariables.put(VARIABLES_PREFIX + key, value));
         }
     }
