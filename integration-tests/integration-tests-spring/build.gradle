@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'com.contentgrid.starter:contentgrid-spring-boot-starter'	
+	implementation 'com.contentgrid.spring:contentgrid-spring-boot-starter'
 	
 	annotationProcessor 'com.contentgrid.spring:contentgrid-spring-boot-starter-annotations'
 	annotationProcessor 'org.projectlombok:lombok'
