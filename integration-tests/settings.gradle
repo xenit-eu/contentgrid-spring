@@ -1,4 +1,4 @@
-rootProject.name = 'contentcloud-spring-boot-integration-tests'
+rootProject.name = 'contentgrid-spring-integration-tests'
 
 includeBuild('..') {
     name = 'cg-spring-boot'

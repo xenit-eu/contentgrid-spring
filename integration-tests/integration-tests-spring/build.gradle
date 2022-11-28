@@ -23,13 +23,13 @@ repositories {
 }
 
 dependencies {
-	implementation 'com.contentgrid.starter:contentgrid-spring-boot-starter'	
+	implementation 'com.contentgrid.spring:contentgrid-spring-boot-starter'
 	
-	annotationProcessor 'com.contentgrid.starter:contentgrid-spring-boot-starter-annotations'
+	annotationProcessor 'com.contentgrid.spring:contentgrid-spring-boot-starter-annotations'
 	annotationProcessor 'org.projectlombok:lombok'
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'com.contentgrid.starter:contentgrid-spring-integration-events'
+	testImplementation 'com.contentgrid.spring:contentgrid-spring-integration-events'
 	
 	testImplementation 'org.springframework.integration:spring-integration-test'
 	

@@ -2,7 +2,7 @@ plugins {
     id "eu.xenit.enterprise-conventions.oss" version "0.3.0-rc.2"
 }
 
-rootProject.name = 'contentgrid-spring-boot'
+rootProject.name = 'contentgrid-spring'
 
 include 'contentgrid-spring-boot-actuators'
 include 'contentgrid-spring-boot-autoconfigure'
