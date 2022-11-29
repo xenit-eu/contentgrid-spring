@@ -15,8 +15,7 @@ import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
 public class ContentGridSpringDataRestConfiguration {
 
     @Bean
-    public BeanPostProcessor replaceRepositoryPropertyReferenceController(ApplicationContext applicationContext)
-    {
+    public BeanPostProcessor replaceRepositoryPropertyReferenceController(ApplicationContext applicationContext) {
         return new BeanPostProcessor() {
             @Override
             public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {

@@ -63,7 +63,7 @@ public class DelegatingRepositoryPropertyReferenceController {
     private final ObjectProvider<QuerydslBindingsFactory> querydslBindingsFactoryProvider;
 
     @Autowired
-    public DelegatingRepositoryPropertyReferenceController(RepositoryPropertyReferenceController delegate,
+    DelegatingRepositoryPropertyReferenceController(RepositoryPropertyReferenceController delegate,
             Repositories repositories, RepositoryResourceMappings mappings,
             RepositoryEntityLinks entityLinks, SelfLinkProvider selfLinkProvider,
             ObjectProvider<QuerydslBindingsFactory> querydslBindingsFactoryProvider) {
@@ -202,7 +202,7 @@ public class DelegatingRepositoryPropertyReferenceController {
         return this.delegate.followPropertyReferenceCompact(repoRequest, id, property, requestHeaders, assembler);
     }
 
-    @RequestMapping(value = BASE_MAPPING, method = {PATCH, PUT, POST}, //
+    @RequestMapping(value = BASE_MAPPING, method = {PATCH, PUT, POST},
             consumes = {MediaType.APPLICATION_JSON_VALUE, SPRING_DATA_COMPACT_JSON_VALUE, TEXT_URI_LIST_VALUE})
     public ResponseEntity<? extends RepresentationModel<?>> createPropertyReference(
             RootResourceInformation resourceInformation, HttpMethod requestMethod,
