@@ -35,6 +35,7 @@ dependencies {
 
     compileOnly project(':contentgrid-spring-boot-actuators')
     compileOnly project(':contentgrid-spring-integration-events')
+    compileOnly project(':contentgrid-spring-data-rest')
 
     compileOnly 'org.springframework.integration:spring-integration-core'
     compileOnly "com.github.paulcwarren:spring-content-autoconfigure"
@@ -43,10 +44,12 @@ dependencies {
     compileOnly 'jakarta.persistence:jakarta.persistence-api'
 
     testImplementation project(':contentgrid-spring-integration-events')
+    testImplementation project(':contentgrid-spring-data-rest')
     testImplementation 'org.springframework:spring-web'
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.data:spring-data-rest-webmvc'
     testImplementation 'com.github.paulcwarren:spring-content-s3-boot-starter'
 
     testCompileOnly 'org.projectlombok:lombok'

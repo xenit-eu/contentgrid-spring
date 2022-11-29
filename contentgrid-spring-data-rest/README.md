@@ -17,10 +17,22 @@ Prerequisites: this redirection (currently) requires that QueryDSL support is en
 
 ## Getting Started
 
+### AutoConfiguration
+
+Spring Boot [autoconfiguration](https://docs.spring.io/spring-boot/docs/current/reference/html/using.html#using.auto-configuration)
+is available via the `:contentgrid-spring-boot-autoconfigure` package, when both this module and
+`org.springframework.data:spring-data-rest-webmvc` are available on the runtime classpath.
+
+```gradle
+dependencies {
+    implementation 'com.contentgrid.spring:contentgrid-spring-boot-starter'
+}
+```
+
+
 ### Import Configuration
 
-You can import the configuration class `ContentGridSpringDataRestConfiguration.class`, which will use a Spring
-`BeanPostProcessor` to replace the `@RepositoryRestController` named `RepositoryPropertyReferenceController`.
+Alternatively, you can manually import the configuration class `ContentGridSpringDataRestConfiguration.class`.
 
 ```java
 @SpringBootApplication
