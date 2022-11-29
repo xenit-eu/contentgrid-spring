@@ -22,5 +22,6 @@ dependencies {
 * `contentgrid-spring-boot-platform` is a Bill of Materials for ContentGrid applications, extending `spring-boot-dependencies`
 * `contentgrid-spring-boot-starter` is the primary Spring Boot Starter
 * `contentgrid-spring-boot-starter-annotations` is a (required) starter for annotation processing
+* `contentgrid-spring-data-rest` customizes Spring Data REST to address a number of issues
 * `contentgrid-spring-integration-events` publishes database change events on a message queue
 
