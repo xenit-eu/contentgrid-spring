@@ -84,18 +84,8 @@ public class DelegatingRepositoryPropertyReferenceController {
         Function<ReferencedProperty, ResponseEntity<?>> handler = (ReferencedProperty prop) -> {
             if (prop.property.isCollectionLike()) {
                 var targetType = prop.property.getPersistentEntityTypeInformation().iterator().next();
-                //this.mappings.getMetadataFor(type.getType()).
                 var url = this.entityLinks.linkToCollectionResource(targetType.getType()).expand();
                 var mappedBy = prop.property.getAssociation().getInverse().findAnnotation(OneToMany.class).mappedBy();
-                var targetProperty = this.repositories.getPersistentEntity(targetType.getType())
-                        .getPersistentProperty(mappedBy);
-                if (targetProperty == null) {
-
-                }
-
-                var targetMapping = this.mappings.getMappingFor(targetProperty);
-                // is the target entity/field exported ? what if it is not ?
-
                 var isQueryDslRepository = this.repositories.getRepositoryInformationFor(targetType.getType())
                         .map(repoMetadata -> QUERY_DSL_PRESENT && QuerydslPredicateExecutor.class.isAssignableFrom(
                                 repoMetadata.getRepositoryInterface()))
