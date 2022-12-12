@@ -11,13 +11,17 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import com.contentgrid.spring.data.querydsl.QuerydslBindingsInspector;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mapping.IdentifierAccessor;
@@ -26,6 +30,7 @@ import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.binding.QuerydslBindingsFactory;
+import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.data.rest.core.mapping.PropertyAwareResourceMapping;
@@ -41,12 +46,14 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+@Slf4j
 @RepositoryRestController
 public class DelegatingRepositoryPropertyReferenceController {
 
@@ -85,26 +92,37 @@ public class DelegatingRepositoryPropertyReferenceController {
             if (prop.property.isCollectionLike()) {
                 var targetType = prop.property.getPersistentEntityTypeInformation().iterator().next();
                 var url = this.entityLinks.linkToCollectionResource(targetType.getType()).expand();
-                var mappedBy = prop.property.getAssociation().getInverse().findAnnotation(OneToMany.class).mappedBy();
+
+                // JPA specific
+                var mappedBy = findMappedBy(prop.property);
+                if (mappedBy.isEmpty()) {
+                    log.warn("Could not find other side of relation {}", prop.property);
+                    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+                }
+
                 var isQueryDslRepository = this.repositories.getRepositoryInformationFor(targetType.getType())
-                        .map(repoMetadata -> QUERY_DSL_PRESENT && QuerydslPredicateExecutor.class.isAssignableFrom(
-                                repoMetadata.getRepositoryInterface()))
-                        .orElse(false);
+                        .filter(repoMetadata -> QUERY_DSL_PRESENT)
+                        .map(RepositoryMetadata::getRepositoryInterface)
+                        .filter(QuerydslPredicateExecutor.class::isAssignableFrom)
+                        .isPresent();
 
                 var querydslBindingsFactory = this.querydslBindingsFactoryProvider.getIfAvailable();
                 if (isQueryDslRepository && querydslBindingsFactory != null) {
                     var querydslBinding = querydslBindingsFactory.createBindingsFor(targetType);
                     var querydslFilter = new QuerydslBindingsInspector(querydslBinding)
-                            .findPathBindingFor(mappedBy, targetType.getType());
+                            .findPathBindingFor(mappedBy.get(), targetType.getType());
 
                     if (querydslFilter.isPresent()) {
                         var filter = querydslFilter.get();
                         var locationUri = URI.create(url.expand().getHref() + "?" + filter + "=" + id);
                         return ResponseEntity.status(HttpStatus.FOUND).location(locationUri).build();
                     }
+                } else {
+                    log.warn("No Querydsl-repository or -bindings found for domain type {}", targetType.getType());
                 }
 
-                // fallback to query-method if target type repo is NOT a querydsl repo ?!
+                // Is a fallback possible to query-methods if target type repo is NOT a querydsl repo ?!
+
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             } else if (prop.property.isMap()) {
                 throw new UnsupportedOperationException();
@@ -118,6 +136,43 @@ public class DelegatingRepositoryPropertyReferenceController {
         };
 
         return doWithReferencedProperty(repoRequest, id, property, handler, HttpMethod.GET);
+    }
+
+    private static Optional<String> findMappedBy(PersistentProperty<?> property) {
+        var oneToMany = property.findAnnotation(OneToMany.class);
+        if (oneToMany != null) {
+            // when this side is the inverse side of a bi-directional relation
+            if (!"".equals(oneToMany.mappedBy())) {
+                return Optional.of(oneToMany.mappedBy());
+            }
+
+            // while it is also possible this is a uni-directional relation using a jointable
+            // currently not supported
+            throw new UnsupportedOperationException();
+        }
+
+        var manyToMany = property.findAnnotation(ManyToMany.class);
+        if (manyToMany != null) {
+            // in case this is the inverse side
+            if (StringUtils.hasText(manyToMany.mappedBy())) {
+                return Optional.of(manyToMany.mappedBy());
+            }
+
+            // in case this is the primary side, we need to scan the other side to find the field
+            // with annotation @ManyToMany(mappedBy=property.getName())
+            // (which only exists in for bidirectional relations)
+            return Optional.ofNullable(property.getAssociationTargetType())
+                    .stream()
+                    .flatMap(targetType -> Arrays.stream(targetType.getDeclaredFields()))
+                    .filter(field -> {
+                        var m2m = field.getAnnotation(ManyToMany.class);
+                        return m2m != null && !"".equals(m2m.mappedBy());
+                    })
+                    .map(Field::getName)
+                    .findFirst();
+        }
+
+        return Optional.empty();
     }
 
 
@@ -226,6 +281,7 @@ public class DelegatingRepositoryPropertyReferenceController {
         return exception.toResponse();
     }
 
+    // See RepositoryPropertyReferenceController#doWithReferencedProperty
     private ResponseEntity<?> doWithReferencedProperty(
             RootResourceInformation resourceInformation,
             Serializable id, String propertyPath,
