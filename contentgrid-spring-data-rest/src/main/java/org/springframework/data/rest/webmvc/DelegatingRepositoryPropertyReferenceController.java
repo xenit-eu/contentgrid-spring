@@ -116,9 +116,12 @@ public class DelegatingRepositoryPropertyReferenceController {
                         var filter = querydslFilter.get();
                         var locationUri = URI.create(url.expand().getHref() + "?" + filter + "=" + id);
                         return ResponseEntity.status(HttpStatus.FOUND).location(locationUri).build();
+                    } else {
+                        log.warn("Querydsl binding for path '{}' type {} not found.",
+                                mappedBy.get(), targetType.getType().getName());
                     }
                 } else {
-                    log.warn("No Querydsl-repository or -bindings found for domain type {}", targetType.getType());
+                    log.warn("No Querydsl-repository or -bindings found for domain type {}.", targetType.getType());
                 }
 
                 // Is a fallback possible to query-methods if target type repo is NOT a querydsl repo ?!
@@ -127,7 +130,7 @@ public class DelegatingRepositoryPropertyReferenceController {
             } else if (prop.property.isMap()) {
                 throw new UnsupportedOperationException();
             } else {
-                // this is a -to-one type of association, so it is safe to resolve
+                // this is a -to-one type of association, redirect to self link
                 return prop.mapValue(target -> this.selfLinkProvider.createSelfLinkFor(prop.getPropertyType(), target))
                         .map(link -> link.getTemplate().expand())
                         .map(uri -> ResponseEntity.status(HttpStatus.FOUND).location(uri).build())
