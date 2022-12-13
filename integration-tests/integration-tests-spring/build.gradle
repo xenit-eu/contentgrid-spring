@@ -33,7 +33,7 @@ dependencies {
 	
 	testImplementation 'org.springframework.integration:spring-integration-test'
 	
-	runtimeOnly 'org.testcontainers:postgresql'
+	runtimeOnly 'org.testcontainers:postgresql:1.17.6'
 }
 
 test {

@@ -14,7 +14,6 @@ ext {
 dependencies {
     api platform('org.springframework.boot:spring-boot-dependencies:2.6.12')
     api platform('com.contentgrid.thunx:thunx-bom:0.4.2')
-    api platform('org.testcontainers:testcontainers-bom:1.17.6')
 
     constraints {
         api project(':contentgrid-spring-boot-starter')
