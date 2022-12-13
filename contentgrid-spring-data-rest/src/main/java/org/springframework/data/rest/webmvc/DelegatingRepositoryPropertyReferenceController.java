@@ -125,10 +125,9 @@ public class DelegatingRepositoryPropertyReferenceController {
                 }
 
                 // Is a fallback possible to query-methods if target type repo is NOT a querydsl repo ?!
-
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
             } else if (prop.property.isMap()) {
-                throw new UnsupportedOperationException();
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
             } else {
                 // this is a -to-one type of association, redirect to self link
                 return prop.mapValue(target -> this.selfLinkProvider.createSelfLinkFor(prop.getPropertyType(), target))
@@ -151,7 +150,7 @@ public class DelegatingRepositoryPropertyReferenceController {
 
             // while it is also possible this is a uni-directional relation using a jointable
             // currently not supported
-            throw new UnsupportedOperationException();
+            return Optional.empty();
         }
 
         var manyToMany = property.findAnnotation(ManyToMany.class);
@@ -228,7 +227,7 @@ public class DelegatingRepositoryPropertyReferenceController {
                         .orElse(ResponseEntity.notFound().build());
 
             } else if (prop.property.isMap()) {
-                throw new UnsupportedOperationException("not implemented");
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
             }
 
             // single-valued association
