@@ -94,7 +94,7 @@ public class DelegatingRepositoryPropertyReferenceController {
                 var url = this.entityLinks.linkToCollectionResource(targetType.getType()).expand();
 
                 // JPA specific
-                var mappedBy = findMappedBy(prop.property);
+                var mappedBy = findReverseRelationPropertyName(prop.property);
                 if (mappedBy.isEmpty()) {
                     log.warn("Could not find other side of relation {}", prop.property);
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
@@ -140,7 +140,7 @@ public class DelegatingRepositoryPropertyReferenceController {
         return doWithReferencedProperty(repoRequest, id, property, handler, HttpMethod.GET);
     }
 
-    private static Optional<String> findMappedBy(PersistentProperty<?> property) {
+    private static Optional<String> findReverseRelationPropertyName(PersistentProperty<?> property) {
         var oneToMany = property.findAnnotation(OneToMany.class);
         if (oneToMany != null) {
             // when this side is the inverse side of a bi-directional relation

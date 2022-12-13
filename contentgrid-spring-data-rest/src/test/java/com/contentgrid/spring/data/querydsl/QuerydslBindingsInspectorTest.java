@@ -37,5 +37,4 @@ class QuerydslBindingsInspectorTest {
         // assertThat(inspector.findPathBindingFor(QInvoice.invoice.counterparty)).isNotEmpty();
     }
 
-
 }
