@@ -33,8 +33,7 @@ dependencies {
 	
 	testImplementation 'org.springframework.integration:spring-integration-test'
 	
-	implementation 'org.testcontainers:postgresql:1.17.3'
-	//testRuntimeOnly 'com.h2database:h2:1.4.200'
+	runtimeOnly 'org.testcontainers:postgresql:1.17.6'
 }
 
 test {
