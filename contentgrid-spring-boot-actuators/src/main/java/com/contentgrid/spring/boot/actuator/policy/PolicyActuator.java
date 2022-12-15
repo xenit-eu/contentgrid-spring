@@ -1,8 +1,8 @@
 package com.contentgrid.spring.boot.actuator.policy;
 
+import com.contentgrid.spring.boot.actuator.Utils;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint;
@@ -23,7 +23,7 @@ public class PolicyActuator {
     @ReadOperation(producesFrom = RegoProducible.class)
     public String readPolicy() throws IOException {
         if (policyResource.exists()) {
-            String contents = Files.readString(policyResource.getFile().toPath());
+            String contents = Utils.readContents(policyResource);
 
             return PROPERTY_PLACEHOLDER_HELPER.replacePlaceholders(contents, policyVariables);
         } else {
