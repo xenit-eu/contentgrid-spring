@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.rest.webmvc.ContentGridSpringDataRestConfiguration;
 
 @SpringBootApplication
-@Import(ContentGridSpringDataRestConfiguration.class)
 public class InvoicingApplication {
 
     public static void main(String[] args) {
