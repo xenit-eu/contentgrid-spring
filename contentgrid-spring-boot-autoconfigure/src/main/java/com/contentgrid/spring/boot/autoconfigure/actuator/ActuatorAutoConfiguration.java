@@ -24,7 +24,7 @@ public class ActuatorAutoConfiguration {
         if(policyVariables.getPolicyPackageName() == null) {
             return null;
         }
-        return new PolicyActuator(applicationContext.getResource("rego/policy.rego"), policyVariables);
+        return new PolicyActuator(applicationContext.getResource("classpath:rego/policy.rego"), policyVariables);
     }
 
     @Bean
@@ -37,7 +37,7 @@ public class ActuatorAutoConfiguration {
 
     @Bean
     WebHooksConfigActuator webHooksConfigActuator(WebhookVariables webhookVariables) {
-        return new WebHooksConfigActuator(applicationContext.getResource("webhooks/config.json"), webhookVariables);
+        return new WebHooksConfigActuator(applicationContext.getResource("classpath:webhooks/config.json"), webhookVariables);
     }
 
     @Bean
