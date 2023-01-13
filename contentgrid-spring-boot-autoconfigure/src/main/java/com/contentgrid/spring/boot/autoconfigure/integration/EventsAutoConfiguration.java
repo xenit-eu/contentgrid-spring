@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,8 @@ import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.Transformers;
 import org.springframework.integration.support.json.Jackson2JsonObjectMapper;
 
+import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties;
+import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher;
 import com.contentgrid.spring.integration.events.ContentGridHalAssembler;
 import com.contentgrid.spring.integration.events.ContentGridMessageHandler;
@@ -37,7 +40,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ConditionalOnBean(TypeConstrainedMappingJackson2HttpMessageConverter.class)
 @AutoConfigureAfter(RepositoryRestMvcAutoConfiguration.class)
 @IntegrationComponentScan(basePackageClasses = ContentGridEventPublisher.class)
-@EnableConfigurationProperties(EventConfigurationProperties.class)
+@EnableConfigurationProperties( { EventConfigurationProperties.class })
 public class EventsAutoConfiguration {
 
     @Bean
@@ -59,14 +62,20 @@ public class EventsAutoConfiguration {
         handlers.stream().map(ContentGridMessageHandler::get).forEach(builder::handle);
         return builder.get();
     }
+    
+    @Bean
+    @ConfigurationProperties(prefix = "contentgrid")
+    ContentGridEventHandlerProperties contentGridEventHandlerProperties() {
+        return new ContentGridEventHandlerProperties();
+    }
 
     @Bean
     @ConditionalOnMissingBean
     ContentGridPublisherEventListener contentGridPublisherEventListener(
             ContentGridEventPublisher contentGridEventPublisher,
-            EntityManagerFactory entityManagerFactory) {
+            EntityManagerFactory entityManagerFactory, ContentGridEventHandlerProperties properties) {
         return new ContentGridPublisherEventListener(contentGridEventPublisher,
-                entityManagerFactory);
+                entityManagerFactory, properties);
     }
 
     @Configuration

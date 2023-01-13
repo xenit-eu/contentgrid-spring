@@ -1,12 +1,13 @@
 plugins {
-    id "eu.xenit.enterprise-conventions.oss" version "0.2.0"
+    id "eu.xenit.enterprise-conventions.oss" version "0.3.0-rc.2"
 }
 
-rootProject.name = 'contentgrid-spring-boot'
+rootProject.name = 'contentgrid-spring'
 
 include 'contentgrid-spring-boot-actuators'
 include 'contentgrid-spring-boot-autoconfigure'
 include 'contentgrid-spring-boot-starter'
 include 'contentgrid-spring-boot-starter-annotations'
 include 'contentgrid-spring-boot-platform'
+include 'contentgrid-spring-data-rest'
 include 'contentgrid-spring-integration-events'

@@ -6,7 +6,11 @@ plugins {
 
 group = 'com.contentgrid.userapps.holmes'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
 
 configurations {
 	compileOnly {
@@ -19,18 +23,17 @@ repositories {
 }
 
 dependencies {
-	implementation 'com.contentgrid.starter:contentgrid-spring-boot-starter'	
+	implementation 'com.contentgrid.spring:contentgrid-spring-boot-starter'
 	
-	annotationProcessor 'com.contentgrid.starter:contentgrid-spring-boot-starter-annotations'
+	annotationProcessor 'com.contentgrid.spring:contentgrid-spring-boot-starter-annotations'
 	annotationProcessor 'org.projectlombok:lombok'
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'com.contentgrid.starter:contentgrid-spring-integration-events'
+	testImplementation 'com.contentgrid.spring:contentgrid-spring-integration-events'
 	
 	testImplementation 'org.springframework.integration:spring-integration-test'
 	
-	implementation 'org.testcontainers:postgresql:1.17.3'
-	//testRuntimeOnly 'com.h2database:h2:1.4.200'
+	runtimeOnly 'org.testcontainers:postgresql:1.17.6'
 }
 
 test {

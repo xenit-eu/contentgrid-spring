@@ -1,6 +1,5 @@
 plugins {
     id "org.ajoberstar.reckon" version "0.16.1"
-    id "io.github.gradle-nexus.publish-plugin" version '1.1.0'
 }
 
 reckon {
@@ -12,21 +11,13 @@ allprojects {
     pluginManager.withPlugin('maven-publish') {
         apply from: "${rootDir}/gradle/publish.gradle"
     }
-    pluginManager.withPlugin('java') {
+    pluginManager.withPlugin('java-library') {
         java {
-            sourceCompatibility = JavaVersion.VERSION_11
-        }
-    }
-}
-
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-
-            username = project.findProperty('sonatype_username')
-            password = project.findProperty('sonatype_password')
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(17)
+            }
+            withSourcesJar()
+            withJavadocJar()
         }
     }
 }

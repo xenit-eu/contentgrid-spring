@@ -13,7 +13,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageType;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
@@ -27,7 +26,7 @@ public interface ContentGridEventPublisher {
 
     default void publish(ContentGridMessage contentGridMessage) {
         Assert.notNull(contentGridMessage, "contentGridMessage cannot be null");
-        Assert.hasText(contentGridMessage.application,
+        Assert.hasText(contentGridMessage.applicationId,
                 "contentGridMessage.application cannot be empty");
         Assert.notNull(contentGridMessage.type, "contentGridMessage.type cannot be null");
         Assert.notNull(contentGridMessage.data, "contentGridMessage.data cannot be null");
@@ -37,31 +36,35 @@ public interface ContentGridEventPublisher {
             headers.putAll(contentGridMessage.headers);
         }
 
-        headers.put("application", contentGridMessage.application);
+        headers.put("applicationId", contentGridMessage.applicationId);
+        headers.put("deploymentId", contentGridMessage.deploymentId);
         headers.put("type", contentGridMessage.type);
 
         publish(new GenericMessage<>(contentGridMessage, headers));
     }
 
     static class ContentGridMessage {
-        private final String application;
+        private final String applicationId;
+        private final String deploymentId;
         private final ContentGridMessageType type;
         private final DataEntity data;
         private final Map<String, Object> headers;
         private final Class<?> entity;
 
-        public ContentGridMessage(String application, ContentGridMessageType type, Class<?> entity,
-                DataEntity data) {
-            this.application = application;
+        public ContentGridMessage(String applicationId, String deploymentId, ContentGridMessageType type, DataEntity data, 
+                Class<?> entity ) {
+            this.applicationId = applicationId;
+            this.deploymentId = deploymentId;
             this.type = type;
             this.data = data;
             this.headers = Collections.emptyMap();
             this.entity = entity;
         }
 
-        public ContentGridMessage(String application, ContentGridMessageType type, DataEntity data,
+        public ContentGridMessage(String applicationId, String deploymentId, ContentGridMessageType type, DataEntity data,
                 Class<?> entity, Map<String, Object> headers) {
-            this.application = application;
+            this.applicationId = applicationId;
+            this.deploymentId = deploymentId;
             this.type = type;
             this.data = data;
             this.headers = headers;
@@ -72,8 +75,12 @@ public interface ContentGridEventPublisher {
             return entity;
         }
 
-        public String getApplication() {
-            return application;
+        public String getApplicationId() {
+            return applicationId;
+        }
+        
+        public String getDeploymentId() {
+            return deploymentId;
         }
 
         public DataEntity getData() {
@@ -112,14 +119,16 @@ public interface ContentGridEventPublisher {
     }
 
     static class ContentGridMessagePayload {
-        private final String application;
+        private final String applicationId;
+        private final String deploymentId;
         private final ContentGridMessageType type;
         private final PersistentEntityResourceData data;
         private final Class<?> entity;
 
-        public ContentGridMessagePayload(String application, ContentGridMessageType type,
+        public ContentGridMessagePayload(String applicationId, String deploymentId, ContentGridMessageType type,
                 Class<?> entity, PersistentEntityResourceData data) {
-            this.application = application;
+            this.applicationId = applicationId;
+            this.deploymentId = deploymentId;
             this.type = type;
             this.data = data;
             this.entity = entity;
@@ -129,8 +138,12 @@ public interface ContentGridEventPublisher {
             return entity;
         }
 
-        public String getApplication() {
-            return application;
+        public String getApplicationId() {
+            return applicationId;
+        }
+        
+        public String getDeploymentId() {
+            return deploymentId;
         }
 
         @JsonUnwrapped

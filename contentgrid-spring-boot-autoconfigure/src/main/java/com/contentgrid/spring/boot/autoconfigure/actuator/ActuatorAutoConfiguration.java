@@ -1,50 +1,59 @@
 package com.contentgrid.spring.boot.autoconfigure.actuator;
 
+import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties;
 import com.contentgrid.spring.boot.actuator.policy.PolicyActuator;
-import com.contentgrid.spring.boot.actuator.policy.PolicyTemplatingProperties;
+import com.contentgrid.spring.boot.actuator.policy.PolicyVariables;
 import com.contentgrid.spring.boot.actuator.webhooks.WebHooksConfigActuator;
-import com.contentgrid.spring.boot.actuator.webhooks.WebhooksTemplatingProperties;
+import com.contentgrid.spring.boot.actuator.webhooks.WebhookVariables;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.PropertyPlaceholderHelper;
-import org.springframework.util.SystemPropertyUtils;
 
 @Configuration
 @ConditionalOnClass({PolicyActuator.class, WebHooksConfigActuator.class})
 public class ActuatorAutoConfiguration {
-    @Bean
-    @ConditionalOnMissingBean(PolicyActuator.class)
-    PolicyActuator policyActuator(PolicyTemplatingProperties properties, PropertyPlaceholderHelper helper) {
-        return new PolicyActuator("rego/policy.rego", properties, helper);
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Bean    
+    // @ConditionalOnBean(PolicyVariables.class) TODO this is causing a problem, 
+    // it should be in another autoconfigure file (@AutoconfigureAfter?)
+    PolicyActuator policyActuator(PolicyVariables policyVariables) {
+        return new PolicyActuator(applicationContext.getResource("classpath:rego/policy.rego"), policyVariables);
     }
 
     @Bean
-    @ConditionalOnMissingBean(WebHooksConfigActuator.class)
-    WebHooksConfigActuator webHooksConfigActuator(WebhooksTemplatingProperties properties, PropertyPlaceholderHelper helper) {
-        return new WebHooksConfigActuator("webhooks/config.json",  properties, helper);
+    @ConditionalOnProperty(name = "contentgrid.system.policyPackage")
+    @ConditionalOnMissingBean(PolicyVariables.class)
+    PolicyVariables policyVariables(ContentGridApplicationProperties applicationProperties) {
+        return PolicyVariables.builder()
+                .policyPackageName(applicationProperties.getSystem().getPolicyPackage())
+                .build();
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "contentgrid.webhook")
-    WebhooksTemplatingProperties webhooksTemplatingProperties() {
-        return new WebhooksTemplatingProperties();
+    WebHooksConfigActuator webHooksConfigActuator(WebhookVariables webhookVariables) {
+        return new WebHooksConfigActuator(applicationContext.getResource("classpath:eventhandler/webhooks.json"), webhookVariables);
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "contentgrid.policy")
-    PolicyTemplatingProperties policyTemplatingProperties() {
-        return new PolicyTemplatingProperties();
+    @ConditionalOnMissingBean(WebhookVariables.class)
+    WebhookVariables webhookVariables(ContentGridApplicationProperties applicationProperties) {
+        return WebhookVariables.builder()
+                .systemProperties(applicationProperties.getSystem())
+                .userVariables(applicationProperties.getVariables())
+                .build();
     }
 
     @Bean
-    @ConditionalOnMissingBean(PropertyPlaceholderHelper.class)
-    PropertyPlaceholderHelper getPropertyPlaceHolderHelper() {
-        return new PropertyPlaceholderHelper(
-                SystemPropertyUtils.PLACEHOLDER_PREFIX,
-                SystemPropertyUtils.PLACEHOLDER_SUFFIX
-        );
+    @ConfigurationProperties(prefix = "contentgrid")
+    ContentGridApplicationProperties contentgridApplicationProperties() {
+        return new ContentGridApplicationProperties();
     }
 }

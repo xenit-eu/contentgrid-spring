@@ -1,5 +1,7 @@
 package com.contentgrid.spring.integration.events;
 
+import java.util.Map;
+
 import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -24,11 +26,13 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
 
     private final ContentGridEventPublisher contentGridEventPublisher;
     private final EntityManagerFactory entityManagerFactory;
+    private final ContentGridEventHandlerProperties applicationProperties;
 
     public ContentGridPublisherEventListener(ContentGridEventPublisher contentGridEventPublisher,
-            EntityManagerFactory entityManagerFactory) {
+            EntityManagerFactory entityManagerFactory, ContentGridEventHandlerProperties applicationProperties) {
         this.contentGridEventPublisher = contentGridEventPublisher;
         this.entityManagerFactory = entityManagerFactory;
+        this.applicationProperties = applicationProperties;
     }
 
     @Override
@@ -40,14 +44,7 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         registry.getEventListenerGroup(EventType.POST_UPDATE).appendListener(this);
         registry.getEventListenerGroup(EventType.POST_DELETE).appendListener(this);
     }
-
-    @Override
-    public void onPostInsert(PostInsertEvent event) {
-        contentGridEventPublisher
-                .publish(new ContentGridMessage("applicationName", ContentGridMessageType.create,
-                        event.getEntity().getClass(), new DataEntity(null, event.getEntity())));
-    }
-
+    
     @Override
     @SuppressWarnings("deprecation")
     public boolean requiresPostCommitHanding(EntityPersister persister) {
@@ -60,6 +57,14 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
     }
 
     @Override
+    public void onPostInsert(PostInsertEvent event) {
+        contentGridEventPublisher
+                .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(), 
+                        ContentGridMessageType.create, new DataEntity(null, event.getEntity()), event.getEntity().getClass(), 
+                        Map.of("webhookConfigUrl", "http://host.docker.internal:6060/actuator/webhooks")));
+    }
+
+    @Override
     public void onPostUpdate(PostUpdateEvent event) {
         Object entity = event.getEntity();
         Object oldEntity = BeanUtils.instantiateClass(entity.getClass());
@@ -67,14 +72,16 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         event.getPersister().setPropertyValues(oldEntity, event.getOldState());
 
         contentGridEventPublisher
-                .publish(new ContentGridMessage("applicationName", ContentGridMessageType.update,
-                        entity.getClass(), new DataEntity(oldEntity, entity)));
+                .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(), 
+                        ContentGridMessageType.update, new DataEntity(oldEntity, entity), event.getEntity().getClass(), 
+                        Map.of("webhookConfigUrl", "http://host.docker.internal:6060/actuator/webhooks")));
     }
 
     @Override
     public void onPostDelete(PostDeleteEvent event) {
         contentGridEventPublisher
-                .publish(new ContentGridMessage("applicationName", ContentGridMessageType.delete,
-                        event.getEntity().getClass(), new DataEntity(event.getEntity(), null)));
+                .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(), 
+                        ContentGridMessageType.delete, new DataEntity(event.getEntity(), null), event.getEntity().getClass(), 
+                        Map.of("webhookConfigUrl", "http://host.docker.internal:6060/actuator/webhooks")));
     }
 }
