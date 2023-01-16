@@ -20,14 +20,7 @@ import org.springframework.context.annotation.Configuration;
 public class ActuatorAutoConfiguration {
     @Autowired
     private ApplicationContext applicationContext;
-
-    @Bean    
-    // @ConditionalOnBean(PolicyVariables.class) TODO this is causing a problem, 
-    // it should be in another autoconfigure file (@AutoconfigureAfter?)
-    PolicyActuator policyActuator(PolicyVariables policyVariables) {
-        return new PolicyActuator(applicationContext.getResource("classpath:rego/policy.rego"), policyVariables);
-    }
-
+    
     @Bean
     @ConditionalOnProperty(name = "contentgrid.system.policyPackage")
     @ConditionalOnMissingBean(PolicyVariables.class)
@@ -35,6 +28,13 @@ public class ActuatorAutoConfiguration {
         return PolicyVariables.builder()
                 .policyPackageName(applicationProperties.getSystem().getPolicyPackage())
                 .build();
+    }
+
+    @Bean    
+    @ConditionalOnBean(PolicyVariables.class)  
+    // TODO this is causing a problem, it should be in another autoconfigure file (@AutoconfigureAfter?)
+    PolicyActuator policyActuator(PolicyVariables policyVariables) {
+        return new PolicyActuator(applicationContext.getResource("classpath:rego/policy.rego"), policyVariables);
     }
 
     @Bean
