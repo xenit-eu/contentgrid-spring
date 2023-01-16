@@ -59,9 +59,9 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
     @Override
     public void onPostInsert(PostInsertEvent event) {
         contentGridEventPublisher
-                .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(), 
-                        ContentGridMessageType.create, new DataEntity(null, event.getEntity()), event.getEntity().getClass(), 
-                        Map.of("webhookConfigUrl", "http://host.docker.internal:6060/actuator/webhooks")));
+                .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(),
+                        ContentGridMessageType.create, new DataEntity(null, event.getEntity()), event.getEntity().getClass(),
+                        Map.of("webhookConfigUrl", applicationProperties.getSystem().getWebhookConfigUrl())));
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         contentGridEventPublisher
                 .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(), 
                         ContentGridMessageType.update, new DataEntity(oldEntity, entity), event.getEntity().getClass(), 
-                        Map.of("webhookConfigUrl", "http://host.docker.internal:6060/actuator/webhooks")));
+                        Map.of("webhookConfigUrl", applicationProperties.getSystem().getWebhookConfigUrl())));
     }
 
     @Override
@@ -82,6 +82,6 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         contentGridEventPublisher
                 .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(), 
                         ContentGridMessageType.delete, new DataEntity(event.getEntity(), null), event.getEntity().getClass(), 
-                        Map.of("webhookConfigUrl", "http://host.docker.internal:6060/actuator/webhooks")));
+                        Map.of("webhookConfigUrl", applicationProperties.getSystem().getWebhookConfigUrl())));
     }
 }

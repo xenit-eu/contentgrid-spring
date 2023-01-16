@@ -7,7 +7,7 @@ includeBuild('..') {
 def springBootVersion = startParameter.getProjectProperties().get('springBootVersion')
 
 includeBuild('./integration-tests-spring') {
-    name = "it-spring"
+    name = "dcm-api"
     if(springBootVersion) {
         it.dependencySubstitution {
             it.all { dependency ->

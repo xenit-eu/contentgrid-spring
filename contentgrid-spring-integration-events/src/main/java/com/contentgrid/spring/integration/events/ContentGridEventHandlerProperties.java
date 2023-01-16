@@ -10,5 +10,6 @@ public class ContentGridEventHandlerProperties {
     public static class SystemProperties {
         private String deploymentId;
         private String applicationId;
+        private String webhookConfigUrl;
     }
 }
