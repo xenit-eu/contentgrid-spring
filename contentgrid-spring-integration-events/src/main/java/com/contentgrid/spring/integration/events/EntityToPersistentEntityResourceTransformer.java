@@ -27,7 +27,7 @@ public class EntityToPersistentEntityResourceTransformer
                 ? contentGridHalAssembler.toModel(updatedEntity.old)
                 : null;
 
-        return new ContentGridMessagePayload(contentGridMessage.getApplication(),
+        return new ContentGridMessagePayload(contentGridMessage.getApplicationId(), contentGridMessage.getDeploymentId(),                 
                 contentGridMessage.getType(), contentGridMessage.getEntity(), new PersistentEntityResourceData(oldModel, newModel));
     }
 }

@@ -23,6 +23,8 @@ import org.springframework.integration.dsl.MessageHandlerSpec;
 import org.springframework.integration.test.mock.MockIntegration;
 import org.springframework.messaging.MessageHandler;
 
+import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties;
+import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties.SystemProperties;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher;
 import com.contentgrid.spring.integration.events.ContentGridMessageHandler;
 import com.contentgrid.spring.integration.events.ContentGridPublisherEventListener;
@@ -30,6 +32,7 @@ import com.contentgrid.userapps.holmes.dcm.model.Case;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.messaging.MessageHeaders;
 
 @SpringBootTest(properties = { "spring.content.storage.type.default=fs" })
 class DcmApiRepositoryIntegrationEventsTests {
@@ -40,8 +43,16 @@ class DcmApiRepositoryIntegrationEventsTests {
         @Bean
         ContentGridPublisherEventListener contentGridPublisherEventListenerSpyMock(
                 EntityManagerFactory entityManagerFactory, ContentGridEventPublisher publisher) {
+
+            ContentGridEventHandlerProperties properties = new ContentGridEventHandlerProperties();
+            SystemProperties systemProperties = new ContentGridEventHandlerProperties.SystemProperties();
+            systemProperties.setApplicationId("test");
+            systemProperties.setDeploymentId("test");
+            systemProperties.setWebhookConfigUrl("http://test/actuator/webhooks");
+            properties.setSystem(systemProperties);
+
             ContentGridPublisherEventListener spy2 = spy(
-                    new ContentGridPublisherEventListener(publisher, entityManagerFactory));
+                    new ContentGridPublisherEventListener(publisher, entityManagerFactory, properties));
             return spy2;
         }
 
@@ -52,12 +63,20 @@ class DcmApiRepositoryIntegrationEventsTests {
                 Object payload = m.getPayload();
                 assertThat(payload).isInstanceOf(String.class);
 
+                // check headers
+                MessageHeaders headers = m.getHeaders();
+                assertThat(headers).containsKey("applicationId");
+                assertThat(headers).containsKey("deploymentId");
+                assertThat(headers).containsKey("webhookConfigUrl");
+
                 try {
+                    // check message body
                     HashMap<String, Object> readValue = objectMapper.readValue((String) payload,
                             new TypeReference<HashMap<String, Object>>() {
                             });
 
-                    assertThat(readValue).containsKey("application");
+                    assertThat(readValue).containsKey("applicationId");
+                    assertThat(readValue).containsKey("deploymentId");
                     assertThat(readValue).containsKey("type");
                     assertThat(readValue).containsKey("old");
                     assertThat(readValue).containsKey("new");

@@ -18,6 +18,9 @@ configurations {
 }
 
 dependencies {
+    annotationProcessor platform(project(':contentgrid-spring-boot-platform'))
+    annotationProcessor 'org.projectlombok:lombok'
+
     implementation platform(project(':contentgrid-spring-boot-platform')) 
 
     api 'org.springframework.integration:spring-integration-amqp'
