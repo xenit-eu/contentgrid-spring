@@ -6,7 +6,7 @@ This project addresses a number of issues with Spring Data REST controllers in t
 
 ## Issues with the Association Resource
 
-* Spring Data REST Association Resource responses do not have support for pagination
+* Spring Data REST Association Resources do not have support for pagination
 * Additionally, ContentGrid resolves authorization polices using [Thunx](https://github.com/xenit-eu/thunx). Without
 this customization, Thunx only resolves authorization predicates against the root resource, not associated resources.
 
