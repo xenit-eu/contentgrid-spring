@@ -24,6 +24,7 @@ import org.springframework.integration.test.mock.MockIntegration;
 import org.springframework.messaging.MessageHandler;
 
 import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties;
+import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties.EventProperties;
 import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties.SystemProperties;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher;
 import com.contentgrid.spring.integration.events.ContentGridMessageHandler;
@@ -48,8 +49,12 @@ class DcmApiRepositoryIntegrationEventsTests {
             SystemProperties systemProperties = new ContentGridEventHandlerProperties.SystemProperties();
             systemProperties.setApplicationId("test");
             systemProperties.setDeploymentId("test");
-            systemProperties.setWebhookConfigUrl("http://test/actuator/webhooks");
+            
+            EventProperties eventProperties = new ContentGridEventHandlerProperties.EventProperties();
+            eventProperties.setWebhookConfigUrl("http://test/actuator/webhooks");
+            
             properties.setSystem(systemProperties);
+            properties.setEvents(eventProperties);
 
             ContentGridPublisherEventListener spy2 = spy(
                     new ContentGridPublisherEventListener(publisher, entityManagerFactory, properties));

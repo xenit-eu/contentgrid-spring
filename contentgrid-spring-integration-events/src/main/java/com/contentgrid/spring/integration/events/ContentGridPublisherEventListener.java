@@ -29,7 +29,8 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
     private final ContentGridEventHandlerProperties applicationProperties;
 
     public ContentGridPublisherEventListener(ContentGridEventPublisher contentGridEventPublisher,
-            EntityManagerFactory entityManagerFactory, ContentGridEventHandlerProperties applicationProperties) {
+            EntityManagerFactory entityManagerFactory,
+            ContentGridEventHandlerProperties applicationProperties) {
         this.contentGridEventPublisher = contentGridEventPublisher;
         this.entityManagerFactory = entityManagerFactory;
         this.applicationProperties = applicationProperties;
@@ -44,7 +45,7 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         registry.getEventListenerGroup(EventType.POST_UPDATE).appendListener(this);
         registry.getEventListenerGroup(EventType.POST_DELETE).appendListener(this);
     }
-    
+
     @Override
     @SuppressWarnings("deprecation")
     public boolean requiresPostCommitHanding(EntityPersister persister) {
@@ -58,10 +59,11 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
 
     @Override
     public void onPostInsert(PostInsertEvent event) {
-        contentGridEventPublisher
-                .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(),
-                        ContentGridMessageType.create, new DataEntity(null, event.getEntity()), event.getEntity().getClass(),
-                        Map.of("webhookConfigUrl", applicationProperties.getSystem().getWebhookConfigUrl())));
+        contentGridEventPublisher.publish(
+                new ContentGridMessage(applicationProperties.getSystem().getApplicationId(),
+                        applicationProperties.getSystem().getDeploymentId(),
+                        ContentGridMessageType.create, new DataEntity(null, event.getEntity()),
+                        event.getEntity().getClass(), createHeaders()));
     }
 
     @Override
@@ -71,17 +73,27 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         BeanUtils.copyProperties(entity, oldEntity);
         event.getPersister().setPropertyValues(oldEntity, event.getOldState());
 
-        contentGridEventPublisher
-                .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(), 
-                        ContentGridMessageType.update, new DataEntity(oldEntity, entity), event.getEntity().getClass(), 
-                        Map.of("webhookConfigUrl", applicationProperties.getSystem().getWebhookConfigUrl())));
+        contentGridEventPublisher.publish(new ContentGridMessage(
+                applicationProperties.getSystem().getApplicationId(),
+                applicationProperties.getSystem().getDeploymentId(), ContentGridMessageType.update,
+                new DataEntity(oldEntity, entity), event.getEntity().getClass(), createHeaders()));
     }
 
     @Override
     public void onPostDelete(PostDeleteEvent event) {
-        contentGridEventPublisher
-                .publish(new ContentGridMessage(applicationProperties.getSystem().getApplicationId(), applicationProperties.getSystem().getDeploymentId(), 
-                        ContentGridMessageType.delete, new DataEntity(event.getEntity(), null), event.getEntity().getClass(), 
-                        Map.of("webhookConfigUrl", applicationProperties.getSystem().getWebhookConfigUrl())));
+        contentGridEventPublisher.publish(
+                new ContentGridMessage(applicationProperties.getSystem().getApplicationId(),
+                        applicationProperties.getSystem().getDeploymentId(),
+                        ContentGridMessageType.delete, new DataEntity(event.getEntity(), null),
+                        event.getEntity().getClass(), createHeaders()));
+    }
+
+    private Map<String, Object> createHeaders() {
+        return Map.of("webhookConfigUrl", getWebhooConfigUrl());
+    }
+
+    private String getWebhooConfigUrl() {
+        String url = applicationProperties.getEvents().getWebhookConfigUrl();
+        return url != null ? url : "";
     }
 }
