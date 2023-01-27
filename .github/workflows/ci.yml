@@ -24,8 +24,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - spring-boot-version: 2.6.+
-            experimental: false
           - spring-boot-version: 2.7.+
             experimental: false
           - spring-boot-version: 2.+
