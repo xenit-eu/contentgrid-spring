@@ -16,6 +16,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.repository.support.Repositories;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.server.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
 import org.springframework.integration.amqp.dsl.Amqp;
@@ -26,7 +27,6 @@ import org.springframework.integration.dsl.IntegrationFlows;
 import org.springframework.integration.dsl.Transformers;
 import org.springframework.integration.support.json.Jackson2JsonObjectMapper;
 
-import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties;
 import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher;
 import com.contentgrid.spring.integration.events.ContentGridHalAssembler;
@@ -73,9 +73,9 @@ public class EventsAutoConfiguration {
     @ConditionalOnMissingBean
     ContentGridPublisherEventListener contentGridPublisherEventListener(
             ContentGridEventPublisher contentGridEventPublisher,
-            EntityManagerFactory entityManagerFactory, ContentGridEventHandlerProperties properties) {
+            EntityManagerFactory entityManagerFactory, ContentGridEventHandlerProperties properties, Repositories repositories) {
         return new ContentGridPublisherEventListener(contentGridEventPublisher,
-                entityManagerFactory, properties);
+                entityManagerFactory, properties, repositories);
     }
 
     @Configuration

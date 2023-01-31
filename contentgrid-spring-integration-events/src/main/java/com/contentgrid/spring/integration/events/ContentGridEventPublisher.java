@@ -12,7 +12,7 @@ import org.springframework.messaging.support.GenericMessage;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageType;
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
@@ -28,7 +28,7 @@ public interface ContentGridEventPublisher {
         Assert.notNull(contentGridMessage, "contentGridMessage cannot be null");
         Assert.hasText(contentGridMessage.applicationId,
                 "contentGridMessage.application cannot be empty");
-        Assert.notNull(contentGridMessage.type, "contentGridMessage.type cannot be null");
+        Assert.notNull(contentGridMessage.trigger, "contentGridMessage.type cannot be null");
         Assert.notNull(contentGridMessage.data, "contentGridMessage.data cannot be null");
 
         HashMap<String, Object> headers = new HashMap<>();
@@ -36,43 +36,45 @@ public interface ContentGridEventPublisher {
             headers.putAll(contentGridMessage.headers);
         }
 
-        headers.put("applicationId", contentGridMessage.applicationId);
-        headers.put("deploymentId", contentGridMessage.deploymentId);
-        headers.put("type", contentGridMessage.type);
+        headers.put("application_id", contentGridMessage.applicationId);
+        headers.put("deployment_id", contentGridMessage.deploymentId);
+        headers.put("trigger", contentGridMessage.trigger);
+        headers.put("entity", contentGridMessage.getEntityName());
 
         publish(new GenericMessage<>(contentGridMessage, headers));
     }
+    
 
     static class ContentGridMessage {
         private final String applicationId;
         private final String deploymentId;
-        private final ContentGridMessageType type;
+        private final ContentGridMessageTrigger trigger;
         private final DataEntity data;
         private final Map<String, Object> headers;
-        private final Class<?> entity;
+        private final String entityName;
 
-        public ContentGridMessage(String applicationId, String deploymentId, ContentGridMessageType type, DataEntity data, 
-                Class<?> entity ) {
+        public ContentGridMessage(String applicationId, String deploymentId, ContentGridMessageTrigger type, DataEntity data, 
+                String entityName ) {
             this.applicationId = applicationId;
             this.deploymentId = deploymentId;
-            this.type = type;
+            this.trigger = type;
             this.data = data;
             this.headers = Collections.emptyMap();
-            this.entity = entity;
+            this.entityName = entityName;
         }
 
-        public ContentGridMessage(String applicationId, String deploymentId, ContentGridMessageType type, DataEntity data,
-                Class<?> entity, Map<String, Object> headers) {
+        public ContentGridMessage(String applicationId, String deploymentId, ContentGridMessageTrigger type, DataEntity data,
+                String entityName, Map<String, Object> headers) {
             this.applicationId = applicationId;
             this.deploymentId = deploymentId;
-            this.type = type;
+            this.trigger = type;
             this.data = data;
             this.headers = headers;
-            this.entity = entity;
+            this.entityName = entityName;
         }
         
-        public Class<?> getEntity() {
-            return entity;
+        public String getEntityName() {
+            return entityName;
         }
 
         public String getApplicationId() {
@@ -87,15 +89,15 @@ public interface ContentGridEventPublisher {
             return data;
         }
 
-        public ContentGridMessageType getType() {
-            return type;
+        public ContentGridMessageTrigger getType() {
+            return trigger;
         }
 
         public Map<String, Object> getHeaders() {
             return headers;
         }
 
-        public static enum ContentGridMessageType {
+        public static enum ContentGridMessageTrigger {
             create, update, delete
         }
 
@@ -121,27 +123,30 @@ public interface ContentGridEventPublisher {
     static class ContentGridMessagePayload {
         private final String applicationId;
         private final String deploymentId;
-        private final ContentGridMessageType type;
+        private final ContentGridMessageTrigger trigger;
         private final PersistentEntityResourceData data;
-        private final Class<?> entity;
+        private final String entityName;
 
-        public ContentGridMessagePayload(String applicationId, String deploymentId, ContentGridMessageType type,
-                Class<?> entity, PersistentEntityResourceData data) {
+        public ContentGridMessagePayload(String applicationId, String deploymentId, ContentGridMessageTrigger type,
+                String entityName, PersistentEntityResourceData data) {
             this.applicationId = applicationId;
             this.deploymentId = deploymentId;
-            this.type = type;
+            this.trigger = type;
             this.data = data;
-            this.entity = entity;
+            this.entityName = entityName;
         }
 
-        public Class<?> getEntity() {
-            return entity;
+        @JsonProperty("entity")
+        public String getEntityName() {
+            return entityName;
         }
 
+        @JsonProperty("application_id")
         public String getApplicationId() {
             return applicationId;
         }
         
+        @JsonProperty("deployment_id")
         public String getDeploymentId() {
             return deploymentId;
         }
@@ -151,8 +156,8 @@ public interface ContentGridEventPublisher {
             return data;
         }
 
-        public ContentGridMessageType getType() {
-            return type;
+        public ContentGridMessageTrigger getTrigger() {
+            return trigger;
         }
 
         static class PersistentEntityResourceData {
