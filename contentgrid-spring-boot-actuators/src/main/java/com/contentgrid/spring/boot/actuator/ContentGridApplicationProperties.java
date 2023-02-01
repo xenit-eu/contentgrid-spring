@@ -1,8 +1,8 @@
 package com.contentgrid.spring.boot.actuator;
 
 import java.util.Map;
+
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 
 @Data
 public class ContentGridApplicationProperties {

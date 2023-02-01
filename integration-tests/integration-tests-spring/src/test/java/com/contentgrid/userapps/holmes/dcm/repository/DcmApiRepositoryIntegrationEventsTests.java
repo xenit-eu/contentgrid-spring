@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.repository.support.Repositories;
 import org.springframework.integration.dsl.MessageHandlerSpec;
 import org.springframework.integration.test.mock.MockIntegration;
 import org.springframework.messaging.MessageHandler;
@@ -43,7 +44,7 @@ class DcmApiRepositoryIntegrationEventsTests {
 
         @Bean
         ContentGridPublisherEventListener contentGridPublisherEventListenerSpyMock(
-                EntityManagerFactory entityManagerFactory, ContentGridEventPublisher publisher) {
+                EntityManagerFactory entityManagerFactory, ContentGridEventPublisher publisher, Repositories repositories) {
 
             ContentGridEventHandlerProperties properties = new ContentGridEventHandlerProperties();
             SystemProperties systemProperties = new ContentGridEventHandlerProperties.SystemProperties();
@@ -57,7 +58,7 @@ class DcmApiRepositoryIntegrationEventsTests {
             properties.setEvents(eventProperties);
 
             ContentGridPublisherEventListener spy2 = spy(
-                    new ContentGridPublisherEventListener(publisher, entityManagerFactory, properties));
+                    new ContentGridPublisherEventListener(publisher, entityManagerFactory, properties, repositories));
             return spy2;
         }
 
@@ -70,8 +71,10 @@ class DcmApiRepositoryIntegrationEventsTests {
 
                 // check headers
                 MessageHeaders headers = m.getHeaders();
-                assertThat(headers).containsKey("applicationId");
-                assertThat(headers).containsKey("deploymentId");
+                assertThat(headers).containsKey("application_id");
+                assertThat(headers).containsKey("deployment_id");
+                assertThat(headers).containsKey("trigger");
+                assertThat(headers).containsKey("entity");
                 assertThat(headers).containsKey("webhookConfigUrl");
 
                 try {
@@ -80,12 +83,10 @@ class DcmApiRepositoryIntegrationEventsTests {
                             new TypeReference<HashMap<String, Object>>() {
                             });
 
-                    assertThat(readValue).containsKey("applicationId");
-                    assertThat(readValue).containsKey("deploymentId");
-                    assertThat(readValue).containsKey("type");
+                    assertThat(readValue).containsKey("application_id");
+                    assertThat(readValue).containsKey("deployment_id");
                     assertThat(readValue).containsKey("old");
                     assertThat(readValue).containsKey("new");
-                    assertThat(readValue).containsKey("entity");
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }

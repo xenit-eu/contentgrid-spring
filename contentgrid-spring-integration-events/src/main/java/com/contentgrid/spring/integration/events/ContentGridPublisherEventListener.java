@@ -16,9 +16,13 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.util.StringUtils;
 
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageType;
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
 
 public class ContentGridPublisherEventListener implements PostInsertEventListener,
@@ -27,13 +31,15 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
     private final ContentGridEventPublisher contentGridEventPublisher;
     private final EntityManagerFactory entityManagerFactory;
     private final ContentGridEventHandlerProperties applicationProperties;
+    private final Repositories repositories;
 
     public ContentGridPublisherEventListener(ContentGridEventPublisher contentGridEventPublisher,
             EntityManagerFactory entityManagerFactory,
-            ContentGridEventHandlerProperties applicationProperties) {
+            ContentGridEventHandlerProperties applicationProperties, Repositories repositories) {
         this.contentGridEventPublisher = contentGridEventPublisher;
         this.entityManagerFactory = entityManagerFactory;
         this.applicationProperties = applicationProperties;
+        this.repositories = repositories;
     }
 
     @Override
@@ -62,8 +68,8 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         contentGridEventPublisher.publish(
                 new ContentGridMessage(applicationProperties.getSystem().getApplicationId(),
                         applicationProperties.getSystem().getDeploymentId(),
-                        ContentGridMessageType.create, new DataEntity(null, event.getEntity()),
-                        event.getEntity().getClass(), createHeaders()));
+                        ContentGridMessageTrigger.create, new DataEntity(null, event.getEntity()),
+                        guessEntityName(event.getEntity()), createHeaders()));
     }
 
     @Override
@@ -75,8 +81,8 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
 
         contentGridEventPublisher.publish(new ContentGridMessage(
                 applicationProperties.getSystem().getApplicationId(),
-                applicationProperties.getSystem().getDeploymentId(), ContentGridMessageType.update,
-                new DataEntity(oldEntity, entity), event.getEntity().getClass(), createHeaders()));
+                applicationProperties.getSystem().getDeploymentId(), ContentGridMessageTrigger.update,
+                new DataEntity(oldEntity, entity), guessEntityName(event.getEntity()), createHeaders()));
     }
 
     @Override
@@ -84,8 +90,18 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         contentGridEventPublisher.publish(
                 new ContentGridMessage(applicationProperties.getSystem().getApplicationId(),
                         applicationProperties.getSystem().getDeploymentId(),
-                        ContentGridMessageType.delete, new DataEntity(event.getEntity(), null),
-                        event.getEntity().getClass(), createHeaders()));
+                        ContentGridMessageTrigger.delete, new DataEntity(event.getEntity(), null),
+                        guessEntityName(event.getEntity()), createHeaders()));
+    }
+    
+    private String guessEntityName(Object entity) {
+        return repositories.getRepositoryInformationFor(entity.getClass())
+                .map(repositoryInformation -> repositoryInformation.getRepositoryInterface())
+                .map(repositoryType -> AnnotationUtils.findAnnotation(repositoryType,
+                        RepositoryRestResource.class))
+                .map(RepositoryRestResource::itemResourceRel)
+                .filter(StringUtils::hasText)
+                .orElseGet(() -> entity.getClass().getSimpleName().toLowerCase());
     }
 
     private Map<String, Object> createHeaders() {

@@ -28,6 +28,6 @@ public class EntityToPersistentEntityResourceTransformer
                 : null;
 
         return new ContentGridMessagePayload(contentGridMessage.getApplicationId(), contentGridMessage.getDeploymentId(),                 
-                contentGridMessage.getType(), contentGridMessage.getEntity(), new PersistentEntityResourceData(oldModel, newModel));
+                contentGridMessage.getType(), contentGridMessage.getEntityName(), new PersistentEntityResourceData(oldModel, newModel));
     }
 }
