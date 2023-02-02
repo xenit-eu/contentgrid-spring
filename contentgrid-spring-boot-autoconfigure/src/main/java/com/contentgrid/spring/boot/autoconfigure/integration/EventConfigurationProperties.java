@@ -6,7 +6,7 @@ import org.springframework.util.Assert;
 @ConfigurationProperties("contentgrid.events")
 public class EventConfigurationProperties {
 
-    private RabbitMqConfigurationProperties rabbitmq;
+    private RabbitMqConfigurationProperties rabbitmq = new RabbitMqConfigurationProperties();
     
     public RabbitMqConfigurationProperties getRabbitmq() {
         return rabbitmq;
