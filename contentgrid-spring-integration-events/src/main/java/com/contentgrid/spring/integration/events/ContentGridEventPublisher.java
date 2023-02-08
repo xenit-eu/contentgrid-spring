@@ -1,20 +1,15 @@
 package com.contentgrid.spring.integration.events;
 
-import java.util.Collections;
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
-
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 @MessagingGateway
 public interface ContentGridEventPublisher {
@@ -26,82 +21,48 @@ public interface ContentGridEventPublisher {
 
     default void publish(ContentGridMessage contentGridMessage) {
         Assert.notNull(contentGridMessage, "contentGridMessage cannot be null");
-        Assert.hasText(contentGridMessage.applicationId,
-                "contentGridMessage.application cannot be empty");
         Assert.notNull(contentGridMessage.trigger, "contentGridMessage.type cannot be null");
         Assert.notNull(contentGridMessage.data, "contentGridMessage.data cannot be null");
 
         HashMap<String, Object> headers = new HashMap<>();
-        if (!ObjectUtils.isEmpty(contentGridMessage.headers)) {
-            headers.putAll(contentGridMessage.headers);
-        }
 
-        headers.put("application_id", contentGridMessage.applicationId);
-        headers.put("deployment_id", contentGridMessage.deploymentId);
-        headers.put("trigger", contentGridMessage.trigger);
+        headers.put("trigger", contentGridMessage.getTrigger());
         headers.put("entity", contentGridMessage.getEntityName());
 
         publish(new GenericMessage<>(contentGridMessage, headers));
     }
-    
 
-    static class ContentGridMessage {
-        private final String applicationId;
-        private final String deploymentId;
+
+    class ContentGridMessage {
+
         private final ContentGridMessageTrigger trigger;
         private final DataEntity data;
-        private final Map<String, Object> headers;
         private final String entityName;
 
-        public ContentGridMessage(String applicationId, String deploymentId, ContentGridMessageTrigger type, DataEntity data, 
-                String entityName ) {
-            this.applicationId = applicationId;
-            this.deploymentId = deploymentId;
+        public ContentGridMessage(ContentGridMessageTrigger type, DataEntity data, String entityName) {
             this.trigger = type;
             this.data = data;
-            this.headers = Collections.emptyMap();
             this.entityName = entityName;
         }
 
-        public ContentGridMessage(String applicationId, String deploymentId, ContentGridMessageTrigger type, DataEntity data,
-                String entityName, Map<String, Object> headers) {
-            this.applicationId = applicationId;
-            this.deploymentId = deploymentId;
-            this.trigger = type;
-            this.data = data;
-            this.headers = headers;
-            this.entityName = entityName;
-        }
-        
         public String getEntityName() {
             return entityName;
-        }
-
-        public String getApplicationId() {
-            return applicationId;
-        }
-        
-        public String getDeploymentId() {
-            return deploymentId;
         }
 
         public DataEntity getData() {
             return data;
         }
 
-        public ContentGridMessageTrigger getType() {
+        public ContentGridMessageTrigger getTrigger() {
             return trigger;
         }
 
-        public Map<String, Object> getHeaders() {
-            return headers;
-        }
-
-        public static enum ContentGridMessageTrigger {
+        public enum ContentGridMessageTrigger {
             create, update, delete
         }
 
         static class DataEntity {
+
             final Object old;
             final Object entity;
 
@@ -120,17 +81,14 @@ public interface ContentGridEventPublisher {
         }
     }
 
-    static class ContentGridMessagePayload {
-        private final String applicationId;
-        private final String deploymentId;
+    class ContentGridMessagePayload {
+
         private final ContentGridMessageTrigger trigger;
         private final PersistentEntityResourceData data;
         private final String entityName;
 
-        public ContentGridMessagePayload(String applicationId, String deploymentId, ContentGridMessageTrigger type,
+        public ContentGridMessagePayload(ContentGridMessageTrigger type,
                 String entityName, PersistentEntityResourceData data) {
-            this.applicationId = applicationId;
-            this.deploymentId = deploymentId;
             this.trigger = type;
             this.data = data;
             this.entityName = entityName;
@@ -139,16 +97,6 @@ public interface ContentGridEventPublisher {
         @JsonProperty("entity")
         public String getEntityName() {
             return entityName;
-        }
-
-        @JsonProperty("application_id")
-        public String getApplicationId() {
-            return applicationId;
-        }
-        
-        @JsonProperty("deployment_id")
-        public String getDeploymentId() {
-            return deploymentId;
         }
 
         @JsonUnwrapped
@@ -161,6 +109,7 @@ public interface ContentGridEventPublisher {
         }
 
         static class PersistentEntityResourceData {
+
             final PersistentEntityResource old;
             final PersistentEntityResource entity;
 
