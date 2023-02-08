@@ -1,5 +1,6 @@
 package com.contentgrid.spring.boot.autoconfigure.integration;
 
+import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -40,29 +41,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ConditionalOnBean(TypeConstrainedMappingJackson2HttpMessageConverter.class)
 @AutoConfigureAfter(RepositoryRestMvcAutoConfiguration.class)
 @IntegrationComponentScan(basePackageClasses = ContentGridEventPublisher.class)
-@EnableConfigurationProperties( { EventConfigurationProperties.class })
+@EnableConfigurationProperties({EventConfigurationProperties.class})
 public class EventsAutoConfiguration {
 
     @Bean
     IntegrationFlow contentGridEventsFlow(EventConfigurationProperties config,
             ObjectProvider<ContentGridMessageHandler> handlers,
             @Qualifier("halJacksonHttpMessageConverter") TypeConstrainedMappingJackson2HttpMessageConverter typeConstrainedMappingJackson2HttpMessageConverter,
-            ApplicationContext context) {
+            ApplicationContext context,
+            ContentGridEventHandlerProperties eventHandlerProperties) {
 
-        ObjectMapper halObjectMapper = typeConstrainedMappingJackson2HttpMessageConverter
-                .getObjectMapper();
+        ObjectMapper halObjectMapper = typeConstrainedMappingJackson2HttpMessageConverter.getObjectMapper();
 
         IntegrationFlowBuilder builder = IntegrationFlows
                 .from(ContentGridEventPublisher.CONTENTGRID_EVENT_CHANNEL)
-                .transform(new EntityToPersistentEntityResourceTransformer(
-                        new ContentGridHalAssembler(context)))
+                .transform(new EntityToPersistentEntityResourceTransformer(new ContentGridHalAssembler(context)))
+                .enrichHeaders(Map.of(
+                        "application_id", eventHandlerProperties.getSystem().getApplicationId(),
+                        "deployment_id", eventHandlerProperties.getSystem().getDeploymentId(),
+                        "webhookConfigUrl", eventHandlerProperties.getEvents().getWebhookConfigUrl())
+                )
                 .transform(Transformers.toJson(new Jackson2JsonObjectMapper(halObjectMapper),
                         MediaTypes.HAL_JSON_VALUE));
 
         handlers.stream().map(ContentGridMessageHandler::get).forEach(builder::handle);
         return builder.get();
     }
-    
+
     @Bean
     @ConfigurationProperties(prefix = "contentgrid")
     ContentGridEventHandlerProperties contentGridEventHandlerProperties() {
@@ -73,13 +78,14 @@ public class EventsAutoConfiguration {
     @ConditionalOnMissingBean
     ContentGridPublisherEventListener contentGridPublisherEventListener(
             ContentGridEventPublisher contentGridEventPublisher,
-            EntityManagerFactory entityManagerFactory, ContentGridEventHandlerProperties properties, Repositories repositories) {
+            EntityManagerFactory entityManagerFactory, ContentGridEventHandlerProperties properties,
+            Repositories repositories) {
         return new ContentGridPublisherEventListener(contentGridEventPublisher,
                 entityManagerFactory, properties, repositories);
     }
 
     @Configuration
-    @ConditionalOnProperty(value = { "spring.rabbitmq.host" })
+    @ConditionalOnProperty(value = {"spring.rabbitmq.host"})
     static class EventsRabbitMqAutoConfiguration {
 
         @Bean

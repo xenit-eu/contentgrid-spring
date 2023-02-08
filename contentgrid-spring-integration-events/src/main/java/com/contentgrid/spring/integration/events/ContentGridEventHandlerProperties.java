@@ -1,26 +1,30 @@
 package com.contentgrid.spring.integration.events;
 
+import java.util.UUID;
 import lombok.Data;
 
 @Data
 public class ContentGridEventHandlerProperties {
+
     private SystemProperties system = new SystemProperties();
     private EventProperties events = new EventProperties();
 
     @Data
     public static class SystemProperties {
-        private String deploymentId;
-        private String applicationId;
+        private String deploymentId = new UUID(0, 0).toString();
+        private String applicationId = new UUID(0, 0).toString();
     }
-    
+
     @Data
     public static class EventProperties {
-        private String webhookConfigUrl;
+
+        private String webhookConfigUrl = "";
         private RabbitMq rabbitmq = new RabbitMq();
     }
-    
+
     @Data
     public static class RabbitMq {
+
         private String routingKey;
     }
 }

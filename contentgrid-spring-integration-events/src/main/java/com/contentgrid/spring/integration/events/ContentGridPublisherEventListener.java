@@ -17,6 +17,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.util.StringUtils;
@@ -66,10 +67,9 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
     @Override
     public void onPostInsert(PostInsertEvent event) {
         contentGridEventPublisher.publish(
-                new ContentGridMessage(applicationProperties.getSystem().getApplicationId(),
-                        applicationProperties.getSystem().getDeploymentId(),
+                new ContentGridMessage(
                         ContentGridMessageTrigger.create, new DataEntity(null, event.getEntity()),
-                        guessEntityName(event.getEntity()), createHeaders()));
+                        guessEntityName(event.getEntity())));
     }
 
     @Override
@@ -80,23 +80,21 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         event.getPersister().setPropertyValues(oldEntity, event.getOldState());
 
         contentGridEventPublisher.publish(new ContentGridMessage(
-                applicationProperties.getSystem().getApplicationId(),
-                applicationProperties.getSystem().getDeploymentId(), ContentGridMessageTrigger.update,
-                new DataEntity(oldEntity, entity), guessEntityName(event.getEntity()), createHeaders()));
+                ContentGridMessageTrigger.update,
+                new DataEntity(oldEntity, entity), guessEntityName(event.getEntity())));
     }
 
     @Override
     public void onPostDelete(PostDeleteEvent event) {
         contentGridEventPublisher.publish(
-                new ContentGridMessage(applicationProperties.getSystem().getApplicationId(),
-                        applicationProperties.getSystem().getDeploymentId(),
+                new ContentGridMessage(
                         ContentGridMessageTrigger.delete, new DataEntity(event.getEntity(), null),
-                        guessEntityName(event.getEntity()), createHeaders()));
+                        guessEntityName(event.getEntity())));
     }
-    
+
     private String guessEntityName(Object entity) {
         return repositories.getRepositoryInformationFor(entity.getClass())
-                .map(repositoryInformation -> repositoryInformation.getRepositoryInterface())
+                .map(RepositoryMetadata::getRepositoryInterface)
                 .map(repositoryType -> AnnotationUtils.findAnnotation(repositoryType,
                         RepositoryRestResource.class))
                 .map(RepositoryRestResource::itemResourceRel)
@@ -104,12 +102,5 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
                 .orElseGet(() -> entity.getClass().getSimpleName().toLowerCase());
     }
 
-    private Map<String, Object> createHeaders() {
-        return Map.of("webhookConfigUrl", getWebhooConfigUrl());
-    }
 
-    private String getWebhooConfigUrl() {
-        String url = applicationProperties.getEvents().getWebhookConfigUrl();
-        return url != null ? url : "";
-    }
 }
