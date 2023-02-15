@@ -1,6 +1,5 @@
 package com.contentgrid.spring.boot.autoconfigure.s3;
 
-import com.contentgrid.spring.boot.autoconfigure.integration.EventConfigurationProperties;
 import com.contentgrid.spring.boot.autoconfigure.s3.S3RegionAutoConfiguration.S3AdditionalProperties;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration;
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration.S3Properties;

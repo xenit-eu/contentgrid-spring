@@ -1,6 +1,7 @@
 package com.contentgrid.spring.integration.events;
 
 import java.util.UUID;
+import org.springframework.util.Assert;
 import lombok.Data;
 
 @Data
@@ -24,7 +25,11 @@ public class ContentGridEventHandlerProperties {
 
     @Data
     public static class RabbitMq {
-
-        private String routingKey;
+        private String routingKey = "contentgrid.events";
+        
+        public void setRoutingKey(String routingKey) {
+            Assert.hasText(routingKey, "routing-key cannot be empty");
+            this.routingKey = routingKey;
+        }
     }
 }

@@ -31,15 +31,12 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
 
     private final ContentGridEventPublisher contentGridEventPublisher;
     private final EntityManagerFactory entityManagerFactory;
-    private final ContentGridEventHandlerProperties applicationProperties;
     private final Repositories repositories;
 
     public ContentGridPublisherEventListener(ContentGridEventPublisher contentGridEventPublisher,
-            EntityManagerFactory entityManagerFactory,
-            ContentGridEventHandlerProperties applicationProperties, Repositories repositories) {
+            EntityManagerFactory entityManagerFactory, Repositories repositories) {
         this.contentGridEventPublisher = contentGridEventPublisher;
         this.entityManagerFactory = entityManagerFactory;
-        this.applicationProperties = applicationProperties;
         this.repositories = repositories;
     }
 
