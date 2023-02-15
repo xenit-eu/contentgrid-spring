@@ -13,7 +13,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,12 +40,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ConditionalOnBean(TypeConstrainedMappingJackson2HttpMessageConverter.class)
 @AutoConfigureAfter(RepositoryRestMvcAutoConfiguration.class)
 @IntegrationComponentScan(basePackageClasses = ContentGridEventPublisher.class)
-@EnableConfigurationProperties({EventConfigurationProperties.class})
 public class EventsAutoConfiguration {
 
     @Bean
-    IntegrationFlow contentGridEventsFlow(EventConfigurationProperties config,
-            ObjectProvider<ContentGridMessageHandler> handlers,
+    IntegrationFlow contentGridEventsFlow(ObjectProvider<ContentGridMessageHandler> handlers,
             @Qualifier("halJacksonHttpMessageConverter") TypeConstrainedMappingJackson2HttpMessageConverter typeConstrainedMappingJackson2HttpMessageConverter,
             ApplicationContext context,
             ContentGridEventHandlerProperties eventHandlerProperties) {
@@ -75,13 +72,12 @@ public class EventsAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(ContentGridPublisherEventListener.class)
     ContentGridPublisherEventListener contentGridPublisherEventListener(
             ContentGridEventPublisher contentGridEventPublisher,
-            EntityManagerFactory entityManagerFactory, ContentGridEventHandlerProperties properties,
-            Repositories repositories) {
+            EntityManagerFactory entityManagerFactory, Repositories repositories) {
         return new ContentGridPublisherEventListener(contentGridEventPublisher,
-                entityManagerFactory, properties, repositories);
+                entityManagerFactory, repositories);
     }
 
     @Configuration
@@ -90,9 +86,9 @@ public class EventsAutoConfiguration {
 
         @Bean
         ContentGridMessageHandler messageHandler(RabbitTemplate rabbitTemplate,
-                EventConfigurationProperties config) {
+                ContentGridEventHandlerProperties config) {
             return () -> Amqp.outboundAdapter(rabbitTemplate)
-                    .routingKey(config.getRabbitmq().getRoutingKey());
+                    .routingKey(config.getEvents().getRabbitmq().getRoutingKey());
         }
     }
 
