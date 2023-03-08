@@ -5,3 +5,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    reviewers: 
+      - "xenit-eu/contentgrid"
+    ignore:
+      - dependency-name: org.springframework.boot:spring-boot-dependencies
+        update-types: ['version-update:semver-major']
