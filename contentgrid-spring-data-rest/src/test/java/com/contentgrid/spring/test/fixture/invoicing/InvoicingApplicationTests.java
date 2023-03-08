@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing;
 
+import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -12,24 +13,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
-import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
-import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
-import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
+import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
 import com.contentgrid.spring.test.fixture.invoicing.model.QOrder;
+import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
+import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
+import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.PromotionCampaignRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingAddressRepository;
-import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
 import javax.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -38,20 +40,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.rest.webmvc.ContentGridSpringDataRestConfiguration;
 import org.springframework.data.rest.webmvc.RestMediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.util.Assert;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriTemplate;
 
+@Slf4j
 @Transactional
 @SpringBootTest
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
-@Import(ContentGridSpringDataRestConfiguration.class)
 class InvoicingApplicationTests {
 
     static final String INVOICE_NUMBER_1 = "I-2022-0001";
@@ -160,7 +158,41 @@ class InvoicingApplicationTests {
                                         }
                                         """.formatted(customerId))
                                 .contentType("application/json"))
-                        .andExpect(status().isCreated());
+                        .andExpect(status().isCreated())
+                        .andExpect(headers().location().path("/invoices/{id}"));
+            }
+
+            @Test
+            @Disabled("Providing multi-value associations during creation is not possible")
+            void createOrder_withPromoCodes_shouldReturn_http201_created() throws Exception {
+                var customerId = customers.findByVat(ORG_XENIT_VAT).orElseThrow().getId();
+
+                var result = mockMvc.perform(post("/orders")
+                                .content("""
+                                        {
+                                            "customer": "/customers/%s",
+                                            "_links": {
+                                                "promos" : [
+                                                    { "href": "/promotions/XMAS-2022" },
+                                                    { "href": "/promotions/FREE-SHIP" }
+                                                ]
+                                            }
+                                        }
+                                        """.formatted(customerId))
+                                .contentType("application/json"))
+                        .andExpect(status().isCreated())
+                        .andExpect(headers().location().path("/orders/{id}"))
+                        .andReturn();
+
+                var orderId = Optional.ofNullable(result.getResponse().getHeader(HttpHeaders.LOCATION))
+                        .map(location -> new UriTemplate("{scheme}://{host}/orders/{id}").match(location))
+                        .map(matches -> matches.get("id"))
+                        .map(UUID::fromString)
+                        .orElseThrow();
+
+                assertThat(orders.findById(orderId)).hasValueSatisfying(order -> {
+                    assertThat(order.getPromos()).hasSize(2);
+                });
             }
         }
     }
@@ -265,7 +297,7 @@ class InvoicingApplicationTests {
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
                                     .accept("application/json"))
                             .andExpect(status().isFound())
-                            .andExpect(locationHeader().uri("http://localhost/customers/{id}", XENIT_ID));
+                            .andExpect(headers().location().uri("http://localhost/customers/{id}", XENIT_ID));
                 }
             }
 
@@ -278,7 +310,8 @@ class InvoicingApplicationTests {
                     mockMvc.perform(get("/customers/" + customerIdByVat(ORG_XENIT_VAT) + "/invoices")
                                     .accept("application/json"))
                             .andExpect(status().isFound())
-                            .andExpect(locationHeader().uri("http://localhost/invoices?counterparty={id}", XENIT_ID));
+                            .andExpect(
+                                    headers().location().uri("http://localhost/invoices?counterparty={id}", XENIT_ID));
                 }
             }
 
@@ -290,8 +323,8 @@ class InvoicingApplicationTests {
                     mockMvc.perform(get("/orders/{id}/shippingAddress", ORDER_1_ID)
                                     .accept("application/json"))
                             .andExpect(status().isFound())
-                            .andExpect(
-                                    locationHeader().uri("http://localhost/shipping-addresses/{id}", ADDRESS_ID_XENIT));
+                            .andExpect(headers().location()
+                                    .uri("http://localhost/shipping-addresses/{id}", ADDRESS_ID_XENIT));
 
                 }
             }
@@ -304,7 +337,7 @@ class InvoicingApplicationTests {
                     mockMvc.perform(get("/orders/{id}/promos", ORDER_1_ID)
                                     .accept("application/json"))
                             .andExpect(status().isFound())
-                            .andExpect(locationHeader().uri("http://localhost/promotions?orders={id}", ORDER_1_ID));
+                            .andExpect(headers().location().uri("http://localhost/promotions?orders={id}", ORDER_1_ID));
 
                 }
             }
@@ -610,9 +643,8 @@ class InvoicingApplicationTests {
                                     .accept("application/json"))
                             .andExpect(status().isNoContent());
 
-                    assertThat(invoices.getById(INVOICE_1_ID))
-                            .isNotNull()
-                            .satisfies(invoice -> assertThat(invoice.getCounterparty()).isNull());
+                    assertThat(invoices.findById(INVOICE_1_ID))
+                            .hasValueSatisfying(invoice -> assertThat(invoice.getCounterparty()).isNull());
                 }
             }
 
@@ -635,7 +667,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void deleteShippingAddress_fromOrder_shouldReturn_http204() throws Exception {
-                    assertThat(orders.getById(ORDER_1_ID)).isNotNull().satisfies(order -> {
+                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
                         assertThat(order.getShippingAddress()).isNotNull();
                     });
 
@@ -643,9 +675,8 @@ class InvoicingApplicationTests {
                                     .accept("application/json"))
                             .andExpect(status().isNoContent());
 
-                    assertThat(orders.getById(ORDER_1_ID))
-                            .isNotNull()
-                            .satisfies(order -> assertThat(order.getShippingAddress()).isNull());
+                    assertThat(orders.findById(ORDER_1_ID))
+                            .hasValueSatisfying(order -> assertThat(order.getShippingAddress()).isNull());
                 }
             }
 
@@ -722,20 +753,17 @@ class InvoicingApplicationTests {
                 @Disabled("See ACC-451")
                 void getPromoById_forOrder_shouldReturn_http302_redirect() throws Exception {
 
-                    var xmas = promos.findByPromoCode(PROMO_CYBER).orElseThrow();
+                    promos.findByPromoCode(PROMO_CYBER).orElseThrow();
 
                     mockMvc.perform(get("/orders/{id}/promos/{promoCode}", ORDER_1_ID, PROMO_CYBER)
                                     .accept("application/json"))
                             .andExpect(status().isFound())
-                            .andExpect(locationHeader().uri("http://localhost/promotions/{promoCode}", PROMO_XMAS));
+                            .andExpect(headers().location().uri("http://localhost/promotions/{promoCode}", PROMO_XMAS));
 
                 }
 
                 @Test
                 void getPromoById_forOrder_invalidId_shouldReturn_http404_notFound() throws Exception {
-
-                    var xmas = promos.findByPromoCode(PROMO_XMAS).orElseThrow();
-
                     mockMvc.perform(get("/orders/{id}/promos/{promoCode}", ORDER_1_ID, PROMO_XMAS)
                                     .accept("application/json"))
                             .andExpect(status().isNotFound());
@@ -747,16 +775,16 @@ class InvoicingApplicationTests {
         @Nested
         @DisplayName("DELETE /{repository}/{entityId}/{property}/{propertyId}")
         class Delete {
+
             @Nested
             class OneToMany {
 
                 @Test
                 void deleteOrderById_fromInvoice_shouldReturn_http204() throws Exception {
-                    var invoice = invoices.getById(INVOICE_1_ID);
-                    assertThat(invoice).isNotNull();
-                    assertThat(invoice.getOrders()).contains(orders.getById(ORDER_1_ID));
+                    var invoice = invoices.findById(INVOICE_1_ID).orElseThrow();
+                    assertThat(invoice.getOrders()).contains(orders.findById(ORDER_1_ID).orElseThrow());
 
-                    mockMvc.perform(delete("/invoices/{invoice}/orders/{order}",INVOICE_1_ID, ORDER_1_ID)
+                    mockMvc.perform(delete("/invoices/{invoice}/orders/{order}", INVOICE_1_ID, ORDER_1_ID)
                                     .accept("application/json"))
                             .andExpect(status().isNoContent());
 
@@ -768,7 +796,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void deleteShippingAddressById_fromOrder_shouldReturn_http204() throws Exception {
-                    assertThat(orders.getById(ORDER_1_ID)).isNotNull().satisfies(order -> {
+                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
                         assertThat(order.getShippingAddress()).isNotNull();
                         assertThat(order.getShippingAddress().getId()).isEqualTo(ADDRESS_ID_XENIT);
                     });
@@ -778,15 +806,14 @@ class InvoicingApplicationTests {
                                             .accept("application/json"))
                             .andExpect(status().isNoContent());
 
-                    assertThat(orders.getById(ORDER_1_ID))
-                            .isNotNull()
-                            .satisfies(order -> assertThat(order.getShippingAddress()).isNull());
+                    assertThat(orders.findById(ORDER_1_ID))
+                            .hasValueSatisfying(order -> assertThat(order.getShippingAddress()).isNull());
                 }
 
                 @Test
                 @Disabled("ACC-453")
                 void deleteShippingAddressByWrongId_fromOrder_shouldReturn_http404() throws Exception {
-                    assertThat(orders.getById(ORDER_1_ID)).isNotNull().satisfies(order -> {
+                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
                         assertThat(order.getShippingAddress()).isNotNull();
                         assertThat(order.getShippingAddress().getId()).isEqualTo(ADDRESS_ID_XENIT);
                     });
@@ -809,21 +836,5 @@ class InvoicingApplicationTests {
         return customers.findByVat(vat).map(Customer::getId).orElseThrow();
     }
 
-    static class LocationHeaderMatcher {
 
-        ResultMatcher uri(String url, Object... vars) {
-            return header().string(HttpHeaders.LOCATION, initUri(url, vars).toString());
-        }
-
-        private static URI initUri(String url, Object[] vars) {
-            Assert.notNull(url, "'url' must not be null");
-            Assert.isTrue(url.startsWith("/") || url.startsWith("http://") || url.startsWith("https://"), "" +
-                    "'url' should start with a path or be a complete HTTP URL: " + url);
-            return UriComponentsBuilder.fromUriString(url).buildAndExpand(vars).encode().toUri();
-        }
-    }
-
-    static LocationHeaderMatcher locationHeader() {
-        return new LocationHeaderMatcher();
-    }
 }
