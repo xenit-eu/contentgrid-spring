@@ -1,19 +1,15 @@
 package com.contentgrid.spring.boot.autoconfigure.actuator;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.info.BuildInfoContributor;
 import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 
 import com.contentgrid.spring.boot.actuator.ContentGridApplicationInfoContributor;
 import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties;
