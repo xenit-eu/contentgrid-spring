@@ -12,7 +12,7 @@ ext {
 }
 
 dependencies {
-    api platform('org.springframework.boot:spring-boot-dependencies:2.7.9')
+    api platform('org.springframework.boot:spring-boot-dependencies:2.7.10')
     api platform('com.contentgrid.thunx:thunx-bom:0.6.0')
 
     constraints {
