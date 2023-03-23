@@ -1,5 +1,8 @@
 package com.contentgrid.spring.boot.autoconfigure.actuator;
 
+import java.io.IOException;
+import java.util.Properties;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -10,17 +13,24 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 import com.contentgrid.spring.boot.actuator.ContentGridApplicationInfoContributor;
 import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties;
+import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties.SystemProperties;
 import com.contentgrid.spring.boot.actuator.policy.PolicyActuator;
 import com.contentgrid.spring.boot.actuator.policy.PolicyVariables;
 import com.contentgrid.spring.boot.actuator.webhooks.WebHooksConfigActuator;
 import com.contentgrid.spring.boot.actuator.webhooks.WebhookVariables;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Configuration
 @ConditionalOnClass({PolicyActuator.class, WebHooksConfigActuator.class})
+@Slf4j
 public class ActuatorAutoConfiguration {
+    
     @Autowired
     private ApplicationContext applicationContext;
     
@@ -61,6 +71,17 @@ public class ActuatorAutoConfiguration {
 
     @Bean
     InfoContributor buildInfoContributor(ContentGridApplicationProperties applicationProperties) {
-        return new ContentGridApplicationInfoContributor(applicationProperties.getSystem());
+        String changeset = null;
+        try {
+            Properties properties = PropertiesLoaderUtils.loadProperties(new ClassPathResource("META-INF/contentgrid.properties"));
+            changeset = properties.getProperty("changeset");
+        } catch (IOException e) {
+            log.warn("Could not load META-INF/contentgrid.properties", e);
+        }
+
+        SystemProperties systemProperties = applicationProperties.getSystem();
+        return new ContentGridApplicationInfoContributor(
+                new ContentGridApplicationInfoContributor.ContentGridInfo(
+                        systemProperties.getApplicationId(), systemProperties.getDeploymentId(), changeset));
     }
 }

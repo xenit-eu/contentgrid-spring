@@ -1,24 +1,29 @@
 package com.contentgrid.spring.boot.actuator;
 
-import java.util.Map;
-
 import org.springframework.boot.actuate.info.Info.Builder;
 import org.springframework.boot.actuate.info.InfoContributor;
 
-import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties.SystemProperties;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 public class ContentGridApplicationInfoContributor implements InfoContributor {
 
-    private final SystemProperties systemProperties;
+    private final ContentGridInfo contentGridInfo;
 
-    public ContentGridApplicationInfoContributor(SystemProperties systemProperties) {
-        this.systemProperties = systemProperties;
+    public ContentGridApplicationInfoContributor(ContentGridInfo contentGridInfo) {
+        this.contentGridInfo = contentGridInfo;
     }
 
     @Override
     public void contribute(Builder builder) {
-        builder.withDetail("ContentGrid", Map.of(
-                "applicationId", systemProperties.getApplicationId(), 
-                "deploymentId", systemProperties.getDeploymentId()));
+        builder.withDetail("ContentGrid", this.contentGridInfo);
+    }
+    
+    @RequiredArgsConstructor
+    @Data
+    public static class ContentGridInfo {
+        private final String applicationId;
+        private final String deploymentId;
+        private final String changesetId;
     }
 }
