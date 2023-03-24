@@ -80,8 +80,18 @@ public class ActuatorAutoConfiguration {
         }
 
         SystemProperties systemProperties = applicationProperties.getSystem();
-        return new ContentGridApplicationInfoContributor(
+        ContentGridApplicationInfoContributor contributor = new ContentGridApplicationInfoContributor(
                 new ContentGridApplicationInfoContributor.ContentGridInfo(
                         systemProperties.getApplicationId(), systemProperties.getDeploymentId(), changeset));
+        
+        log.info("""          
+          ContentGrid info:
+                    
+             ApplicationId: %s
+              DeploymentId: %s
+               ChangesetId: %s
+          """.formatted(systemProperties.getApplicationId(), systemProperties.getDeploymentId(), changeset));
+        
+        return contributor;
     }
 }
