@@ -4,7 +4,6 @@ import org.springframework.boot.actuate.info.Info.Builder;
 import org.springframework.boot.actuate.info.InfoContributor;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
 public class ContentGridApplicationInfoContributor implements InfoContributor {
 
@@ -19,7 +18,6 @@ public class ContentGridApplicationInfoContributor implements InfoContributor {
         builder.withDetail("ContentGrid", this.contentGridInfo);
     }
     
-    @RequiredArgsConstructor
     @Data
     public static class ContentGridInfo {
         private final String applicationId;
