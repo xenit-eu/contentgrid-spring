@@ -2,6 +2,8 @@ package org.springframework.data.rest.webmvc;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.content.rest.config.ContentRestConfigurer;
+import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,5 +35,10 @@ public class ContentGridSpringDataRestConfiguration {
                 return bean;
             }
         };
+    }
+
+    @Bean
+    public ContentRestConfigurer contentRestConfigurer() {
+        return config -> config.setShortcutLinks(false);
     }
 }
