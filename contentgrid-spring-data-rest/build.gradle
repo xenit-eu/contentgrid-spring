@@ -58,7 +58,7 @@ dependencies {
     testFixturesImplementation 'com.querydsl:querydsl-core'
 
     testFixturesRuntimeOnly 'org.postgresql:postgresql'
-    testFixturesRuntimeOnly 'org.testcontainers:postgresql:1.18.1'
+    testFixturesRuntimeOnly 'org.testcontainers:postgresql:1.18.3'
     testFixturesRuntimeOnly 'com.querydsl:querydsl-jpa'
 
 }
