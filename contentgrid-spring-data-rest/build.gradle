@@ -35,6 +35,7 @@ dependencies {
     implementation 'jakarta.servlet:jakarta.servlet-api'
 
     implementation 'org.springframework.data:spring-data-rest-webmvc'
+    implementation 'com.github.paulcwarren:spring-content-rest'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
@@ -46,9 +47,13 @@ dependencies {
     testFixturesImplementation platform(project(':contentgrid-spring-boot-platform'))
 
     testFixturesApi 'org.springframework.data:spring-data-jpa'
+
     testFixturesImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     testFixturesImplementation 'org.springframework.boot:spring-boot-starter-data-rest'
-    testFixturesImplementation 'org.projectlombok:lombok'
+    testFixturesImplementation "com.github.paulcwarren:spring-content-rest-boot-starter"
+    testFixturesImplementation "com.github.paulcwarren:spring-content-fs-boot-starter"
+
+    testFixturesCompileOnly 'org.projectlombok:lombok'
 
     testFixturesImplementation 'com.querydsl:querydsl-core'
 

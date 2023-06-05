@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -13,6 +14,10 @@ import javax.persistence.OneToMany;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.content.commons.annotations.ContentId;
+import org.springframework.content.commons.annotations.ContentLength;
+import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.OriginalFileName;
 
 @Entity
 @Getter
@@ -28,6 +33,22 @@ public class Invoice {
     private boolean draft;
 
     private boolean paid;
+
+    @ContentId
+    @JsonProperty("content_id")
+    private String contentId;
+
+    @ContentLength
+    @JsonProperty("content_length")
+    private Long contentLength;
+
+    @MimeType
+    @JsonProperty("content_mimetype")
+    private String contentMimetype;
+
+    @OriginalFileName
+    @JsonProperty("content_filename")
+    private String contentFilename;
 
     @ManyToOne
     @JoinColumn(name = "counterparty")
