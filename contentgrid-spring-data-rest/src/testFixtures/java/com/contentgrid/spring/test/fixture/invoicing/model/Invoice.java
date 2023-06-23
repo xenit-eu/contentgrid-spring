@@ -50,6 +50,22 @@ public class Invoice {
     @JsonProperty("content_filename")
     private String contentFilename;
 
+    @ContentId
+    @JsonProperty("attachment_id")
+    private String attachmentId;
+
+    @ContentLength
+    @JsonProperty("attachment_length")
+    private Long attachmentLength;
+
+    @MimeType
+    @JsonProperty("attachment_mimetype")
+    private String attachmentMimetype;
+
+    @OriginalFileName
+    @JsonProperty("attachment_filename")
+    private String attachmentFilename;
+
     @ManyToOne
     @JoinColumn(name = "counterparty")
     private Customer counterparty;
