@@ -1020,6 +1020,14 @@ class InvoicingApplicationTests {
             }
 
             @Test
+            @Disabled("ACC-735")
+            void postInvoiceContent_missingContentType_http400() throws Exception {
+                mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                .content(UNICODE_TEXT))
+                        .andExpect(status().isBadRequest());
+            }
+
+            @Test
             void postMultipartContent_http201() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 assertThat(invoicesContent.getContent(invoice)).isNull();
@@ -1063,6 +1071,15 @@ class InvoicingApplicationTests {
                 assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
                 assertThat(invoice.getContentLength()).isEqualTo(image.contentLength());
                 assertThat(invoice.getContentFilename()).isEqualTo("logo.png");
+            }
+
+            @Test
+            void postMultipartContent_noPayload_http400() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                assertThat(invoicesContent.getContent(invoice)).isNull();
+
+                mockMvc.perform(multipart(HttpMethod.POST, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
+                        .andExpect(status().isBadRequest());
             }
         }
 
@@ -1189,6 +1206,14 @@ class InvoicingApplicationTests {
             }
 
             @Test
+            @Disabled("ACC-735")
+            void putInvoiceContent_missingContentType_http400() throws Exception {
+                mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                .content(UNICODE_TEXT))
+                        .andExpect(status().isBadRequest());
+            }
+
+            @Test
             void putMultipartContent_http201() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 assertThat(invoicesContent.getContent(invoice)).isNull();
@@ -1232,6 +1257,15 @@ class InvoicingApplicationTests {
                 assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
                 assertThat(invoice.getContentLength()).isEqualTo(image.contentLength());
                 assertThat(invoice.getContentFilename()).isEqualTo("logo.png");
+            }
+
+            @Test
+            void putMultipartContent_noPayload_http400() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                assertThat(invoicesContent.getContent(invoice)).isNull();
+
+                mockMvc.perform(multipart(HttpMethod.PUT, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
+                        .andExpect(status().isBadRequest());
             }
         }
 
