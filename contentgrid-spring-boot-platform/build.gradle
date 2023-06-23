@@ -8,7 +8,7 @@ javaPlatform {
 }
 
 ext {
-    springContentVersion = '2.7.0'
+    springContentVersion = '2.9.0'
 }
 
 dependencies {
