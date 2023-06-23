@@ -847,8 +847,6 @@ class InvoicingApplicationTests {
     @Nested
     class ContentPropertyResource {
 
-        private static final String ASCII_TEXT = "Some ASCII text :poop:";
-
         private static final String EXT_ASCII_TEXT = "L'éducation doit être gratuite.";
         private static final int EXT_ASCII_TEXT_LATIN1_LENGTH = 31;
         private static final int EXT_ASCII_TEXT_UTF8_LENGTH = 33;
@@ -1013,7 +1011,7 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            void postInvoiceContent_missingEntity_expectsHttp404() throws Exception {
+            void postInvoiceContent_missingEntity_http404() throws Exception {
                 mockMvc.perform(post("/invoices/{id}/content", UUID.randomUUID())
                                 .contentType(MediaType.TEXT_PLAIN)
                                 .characterEncoding(StandardCharsets.UTF_8)
@@ -1182,7 +1180,7 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            void putInvoiceContent_missingEntity_expectsHttp404() throws Exception {
+            void putInvoiceContent_missingEntity_http404() throws Exception {
                 mockMvc.perform(put("/invoices/{id}/content", UUID.randomUUID())
                                 .contentType(MediaType.TEXT_PLAIN)
                                 .characterEncoding(StandardCharsets.UTF_8)
