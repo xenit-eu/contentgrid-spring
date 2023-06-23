@@ -7,28 +7,15 @@ javaPlatform {
     allowDependencies()
 }
 
-ext {
-    springContentVersion = '2.7.0'
-}
 
 dependencies {
     api platform('org.springframework.boot:spring-boot-dependencies:2.7.12')
     api platform('com.contentgrid.thunx:thunx-bom:0.6.2')
+    api platform('com.github.paulcwarren:spring-content-bom:2.9.0')
 
     constraints {
         api project(':contentgrid-spring-boot-starter')
         api project(':contentgrid-spring-boot-starter-annotations')
         api project(':contentgrid-spring-boot-actuators')
-
-        ['rest', 'fs', 'jpa', 'mongo', 'rest', 's3', 'renditions', 'solr', 'elasticsearch'].each {
-            api "com.github.paulcwarren:spring-content-${it}:${springContentVersion}"
-            api "com.github.paulcwarren:spring-content-${it}-boot-starter:${springContentVersion}"
-        }
-        ['autoconfigure', 'azure-storage', 'commons', 'docx4j', 'gcs', 'cmis'].each {
-            api "com.github.paulcwarren:spring-content-${it}:${springContentVersion}"
-        }
-        ['common', 'jpa', 'jpa-boot-starter'].each {
-            api "com.github.paulcwarren:spring-versions-${it}:${springContentVersion}"
-        }
     }
 }
