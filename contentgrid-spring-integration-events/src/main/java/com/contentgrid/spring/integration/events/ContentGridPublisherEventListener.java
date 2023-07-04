@@ -1,9 +1,10 @@
 package com.contentgrid.spring.integration.events;
 
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
 import java.util.Map;
-
 import javax.persistence.EntityManagerFactory;
-
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
@@ -23,10 +24,6 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.util.StringUtils;
-
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
 
 public class ContentGridPublisherEventListener implements PostInsertEventListener,
         PostUpdateEventListener, PostDeleteEventListener, PostCollectionUpdateEventListener,
@@ -55,7 +52,6 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public boolean requiresPostCommitHanding(EntityPersister persister) {
         return this.requiresPostCommitHandling(persister);
     }
@@ -111,6 +107,5 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
                 .filter(StringUtils::hasText)
                 .orElseGet(() -> entity.getClass().getSimpleName().toLowerCase());
     }
-
 
 }
