@@ -6,6 +6,8 @@ import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostCollectionUpdateEvent;
+import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
@@ -27,7 +29,8 @@ import com.contentgrid.spring.integration.events.ContentGridEventPublisher.Conte
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
 
 public class ContentGridPublisherEventListener implements PostInsertEventListener,
-        PostUpdateEventListener, PostDeleteEventListener, InitializingBean {
+        PostUpdateEventListener, PostDeleteEventListener, PostCollectionUpdateEventListener,
+        InitializingBean {
 
     private final ContentGridEventPublisher contentGridEventPublisher;
     private final EntityManagerFactory entityManagerFactory;
@@ -48,6 +51,7 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         registry.getEventListenerGroup(EventType.POST_INSERT).appendListener(this);
         registry.getEventListenerGroup(EventType.POST_UPDATE).appendListener(this);
         registry.getEventListenerGroup(EventType.POST_DELETE).appendListener(this);
+        registry.getEventListenerGroup(EventType.POST_COLLECTION_UPDATE).appendListener(this);
     }
 
     @Override
@@ -87,6 +91,15 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
                 new ContentGridMessage(
                         ContentGridMessageTrigger.delete, new DataEntity(event.getEntity(), null),
                         guessEntityName(event.getEntity())));
+    }
+
+    @Override
+    public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
+        contentGridEventPublisher.publish(new ContentGridMessage(
+                ContentGridMessageTrigger.update,
+                new DataEntity(event.getAffectedOwnerOrNull(), event.getAffectedOwnerOrNull()),
+                guessEntityName(event.getAffectedOwnerOrNull())
+        ));
     }
 
     private String guessEntityName(Object entity) {
