@@ -58,7 +58,7 @@ class DcmApiRepositoryIntegrationEventsTests {
             properties.setEvents(eventProperties);
 
             ContentGridPublisherEventListener spy2 = spy(
-                    new ContentGridPublisherEventListener(publisher, entityManagerFactory, properties, repositories));
+                    new ContentGridPublisherEventListener(publisher, entityManagerFactory, repositories));
             return spy2;
         }
 
@@ -83,8 +83,6 @@ class DcmApiRepositoryIntegrationEventsTests {
                             new TypeReference<HashMap<String, Object>>() {
                             });
 
-                    assertThat(readValue).containsKey("application_id");
-                    assertThat(readValue).containsKey("deployment_id");
                     assertThat(readValue).containsKey("old");
                     assertThat(readValue).containsKey("new");
                 } catch (JsonProcessingException e) {
