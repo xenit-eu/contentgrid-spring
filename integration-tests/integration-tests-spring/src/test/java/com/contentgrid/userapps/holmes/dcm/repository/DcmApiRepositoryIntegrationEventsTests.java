@@ -33,6 +33,7 @@ import com.contentgrid.spring.integration.events.ContentGridMessageHandler;
 import com.contentgrid.spring.integration.events.ContentGridPublisherEventListener;
 import com.contentgrid.userapps.holmes.dcm.model.Case;
 import com.contentgrid.userapps.holmes.dcm.model.Person;
+import com.contentgrid.userapps.holmes.dcm.model.Evidence;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -104,6 +105,9 @@ class DcmApiRepositoryIntegrationEventsTests {
 
     @Autowired
     PersonRepository personRepository;
+
+    @Autowired
+    EvidenceRepository evidenceRepository;
 
     @Autowired
     ContentGridPublisherEventListener listener;
@@ -194,7 +198,7 @@ class DcmApiRepositoryIntegrationEventsTests {
     }
 
     @Test
-    void whenPersonIsAddedToCaseSuspects_postUpdateShouldBeCalledOnce_ok() {
+    void whenPersonIsAddedToCaseSuspects_manyToMany_postUpdateCollectionShouldBeCalledOnce_ok() {
         Case _case = repository.save(new Case());
         Person person = personRepository.save(new Person());
 
@@ -206,6 +210,57 @@ class DcmApiRepositoryIntegrationEventsTests {
         verify(listener, times(0)).onPostUpdate(any());
         verify(listener, times(0)).onPostDelete(any());
         verify(listener, times(1)).onPostUpdateCollection(any());
+
+        verify(contentGridMessageHandler.get().get(), times(3)).handleMessage(any());
+    }
+
+    @Test
+    void whenPersonIsAddedToCaseDetective_manyToOne_postUpdateShouldBeCalledOnce_ok() {
+        Case _case = repository.save(new Case());
+        Person person = personRepository.save(new Person());
+
+        _case.setLeadDetective(person);
+        repository.save(_case);
+        personRepository.save(person);
+
+        verify(listener, times(2)).onPostInsert(any());
+        verify(listener, times(0)).onPostUpdate(any());
+        verify(listener, times(0)).onPostDelete(any());
+        verify(listener, times(1)).onPostUpdateCollection(any());
+
+        verify(contentGridMessageHandler.get().get(), times(3)).handleMessage(any());
+    }
+
+    @Test
+    void whenEvidenceIsAddedToCase_oneToMany_postUpdateCollectionShouldBeCalledOnce_ok() {
+        Case _case = repository.save(new Case());
+        Evidence evidence = evidenceRepository.save(new Evidence());
+
+        _case.setHasEvidence(List.of(evidence));
+        repository.save(_case);
+        evidenceRepository.save(evidence);
+
+        verify(listener, times(2)).onPostInsert(any());
+        verify(listener, times(0)).onPostUpdate(any());
+        verify(listener, times(0)).onPostDelete(any());
+        verify(listener, times(1)).onPostUpdateCollection(any());
+
+        verify(contentGridMessageHandler.get().get(), times(3)).handleMessage(any());
+    }
+
+    @Test
+    void whenEvidenceIsAddedToCaseScenario_oneToOne_postUpdateCollectionShouldBeCalledOnce_ok() {
+        Case _case = repository.save(new Case());
+        Evidence evidence = evidenceRepository.save(new Evidence());
+
+        _case.setScenario(evidence);
+        repository.save(_case);
+        evidenceRepository.save(evidence);
+
+        verify(listener, times(2)).onPostInsert(any());
+        verify(listener, times(1)).onPostUpdate(any());
+        verify(listener, times(0)).onPostDelete(any());
+        verify(listener, times(0)).onPostUpdateCollection(any());
 
         verify(contentGridMessageHandler.get().get(), times(3)).handleMessage(any());
     }
