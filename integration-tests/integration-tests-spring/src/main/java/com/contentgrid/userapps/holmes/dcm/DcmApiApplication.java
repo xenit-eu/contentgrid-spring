@@ -6,8 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class DcmApiApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(DcmApiApplication.class, args);
+	public static void main(String[] arication.class, args);
 	}
 
 }

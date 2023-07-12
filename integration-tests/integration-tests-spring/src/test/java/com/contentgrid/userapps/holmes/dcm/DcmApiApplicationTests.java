@@ -9,7 +9,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 class DcmApiApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void contextLo
+	}
+
+	@Test
+	void doesthiswork() {
+		throw new RuntimeException("No!");
 	}
 
 }

@@ -16,10 +16,10 @@ import lombok.Setter;
 @Setter
 public class Person {
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private UUID id;
+	@Generate
+	ate UUID id;
 
-	private String name;
+	ng name;
 
 	private String notes;
-}
+}}}}
