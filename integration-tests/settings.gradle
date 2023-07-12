@@ -1,13 +1,8 @@
 rootProject.name = 'contentgrid-spring-integration-tests'
 
-includeBuild('..') {
-    name = 'cg-spring-boot'
-}
-
 def springBootVersion = startParameter.getProjectProperties().get('springBootVersion')
 
-includeBuild('./integration-tests-spring') {
-    name = "dcm-api"
+includeBuild('integration-tests-spring') {
     if(springBootVersion) {
         it.dependencySubstitution {
             it.all { dependency ->
@@ -19,3 +14,5 @@ includeBuild('./integration-tests-spring') {
         }
     }
 }
+
+includeBuild('..')

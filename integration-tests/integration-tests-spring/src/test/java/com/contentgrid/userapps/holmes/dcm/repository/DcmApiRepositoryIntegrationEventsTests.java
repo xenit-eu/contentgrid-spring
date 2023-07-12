@@ -58,7 +58,7 @@ class DcmApiRepositoryIntegrationEventsTests {
             properties.setEvents(eventProperties);
 
             ContentGridPublisherEventListener spy2 = spy(
-                    new ContentGridPublisherEventListener(publisher, entityManagerFactory, properties, repositories));
+                    new ContentGridPublisherEventListener(publisher, entityManagerFactory, repositories));
             return spy2;
         }
 

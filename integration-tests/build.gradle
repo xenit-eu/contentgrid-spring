@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 def integTestTasks(taskName) {
     return gradle.includedBuilds.stream()
-            .filter(build -> build.name.startsWith('it-'))
+            .filter(build -> build.name.startsWith('integration-tests-'))
             .map(build -> build.task(taskName))
             .collect(Collectors.toList())
 }
