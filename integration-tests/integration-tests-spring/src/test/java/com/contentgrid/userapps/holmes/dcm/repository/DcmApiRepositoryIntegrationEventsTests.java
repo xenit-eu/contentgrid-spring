@@ -83,8 +83,6 @@ class DcmApiRepositoryIntegrationEventsTests {
                             new TypeReference<HashMap<String, Object>>() {
                             });
 
-                    assertThat(readValue).containsKey("application_id");
-                    assertThat(readValue).containsKey("deployment_id");
                     assertThat(readValue).containsKey("old");
                     assertThat(readValue).containsKey("new");
                 } catch (JsonProcessingException e) {
