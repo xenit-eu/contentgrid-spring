@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
+import java.util.List;
 
 import javax.persistence.EntityManagerFactory;
 
@@ -31,6 +32,7 @@ import com.contentgrid.spring.integration.events.ContentGridEventPublisher;
 import com.contentgrid.spring.integration.events.ContentGridMessageHandler;
 import com.contentgrid.spring.integration.events.ContentGridPublisherEventListener;
 import com.contentgrid.userapps.holmes.dcm.model.Case;
+import com.contentgrid.userapps.holmes.dcm.model.Person;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -101,6 +103,9 @@ class DcmApiRepositoryIntegrationEventsTests {
     CaseRepository repository;
 
     @Autowired
+    PersonRepository personRepository;
+
+    @Autowired
     ContentGridPublisherEventListener listener;
 
     @Autowired
@@ -119,6 +124,7 @@ class DcmApiRepositoryIntegrationEventsTests {
         verify(listener, times(1)).onPostInsert(any());
         verify(listener, times(0)).onPostUpdate(any());
         verify(listener, times(0)).onPostDelete(any());
+        verify(listener, times(0)).onPostUpdateCollection(any());
 
         verify(contentGridMessageHandler.get().get(), times(1)).handleMessage(any());
     }
@@ -130,6 +136,7 @@ class DcmApiRepositoryIntegrationEventsTests {
         verify(listener, times(2)).onPostInsert(any());
         verify(listener, times(0)).onPostUpdate(any());
         verify(listener, times(0)).onPostDelete(any());
+        verify(listener, times(0)).onPostUpdateCollection(any());
 
         verify(contentGridMessageHandler.get().get(), times(2)).handleMessage(any());
     }
@@ -147,6 +154,7 @@ class DcmApiRepositoryIntegrationEventsTests {
         verify(listener, times(1)).onPostInsert(any());
         verify(listener, times(1)).onPostUpdate(any());
         verify(listener, times(0)).onPostDelete(any());
+        verify(listener, times(0)).onPostUpdateCollection(any());
 
         verify(contentGridMessageHandler.get().get(), times(2)).handleMessage(any());
     }
@@ -163,6 +171,7 @@ class DcmApiRepositoryIntegrationEventsTests {
         verify(listener, times(1)).onPostInsert(any());
         verify(listener, times(2)).onPostUpdate(any());
         verify(listener, times(0)).onPostDelete(any());
+        verify(listener, times(0)).onPostUpdateCollection(any());
 
         verify(contentGridMessageHandler.get().get(), times(3)).handleMessage(any());
     }
@@ -179,6 +188,24 @@ class DcmApiRepositoryIntegrationEventsTests {
         verify(listener, times(1)).onPostInsert(any());
         verify(listener, times(1)).onPostUpdate(any());
         verify(listener, times(1)).onPostDelete(any());
+        verify(listener, times(0)).onPostUpdateCollection(any());
+
+        verify(contentGridMessageHandler.get().get(), times(3)).handleMessage(any());
+    }
+
+    @Test
+    void whenPersonIsAddedToCaseSuspects_postUpdateShouldBeCalledOnce_ok() {
+        Case _case = repository.save(new Case());
+        Person person = personRepository.save(new Person());
+
+        _case.setSuspects(List.of(person));
+        repository.save(_case);
+        personRepository.save(person);
+
+        verify(listener, times(2)).onPostInsert(any());
+        verify(listener, times(0)).onPostUpdate(any());
+        verify(listener, times(0)).onPostDelete(any());
+        verify(listener, times(1)).onPostUpdateCollection(any());
 
         verify(contentGridMessageHandler.get().get(), times(3)).handleMessage(any());
     }
