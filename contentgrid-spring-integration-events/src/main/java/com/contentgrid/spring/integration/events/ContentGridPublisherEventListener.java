@@ -3,7 +3,6 @@ package com.contentgrid.spring.integration.events;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
-import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;

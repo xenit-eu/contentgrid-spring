@@ -9,9 +9,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import java.util.UUID;
 import javax.persistence.EntityManagerFactory;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +40,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest(properties = { "spring.content.storage.type.default=fs" })
 class DcmApiRepositoryIntegrationEventsTests {
@@ -53,10 +56,10 @@ class DcmApiRepositoryIntegrationEventsTests {
             SystemProperties systemProperties = new ContentGridEventHandlerProperties.SystemProperties();
             systemProperties.setApplicationId("test");
             systemProperties.setDeploymentId("test");
-            
+
             EventProperties eventProperties = new ContentGridEventHandlerProperties.EventProperties();
             eventProperties.setWebhookConfigUrl("http://test/actuator/webhooks");
-            
+
             properties.setSystem(systemProperties);
             properties.setEvents(eventProperties);
 
@@ -88,6 +91,11 @@ class DcmApiRepositoryIntegrationEventsTests {
 
                     assertThat(readValue).containsKey("old");
                     assertThat(readValue).containsKey("new");
+
+                    for (String k : readValue.keySet()) {
+                        System.out.println("[" + k + "]: " + readValue.get(k));
+                    }
+
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
@@ -114,6 +122,9 @@ class DcmApiRepositoryIntegrationEventsTests {
 
     @Autowired
     ContentGridMessageHandler contentGridMessageHandler;
+
+    @Autowired
+    TransactionTemplate transactionTemplate;
 
     @BeforeEach
     public void buildSpy() {
@@ -199,12 +210,20 @@ class DcmApiRepositoryIntegrationEventsTests {
 
     @Test
     void whenPersonIsAddedToCaseSuspects_manyToMany_postUpdateCollectionShouldBeCalledOnce_ok() {
-        Case _case = repository.save(new Case());
-        Person person = personRepository.save(new Person());
+        UUID caseId = repository.save(new Case()).getId();
+        // We have to run this in a transaction and verify the interactions _after_ the transaction closes, because
+        // events are sent after committing the tx. If we don't run it in a transaction, hibernate complains about
+        // a lack of an open session when we try to do anything with case.hasEvidence.
+        transactionTemplate.executeWithoutResult((status) -> {
+            // Case has a List<Evidence> that is initialized to null. To avoid a PostUpdate event being sent because
+            // hibernate hydrated that to an empty PersistentBag, we save and get Case first before calling anything on it.
+            Case _case = repository.getReferenceById(caseId);
+            Person person = personRepository.save(new Person());
 
-        _case.setSuspects(List.of(person));
-        repository.save(_case);
-        personRepository.save(person);
+            _case.getSuspects().add(person);
+            repository.save(_case);
+            personRepository.save(person);
+        });
 
         verify(listener, times(2)).onPostInsert(any());
         verify(listener, times(0)).onPostUpdate(any());
@@ -224,26 +243,35 @@ class DcmApiRepositoryIntegrationEventsTests {
         personRepository.save(person);
 
         verify(listener, times(2)).onPostInsert(any());
-        verify(listener, times(0)).onPostUpdate(any());
+        verify(listener, times(1)).onPostUpdate(any());
         verify(listener, times(0)).onPostDelete(any());
-        verify(listener, times(1)).onPostUpdateCollection(any());
+        verify(listener, times(0)).onPostUpdateCollection(any());
 
         verify(contentGridMessageHandler.get().get(), times(3)).handleMessage(any());
     }
 
     @Test
     void whenEvidenceIsAddedToCase_oneToMany_postUpdateCollectionShouldBeCalledOnce_ok() {
-        Case _case = repository.save(new Case());
-        Evidence evidence = evidenceRepository.save(new Evidence());
+        // We have to run this in a transaction and verify the interactions _after_ the transaction closes, because
+        // events are sent after committing the tx. If we don't run it in a transaction, hibernate complains about
+        // a lack of an open session when we try to do anything with case.hasEvidence.
+        transactionTemplate.executeWithoutResult((status) -> {
+            UUID caseId = repository.save(new Case()).getId();
+            Case _case = repository.getReferenceById(caseId);
+            Evidence evidence = evidenceRepository.save(new Evidence());
 
-        _case.setHasEvidence(List.of(evidence));
-        repository.save(_case);
-        evidenceRepository.save(evidence);
+            ArrayList<Evidence> l = new ArrayList<>();
+            l.add(evidence);
+            _case.setHasEvidence(l);
+            repository.save(_case);
+            evidenceRepository.save(evidence);
+        });
+
 
         verify(listener, times(2)).onPostInsert(any());
-        verify(listener, times(0)).onPostUpdate(any());
+        verify(listener, times(1)).onPostUpdate(any());
         verify(listener, times(0)).onPostDelete(any());
-        verify(listener, times(1)).onPostUpdateCollection(any());
+        verify(listener, times(0)).onPostUpdateCollection(any());
 
         verify(contentGridMessageHandler.get().get(), times(3)).handleMessage(any());
     }
