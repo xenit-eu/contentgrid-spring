@@ -4,7 +4,9 @@ import com.contentgrid.spring.integration.events.ContentGridEventPublisher.Conte
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import java.util.HashMap;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.messaging.Message;
@@ -108,16 +110,11 @@ public interface ContentGridEventPublisher {
             return trigger;
         }
 
+        @RequiredArgsConstructor
         static class PersistentEntityResourceData {
 
-            final PersistentEntityResource old;
-            final PersistentEntityResource entity;
-
-            PersistentEntityResourceData(PersistentEntityResource old,
-                    PersistentEntityResource entity) {
-                this.old = old;
-                this.entity = entity;
-            }
+            private final EntityModel<?> old;
+            private final EntityModel<?> entity;
 
             @JsonProperty("new")
             public Object getEntity() {
