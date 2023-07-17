@@ -1,11 +1,13 @@
 package com.contentgrid.spring.integration.events;
 
-import java.util.Map;
-
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
 import javax.persistence.EntityManagerFactory;
-
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostCollectionUpdateEvent;
+import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
@@ -22,12 +24,9 @@ import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.util.StringUtils;
 
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
-
 public class ContentGridPublisherEventListener implements PostInsertEventListener,
-        PostUpdateEventListener, PostDeleteEventListener, InitializingBean {
+        PostUpdateEventListener, PostDeleteEventListener, PostCollectionUpdateEventListener,
+        InitializingBean {
 
     private final ContentGridEventPublisher contentGridEventPublisher;
     private final EntityManagerFactory entityManagerFactory;
@@ -48,10 +47,10 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         registry.getEventListenerGroup(EventType.POST_INSERT).appendListener(this);
         registry.getEventListenerGroup(EventType.POST_UPDATE).appendListener(this);
         registry.getEventListenerGroup(EventType.POST_DELETE).appendListener(this);
+        registry.getEventListenerGroup(EventType.POST_COLLECTION_UPDATE).appendListener(this);
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public boolean requiresPostCommitHanding(EntityPersister persister) {
         return this.requiresPostCommitHandling(persister);
     }
@@ -89,6 +88,15 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
                         guessEntityName(event.getEntity())));
     }
 
+    @Override
+    public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
+        contentGridEventPublisher.publish(new ContentGridMessage(
+                ContentGridMessageTrigger.update,
+                new DataEntity(event.getAffectedOwnerOrNull(), event.getAffectedOwnerOrNull()),
+                guessEntityName(event.getAffectedOwnerOrNull())
+        ));
+    }
+
     private String guessEntityName(Object entity) {
         return repositories.getRepositoryInformationFor(entity.getClass())
                 .map(RepositoryMetadata::getRepositoryInterface)
@@ -98,6 +106,5 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
                 .filter(StringUtils::hasText)
                 .orElseGet(() -> entity.getClass().getSimpleName().toLowerCase());
     }
-
 
 }
