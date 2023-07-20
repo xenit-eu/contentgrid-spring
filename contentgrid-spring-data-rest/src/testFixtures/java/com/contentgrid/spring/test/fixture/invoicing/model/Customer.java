@@ -34,7 +34,7 @@ public class Customer {
 
     private String name;
 
-    @Column(unique=true)
+    @Column(unique=true, nullable = false)
     private String vat;
 
     @Embedded

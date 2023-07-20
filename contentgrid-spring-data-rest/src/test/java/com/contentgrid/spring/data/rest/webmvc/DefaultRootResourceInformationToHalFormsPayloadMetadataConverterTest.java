@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
+import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ class DefaultRootResourceInformationToHalFormsPayloadMetadataConverterTest {
     }
 
     @Test
-    void convertToCreatePayloadMetadataWithEmbeddedContent() {
+    void convertToCreatePayloadMetadata_embeddedContent() {
         var converter = new DefaultRootResourceInformationToHalFormsPayloadMetadataConverter();
 
         var metadata = converter.convertToCreatePayloadMetadata(getResourceInformation(Customer.class));
@@ -51,7 +52,7 @@ class DefaultRootResourceInformationToHalFormsPayloadMetadataConverterTest {
                 vat -> {
                     assertThat(vat.getName()).isEqualTo("vat");
                     assertThat(vat.isReadOnly()).isFalse();
-                    assertThat(vat.isRequired()).isFalse();
+                    assertThat(vat.isRequired()).isTrue();
                 },
                 contentMimetype -> {
                     assertThat(contentMimetype.getName()).isEqualTo("content.mimetype");
@@ -73,7 +74,7 @@ class DefaultRootResourceInformationToHalFormsPayloadMetadataConverterTest {
     }
 
     @Test
-    void convertToCreatePayloadMetadataWithAssociation() {
+    void convertToCreatePayloadMetadata_association() {
         var converter = new DefaultRootResourceInformationToHalFormsPayloadMetadataConverter();
 
         var metadata = converter.convertToCreatePayloadMetadata(getResourceInformation(Order.class));
@@ -98,6 +99,20 @@ class DefaultRootResourceInformationToHalFormsPayloadMetadataConverterTest {
                 },
                 promos -> {
                     assertThat(promos.getName()).isEqualTo("promos");
+                }
+        );
+    }
+
+    @Test
+    void convertToCreatePayloadMetadata_requiredAssociation() {
+        var converter = new DefaultRootResourceInformationToHalFormsPayloadMetadataConverter();
+
+        var metadata = converter.convertToCreatePayloadMetadata(getResourceInformation(Invoice.class));
+
+        assertThat(metadata.stream()).anySatisfy(
+                counterparty -> {
+                    assertThat(counterparty.getName()).isEqualTo("counterparty");
+                    assertThat(counterparty.isRequired()).isTrue();
                 }
         );
     }

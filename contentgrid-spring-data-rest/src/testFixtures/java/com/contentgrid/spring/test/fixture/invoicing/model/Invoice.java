@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -30,6 +31,7 @@ public class Invoice {
     @JsonProperty(access = Access.READ_ONLY)
     private UUID id;
 
+    @Column(nullable = false)
     private String number;
 
     private boolean draft;
@@ -68,8 +70,8 @@ public class Invoice {
     @JsonProperty("attachment_filename")
     private String attachmentFilename;
 
-    @ManyToOne
-    @JoinColumn(name = "counterparty")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "counterparty", nullable = false)
     private Customer counterparty;
 
     @OneToMany(mappedBy = "invoice")
