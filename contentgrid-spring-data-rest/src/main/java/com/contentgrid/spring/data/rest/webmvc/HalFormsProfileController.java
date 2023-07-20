@@ -1,9 +1,23 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.random.RandomGenerator;
+import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.SneakyThrows;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.BasePathAwareController;
 import org.springframework.data.rest.webmvc.ProfileController;
@@ -25,17 +39,26 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 @RequiredArgsConstructor
 @BasePathAwareController
-public class HalFormsProfileController {
+public class HalFormsProfileController implements InitializingBean {
     private static final RandomGenerator RANDOM = RandomGenerator.getDefault();
 
     private final RepositoryRestConfiguration configuration;
     private final EntityLinks entityLinks;
     private final DomainTypeToHalFormsPayloadMetadataConverter toHalFormsPayloadMetadataConverter;
+    private final ObjectMapper objectMapper;
+
+    private static final Class<?> HAL_FORMS_TEMPLATE_CLASS;
+
+    static {
+        try {
+            HAL_FORMS_TEMPLATE_CLASS = Class.forName("org.springframework.hateoas.mediatype.hal.forms.HalFormsTemplate");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @RequestMapping(value = ProfileController.RESOURCE_PROFILE_MAPPING, method = RequestMethod.OPTIONS, produces = MediaTypes.HAL_FORMS_JSON_VALUE)
     HttpEntity<?> halFormsOptions() {
@@ -49,9 +72,8 @@ public class HalFormsProfileController {
     @RequestMapping(value = ProfileController.RESOURCE_PROFILE_MAPPING, method = RequestMethod.GET, produces = {
             MediaTypes.HAL_FORMS_JSON_VALUE
     })
-    @ResponseBody
-    @ResponseStatus(HttpStatus.OK)
-    RepresentationModel<?> halFormsProfile(RootResourceInformation information) {
+    void halFormsProfile(RootResourceInformation information, HttpServletResponse response)
+            throws IOException {
         var model = new RepresentationModel<>();
 
         model.add(Link.of(ProfileController.getPath(configuration, information.getResourceMetadata())));
@@ -80,12 +102,73 @@ public class HalFormsProfileController {
                 .withName(IanaLinkRelations.CREATE_FORM_VALUE)
                 .withInput(toHalFormsPayloadMetadataConverter.convertToCreatePayloadMetadata(information.getDomainType()))
                 .withInputMediaType(MediaType.APPLICATION_JSON)
+                .andAfford(HttpMethod.PATCH) // This gets mapped to "GET" with the very ugly hack below
+                .withName(IanaLinkRelations.SEARCH_VALUE)
+                .withInput(toHalFormsPayloadMetadataConverter.convertToSearchPayloadMetadata(information.getDomainType()))
                 .build();
 
         model.add(collectionAffordances.toLink());
         model.add(itemLink);
 
-        return model;
+        response.setContentType(MediaTypes.HAL_FORMS_JSON_VALUE);
+        objectMapper.writeValue(response.getWriter(), model);
     }
 
+    @Override
+    public void afterPropertiesSet() {
+        objectMapper.registerModule(new SimpleModule().setSerializerModifier(new CustomHalFormsTemplateSerializerModifier()));
+    }
+
+    @JsonSerialize(using = CustomHalFormsTemplateSerializer.class)
+    private static final class HalFormsTemplateMixin {
+
+    }
+
+    private static class CustomHalFormsTemplateSerializerModifier extends BeanSerializerModifier {
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public JsonSerializer<?> modifySerializer(SerializationConfig config, BeanDescription beanDesc,
+                JsonSerializer<?> serializer) {
+            if(Objects.equals(beanDesc.getBeanClass(), HAL_FORMS_TEMPLATE_CLASS)) {
+                return new CustomHalFormsTemplateSerializer((JsonSerializer<Object>) serializer);
+            }
+            return serializer;
+        }
+    }
+
+    /**
+     * This is what is unfortunately required to change the hal-forms method to GET, without having to re-implement too many things ourself.
+     *
+     * Because:
+     * - hal-forms templates that would be created from GET are filtered out
+     * - hal-forms templates that have a method other than POST/PUT/PATCH have their template properties cleared out
+     * - We can't change the serialization of HttpMethod itself, as the enum itself is not directly rendered, only its string value is.
+     * - We can't subclass/override HalFormsTemplate directly, since it's package-private
+     */
+    @RequiredArgsConstructor
+    private static class CustomHalFormsTemplateSerializer extends JsonSerializer<Object> {
+
+        private final static Field HTTP_METHOD_FIELD;
+
+        static {
+            try {
+                HTTP_METHOD_FIELD = HAL_FORMS_TEMPLATE_CLASS.getDeclaredField("httpMethod");
+                HTTP_METHOD_FIELD.setAccessible(true);
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private final JsonSerializer<Object> defaultSerializer;
+
+        @SneakyThrows
+        @Override
+        public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            if(HTTP_METHOD_FIELD.get(value) == HttpMethod.PATCH) {
+                HTTP_METHOD_FIELD.set(value, HttpMethod.GET);
+            }
+            defaultSerializer.serialize(value, gen, serializers);
+        }
+    }
 }

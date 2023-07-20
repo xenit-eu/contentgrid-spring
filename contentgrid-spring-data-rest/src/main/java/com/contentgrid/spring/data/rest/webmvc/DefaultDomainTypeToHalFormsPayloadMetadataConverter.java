@@ -59,7 +59,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
             @Override
             public Stream<PropertyMetadata> stream() {
                 return properties.stream();
-    }
+            }
 
             @Override
             public Class<?> getType() {

@@ -88,6 +88,36 @@ class HalFormsProfileControllerTest {
                                             }
                                         }
                                     ]
+                                },
+                                search: {
+                                    method: "GET",
+                                    target: "http://localhost/customers",
+                                    properties: [
+                                        {
+                                            name: "vat",
+                                            type: "text"
+                                        },
+                                        {
+                                            name: "content.size",
+                                            type: "number"
+                                        },
+                                        {
+                                            name: "content.mimetype",
+                                            type: "text"
+                                        },
+                                        {
+                                            name: "content.filename",
+                                            type: "text"
+                                        },
+                                        {
+                                            name: "invoices.number",
+                                            type: "text"
+                                        },
+                                        {
+                                            name: "invoices.paid"
+                                        # ,type: "checkbox"
+                                        }
+                                    ]
                                 }
                             }
                         }
@@ -160,6 +190,23 @@ class HalFormsProfileControllerTest {
                                             }
                                         }
                                     }
+                                ]
+                            },
+                            search: {
+                                method: "GET",
+                                target: "http://localhost/invoices",
+                                properties: [
+                                    {
+                                        name: "number",
+                                        type: "text"
+                                    },
+                                    {
+                                        name: "paid"
+                                        # ,type: "checkbox"
+                                    }
+                                    # Note: no relation to orders is exposed,
+                                    # because the searchable properties on Order are
+                                    # also relations. We only expand one level deep
                                 ]
                             }
                         }
