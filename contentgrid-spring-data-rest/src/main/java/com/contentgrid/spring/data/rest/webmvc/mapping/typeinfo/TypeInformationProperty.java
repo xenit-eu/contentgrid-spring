@@ -5,6 +5,7 @@ import com.contentgrid.spring.data.rest.webmvc.mapping.Property;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Optional;
+import javax.persistence.Embedded;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.TypeInformation;
 
@@ -35,6 +36,9 @@ public class TypeInformationProperty implements Property {
 
     @Override
     public Optional<Container> nestedContainer() {
+        if(findAnnotation(Embedded.class).isPresent()) {
+            return Optional.of(new TypeInformationContainer(typeInformation));
+        }
         return Optional.empty();
     }
 

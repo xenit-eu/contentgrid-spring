@@ -1,6 +1,9 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
 import com.contentgrid.spring.data.rest.webmvc.mapping.DomainTypeMapping;
+import com.contentgrid.spring.data.rest.webmvc.mapping.FormMapping;
+import com.contentgrid.spring.data.rest.webmvc.mapping.SearchMapping;
+import com.contentgrid.spring.data.rest.webmvc.mapping.collectionfilter.CollectionFilterBasedContainer;
 import com.contentgrid.spring.data.rest.webmvc.mapping.jackson.JacksonBasedContainer;
 import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.beans.factory.ObjectProvider;
@@ -21,21 +24,30 @@ public class ContentGridSpringDataRestProfileConfiguration {
     }
 
     @Bean
+    @FormMapping
     DomainTypeMapping halFormsFormMappingDomainTypeMapping(Repositories repositories) {
         return new DomainTypeMapping(repositories, JacksonBasedContainer::new);
     }
 
     @Bean
+    @SearchMapping
+    DomainTypeMapping halFormsSearchMappingDomainTypeMapping(Repositories repositories) {
+        return new DomainTypeMapping(repositories, (container) -> new CollectionFilterBasedContainer(container, 2));
+    }
+
+    @Bean
     DomainTypeToHalFormsPayloadMetadataConverter DomainTypeToHalFormsPayloadMetadataConverter(
-            DomainTypeMapping formDomainTypeMapping
+            @FormMapping DomainTypeMapping formDomainTypeMapping,
+            @SearchMapping DomainTypeMapping searchDomainTypeMapping
     ) {
         return new DefaultDomainTypeToHalFormsPayloadMetadataConverter(
-                formDomainTypeMapping
+                formDomainTypeMapping,
+                searchDomainTypeMapping
         );
     }
 
     @Bean
-    HalFormsConfiguration halFormsConfiguration(ObjectProvider<HalConfiguration> halConfiguration, DomainTypeMapping domainTypeMapping, EntityLinks entityLinks) {
+    HalFormsConfiguration halFormsConfiguration(ObjectProvider<HalConfiguration> halConfiguration, @FormMapping DomainTypeMapping domainTypeMapping, EntityLinks entityLinks) {
         var halFormsConfiguration = new AtomicReference<>(new HalFormsConfiguration(halConfiguration.getIfAvailable(HalConfiguration::new)));
         for (Class<?> domainType : domainTypeMapping) {
             var container = domainTypeMapping.forDomainType(domainType);

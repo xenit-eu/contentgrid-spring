@@ -29,6 +29,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         DomainTypeToHalFormsPayloadMetadataConverter {
 
     private final DomainTypeMapping formMapping;
+    private final DomainTypeMapping searchMapping;
 
     @Override
     public PayloadMetadata convertToCreatePayloadMetadata(Class<?> domainType) {
@@ -67,6 +68,14 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         };
     }
 
+    @Override
+    public PayloadMetadata convertToSearchPayloadMetadata(Class<?> domainType) {
+        List<PropertyMetadata> properties = new ArrayList<>();
+        extractPropertyMetadataForSearch(searchMapping.forDomainType(domainType))
+                .forEachOrdered(properties::add);
+        return properties::stream;
+    }
+
     private Stream<PropertyMetadata> extractPropertyMetadataForForms(Container entity) {
         var output = Stream.<PropertyMetadata>builder();
         entity.doWithProperties(new RecursivePropertyConsumer(
@@ -87,6 +96,17 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
                         .withRequired(property.isRequired())
                         .withReadOnly(false),
                 this::extractPropertyMetadataForForms
+        ));
+        return output.build();
+    }
+
+    private Stream<PropertyMetadata> extractPropertyMetadataForSearch(Container entity) {
+        var output = Stream.<PropertyMetadata>builder();
+        entity.doWithAll(new RecursivePropertyConsumer(
+                output,
+                (property) -> new BasicPropertyMetadata(property.getName(), property.getTypeInformation().toTypeDescriptor().getResolvableType())
+                        .withReadOnly(false),
+                this::extractPropertyMetadataForSearch
         ));
         return output.build();
     }
