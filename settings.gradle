@@ -6,6 +6,19 @@ plugins {
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
+        exclusiveContent {
+            forRepository {
+                maven {
+                    url 'https://s01.oss.sonatype.org/content/repositories/snapshots'
+                    mavenContent {
+                        snapshotsOnly()
+                    }
+                }
+            }
+            filter {
+                includeGroup("com.contentgrid.hateoas")
+            }
+        }
     }
 }
 
