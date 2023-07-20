@@ -30,12 +30,13 @@ class HalFormsProfileControllerTest {
                 .andExpect(MockMvcResultMatchers.content().json("""
                         {
                             _links: {
-                                collection: {
+                                describes: {
+                                    name: "collection",
                                     href: "http://localhost/customers"
                                 }
                             },
                             _templates: {
-                                create: {
+                                "create-form": {
                                     method: "POST",
                                     contentType: "application/json",
                                     target: "http://localhost/customers",
@@ -94,7 +95,7 @@ class HalFormsProfileControllerTest {
                 .andExpect(MockMvcResultMatchers.content().json("""
                     {
                         _templates: {
-                            create: {
+                            "create-form": {
                                 method: "POST",
                                 contentType: "application/json",
                                 target: "http://localhost/invoices",

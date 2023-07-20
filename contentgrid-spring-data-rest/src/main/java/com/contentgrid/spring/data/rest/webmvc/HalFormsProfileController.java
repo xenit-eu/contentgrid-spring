@@ -7,6 +7,7 @@ import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.BasePathAwareController;
 import org.springframework.data.rest.webmvc.ProfileController;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.RepresentationModel;
@@ -50,12 +51,14 @@ public class HalFormsProfileController {
 
         model.add(Link.of(ProfileController.getPath(configuration, information.getResourceMetadata())));
 
-        var collectionLink = entityLinks.linkFor(information.getDomainType()).withRel("collection");
+        var collectionLink = entityLinks.linkFor(information.getDomainType())
+                .withRel(IanaLinkRelations.DESCRIBES)
+                .withName(IanaLinkRelations.COLLECTION_VALUE);
 
         var collectionAffordances = Affordances.of(collectionLink)
                 .afford(HttpMethod.HEAD) // This is to pin down the default affordance, which we don't care about
                 .andAfford(HttpMethod.POST)
-                .withName("create")
+                .withName(IanaLinkRelations.CREATE_FORM_VALUE)
                 .withInput(toHalFormsPayloadMetadataConverter.convertToCreatePayloadMetadata(information.getDomainType()))
                 .withInputMediaType(MediaType.APPLICATION_JSON)
                 .build();
