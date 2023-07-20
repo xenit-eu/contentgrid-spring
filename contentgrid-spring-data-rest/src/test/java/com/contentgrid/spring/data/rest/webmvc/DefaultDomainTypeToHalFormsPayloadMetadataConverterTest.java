@@ -9,37 +9,21 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.repository.support.RepositoryInvokerFactory;
-import org.springframework.data.rest.core.mapping.ResourceMappings;
-import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
-@ContextConfiguration(classes = InvoicingApplication.class)
-class DefaultRootResourceInformationToHalFormsPayloadMetadataConverterTest {
+@ContextConfiguration(classes = {
+        InvoicingApplication.class,
+        ContentGridSpringDataRestProfileConfiguration.class
+})
+class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Autowired
-    Repositories repositories;
-    @Autowired
-    RepositoryInvokerFactory invokerFactory;
-    @Autowired
-    ResourceMappings mappings;
-
-    protected RootResourceInformation getResourceInformation(Class<?> domainType) {
-
-        PersistentEntity<?, ?> entity = repositories.getPersistentEntity(domainType);
-
-        return new RootResourceInformation(mappings.getMetadataFor(domainType), entity,
-                invokerFactory.getInvokerFor(domainType));
-    }
+    DefaultDomainTypeToHalFormsPayloadMetadataConverter converter;
 
     @Test
     void convertToCreatePayloadMetadata_embeddedContent() {
-        var converter = new DefaultRootResourceInformationToHalFormsPayloadMetadataConverter();
-
-        var metadata = converter.convertToCreatePayloadMetadata(getResourceInformation(Customer.class));
+        var metadata = converter.convertToCreatePayloadMetadata(Customer.class);
 
         assertThat(metadata.getType()).isEqualTo(Customer.class);
 
@@ -75,9 +59,7 @@ class DefaultRootResourceInformationToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_association() {
-        var converter = new DefaultRootResourceInformationToHalFormsPayloadMetadataConverter();
-
-        var metadata = converter.convertToCreatePayloadMetadata(getResourceInformation(Order.class));
+        var metadata = converter.convertToCreatePayloadMetadata(Order.class);
 
         assertThat(metadata.getType()).isEqualTo(Order.class);
 
@@ -105,9 +87,7 @@ class DefaultRootResourceInformationToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_requiredAssociation() {
-        var converter = new DefaultRootResourceInformationToHalFormsPayloadMetadataConverter();
-
-        var metadata = converter.convertToCreatePayloadMetadata(getResourceInformation(Invoice.class));
+        var metadata = converter.convertToCreatePayloadMetadata(Invoice.class);
 
         assertThat(metadata.stream()).anySatisfy(
                 counterparty -> {

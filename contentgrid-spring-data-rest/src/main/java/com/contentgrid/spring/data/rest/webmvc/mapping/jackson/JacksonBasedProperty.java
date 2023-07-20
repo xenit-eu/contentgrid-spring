@@ -50,7 +50,8 @@ public class JacksonBasedProperty implements Property {
 
     @Override
     public Optional<Container> nestedContainer() {
-        return delegate.nestedContainer();
+        return delegate.nestedContainer()
+                .map(JacksonBasedContainer::new);
     }
 
     @Override

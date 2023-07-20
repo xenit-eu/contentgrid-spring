@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.HashSet;
@@ -39,11 +40,11 @@ public class Invoice {
     private boolean paid;
 
     @ContentId
-    @JsonProperty("content_id")
+    @JsonIgnore
     private String contentId;
 
     @ContentLength
-    @JsonProperty("content_length")
+    @JsonProperty(value = "content_length", access = Access.READ_ONLY)
     private Long contentLength;
 
     @MimeType
@@ -55,11 +56,11 @@ public class Invoice {
     private String contentFilename;
 
     @ContentId
-    @JsonProperty("attachment_id")
+    @JsonIgnore
     private String attachmentId;
 
     @ContentLength
-    @JsonProperty("attachment_length")
+    @JsonProperty(value = "attachment_length", access = Access.READ_ONLY)
     private Long attachmentLength;
 
     @MimeType
