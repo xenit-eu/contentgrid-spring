@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.contentgrid.spring.querydsl.annotations.CollectionFilterParam;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.UUID;
@@ -24,6 +25,7 @@ public class ShippingAddress {
     private UUID id;
 
     private String street;
+    @CollectionFilterParam
     private String zip;
     private String city;
 

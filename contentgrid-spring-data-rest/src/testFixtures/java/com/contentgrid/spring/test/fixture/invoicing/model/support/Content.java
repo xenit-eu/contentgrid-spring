@@ -1,5 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing.model.support;
 
+import com.contentgrid.spring.querydsl.annotations.CollectionFilterParam;
+import com.contentgrid.spring.querydsl.annotations.CollectionFilterParams;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -18,11 +20,14 @@ public class Content {
 
     @ContentLength
     @JsonProperty(access = Access.READ_ONLY)
+    @CollectionFilterParam(value = "size")
     private Long length;
 
     @MimeType
+    @CollectionFilterParam(value = "mimetype")
     private String mimetype;
 
     @OriginalFileName
+    @CollectionFilterParam
     private String filename;
 }

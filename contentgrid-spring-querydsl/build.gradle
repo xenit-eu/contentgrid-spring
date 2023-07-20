@@ -1,0 +1,17 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+configurations {
+    compileOnly {
+        extendsFrom(annotationProcessor)
+    }
+}
+
+dependencies {
+    annotationProcessor platform(project(':contentgrid-spring-boot-platform'))
+    annotationProcessor 'org.projectlombok:lombok'
+
+    api platform(project(':contentgrid-spring-boot-platform'))
+    api 'com.querydsl:querydsl-core'
+}

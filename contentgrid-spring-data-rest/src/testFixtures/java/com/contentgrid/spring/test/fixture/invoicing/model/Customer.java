@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.contentgrid.spring.querydsl.annotations.CollectionFilterParam;
 import com.contentgrid.spring.test.fixture.invoicing.model.support.Content;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -35,6 +36,7 @@ public class Customer {
     private String name;
 
     @Column(unique=true, nullable = false)
+    @CollectionFilterParam
     private String vat;
 
     @Embedded
@@ -43,12 +45,14 @@ public class Customer {
     @AttributeOverride(name = "mimetype", column = @Column(name = "content__mimetype"))
     @AttributeOverride(name = "filename", column = @Column(name = "content__filename"))
     @RestResource(linkRel = "content", path = "content")
+    @CollectionFilterParam
     private Content content;
 
     @OneToMany(mappedBy = "customer")
     private Set<Order> orders = new HashSet<>();
 
     @OneToMany(mappedBy="counterparty")
+    @CollectionFilterParam
     private Set<Invoice> invoices = new HashSet<>();
 
 }
