@@ -8,6 +8,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+/**
+ * Qualifier annotation for {@link DomainTypeMapping} that relates to search query parameters
+ */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
