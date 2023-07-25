@@ -1,0 +1,91 @@
+package com.contentgrid.spring.data.rest.webmvc;
+
+import java.util.Collections;
+import java.util.random.RandomGenerator;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.data.rest.webmvc.BasePathAwareController;
+import org.springframework.data.rest.webmvc.ProfileController;
+import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.TemplateVariable.VariableType;
+import org.springframework.hateoas.TemplateVariables;
+import org.springframework.hateoas.UriTemplate;
+import org.springframework.hateoas.mediatype.Affordances;
+import org.springframework.hateoas.server.EntityLinks;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@RequiredArgsConstructor
+@BasePathAwareController
+public class HalFormsProfileController {
+    private static final RandomGenerator RANDOM = RandomGenerator.getDefault();
+
+    private final RepositoryRestConfiguration configuration;
+    private final EntityLinks entityLinks;
+    private final DomainTypeToHalFormsPayloadMetadataConverter toHalFormsPayloadMetadataConverter;
+
+    @RequestMapping(value = ProfileController.RESOURCE_PROFILE_MAPPING, method = RequestMethod.OPTIONS, produces = MediaTypes.HAL_FORMS_JSON_VALUE)
+    HttpEntity<?> halFormsOptions() {
+        var headers = new HttpHeaders();
+
+        headers.setAllow(Collections.singleton(HttpMethod.GET));
+
+        return new ResponseEntity<>(headers, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = ProfileController.RESOURCE_PROFILE_MAPPING, method = RequestMethod.GET, produces = {
+            MediaTypes.HAL_FORMS_JSON_VALUE
+    })
+    @ResponseBody
+    @ResponseStatus(HttpStatus.OK)
+    RepresentationModel<?> halFormsProfile(RootResourceInformation information) {
+        var model = new RepresentationModel<>();
+
+        model.add(Link.of(ProfileController.getPath(configuration, information.getResourceMetadata())));
+
+        var collectionLink = entityLinks.linkFor(information.getDomainType())
+                .withRel(IanaLinkRelations.DESCRIBES)
+                .withName(IanaLinkRelations.COLLECTION_VALUE);
+
+        var placeholder = new StringBuilder("---");
+        while(placeholder.length() < 10) {
+            placeholder.append(RANDOM.nextInt('a', 'z'));
+        }
+        placeholder.append("---");
+        var itemLinkTemplate = entityLinks.linkToItemResource(information.getDomainType(), placeholder.toString())
+                .getTemplate()
+                .with("id", VariableType.SIMPLE);
+
+        var itemLink = Link.of(
+                UriTemplate.of(itemLinkTemplate.toString().replace(placeholder, ""), new TemplateVariables(itemLinkTemplate.getVariables())),
+                IanaLinkRelations.DESCRIBES
+        ).withName(IanaLinkRelations.ITEM_VALUE);
+
+        var collectionAffordances = Affordances.of(collectionLink)
+                .afford(HttpMethod.HEAD) // This is to pin down the default affordance, which we don't care about
+                .andAfford(HttpMethod.POST)
+                .withName(IanaLinkRelations.CREATE_FORM_VALUE)
+                .withInput(toHalFormsPayloadMetadataConverter.convertToCreatePayloadMetadata(information.getDomainType()))
+                .withInputMediaType(MediaType.APPLICATION_JSON)
+                .build();
+
+        model.add(collectionAffordances.toLink());
+        model.add(itemLink);
+
+        return model;
+    }
+
+}

@@ -1,5 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +24,7 @@ public class PromotionCampaign {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonProperty(access = Access.READ_ONLY)
     private UUID id;
 
     @Column(updatable = false, nullable = false)

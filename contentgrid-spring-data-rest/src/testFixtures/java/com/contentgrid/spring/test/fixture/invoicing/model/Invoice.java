@@ -1,9 +1,12 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -26,8 +29,10 @@ import org.springframework.content.commons.annotations.OriginalFileName;
 public class Invoice {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonProperty(access = Access.READ_ONLY)
     private UUID id;
 
+    @Column(nullable = false)
     private String number;
 
     private boolean draft;
@@ -35,11 +40,11 @@ public class Invoice {
     private boolean paid;
 
     @ContentId
-    @JsonProperty("content_id")
+    @JsonIgnore
     private String contentId;
 
     @ContentLength
-    @JsonProperty("content_length")
+    @JsonProperty(value = "content_length", access = Access.READ_ONLY)
     private Long contentLength;
 
     @MimeType
@@ -51,11 +56,11 @@ public class Invoice {
     private String contentFilename;
 
     @ContentId
-    @JsonProperty("attachment_id")
+    @JsonIgnore
     private String attachmentId;
 
     @ContentLength
-    @JsonProperty("attachment_length")
+    @JsonProperty(value = "attachment_length", access = Access.READ_ONLY)
     private Long attachmentLength;
 
     @MimeType
@@ -66,8 +71,8 @@ public class Invoice {
     @JsonProperty("attachment_filename")
     private String attachmentFilename;
 
-    @ManyToOne
-    @JoinColumn(name = "counterparty")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "counterparty", nullable = false)
     private Customer counterparty;
 
     @OneToMany(mappedBy = "invoice")

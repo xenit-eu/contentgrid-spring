@@ -108,8 +108,8 @@ class InvoicingApplicationTests {
         var promoCyber = promos.save(new PromotionCampaign("CYBER-MON", "Cyber Monday"));
         PROMO_CYBER = promoCyber.getPromoCode();
 
-        var xenit = customers.save(new Customer(null, "XeniT", ORG_XENIT_VAT, new HashSet<>(), new HashSet<>()));
-        var inbev = customers.save(new Customer(null, "AB InBev", ORG_INBEV_VAT, new HashSet<>(), new HashSet<>()));
+        var xenit = customers.save(new Customer(null, "XeniT", ORG_XENIT_VAT, null, new HashSet<>(), new HashSet<>()));
+        var inbev = customers.save(new Customer(null, "AB InBev", ORG_INBEV_VAT, null, new HashSet<>(), new HashSet<>()));
 
         XENIT_ID = xenit.getId();
         INBEV_ID = inbev.getId();

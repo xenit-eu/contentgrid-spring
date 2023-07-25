@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.data.rest.webmvc.ContentGridSpringDataRestConfiguration;
 import org.springframework.data.rest.webmvc.DelegatingRepositoryPropertyReferenceController;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
+import org.springframework.hateoas.mediatype.hal.HalConfiguration;
+import org.springframework.hateoas.mediatype.hal.forms.HalFormsConfiguration;
 
 class ContentGridSpringDataRestAutoConfigurationTest {
 
@@ -26,6 +28,17 @@ class ContentGridSpringDataRestAutoConfigurationTest {
             assertThat(context).hasBean("repositoryPropertyReferenceController");
             assertThat(context).hasNotFailed();
         });
+    }
+
+    @Test
+    void checkContentGridProfile_halConfiguration_used() {
+        var halConfiguration = new HalConfiguration();
+        contextRunner
+                .withBean(HalConfiguration.class, () -> halConfiguration)
+                .run(context -> {
+                    assertThat(context).hasSingleBean(HalFormsConfiguration.class);
+                    assertThat(context.getBean(HalFormsConfiguration.class).getHalConfiguration()).isSameAs(halConfiguration);
+                });
     }
 
     @Test

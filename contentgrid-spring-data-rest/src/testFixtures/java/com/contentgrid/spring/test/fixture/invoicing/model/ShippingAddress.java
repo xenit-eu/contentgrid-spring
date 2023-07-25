@@ -1,5 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.UUID;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -18,6 +20,7 @@ public class ShippingAddress {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @JsonProperty(access = Access.READ_ONLY)
     private UUID id;
 
     private String street;

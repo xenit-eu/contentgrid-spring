@@ -1,6 +1,9 @@
 package com.contentgrid.spring.boot.autoconfigure.data.web;
 
+import com.contentgrid.spring.data.rest.webmvc.ContentGridSpringDataRestProfileConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,8 +14,10 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguratio
 
 @Configuration
 @ConditionalOnClass({ContentGridSpringDataRestConfiguration.class, RepositoryRestMvcConfiguration.class})
-@Import(ContentGridSpringDataRestConfiguration.class)
+@Import({ContentGridSpringDataRestConfiguration.class, ContentGridSpringDataRestProfileConfiguration.class})
+@AutoConfigureAfter(HypermediaAutoConfiguration.class)
 public class ContentGridSpringDataRestAutoConfiguration {
+
     @Bean
     @ConfigurationProperties("contentgrid.rest")
     ContentGridRestProperties contentGridRestProperties() {
