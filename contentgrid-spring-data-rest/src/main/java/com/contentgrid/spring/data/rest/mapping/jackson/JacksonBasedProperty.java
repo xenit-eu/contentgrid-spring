@@ -1,7 +1,7 @@
-package com.contentgrid.spring.data.rest.webmvc.mapping.jackson;
+package com.contentgrid.spring.data.rest.mapping.jackson;
 
-import com.contentgrid.spring.data.rest.webmvc.mapping.Container;
-import com.contentgrid.spring.data.rest.webmvc.mapping.Property;
+import com.contentgrid.spring.data.rest.mapping.Container;
+import com.contentgrid.spring.data.rest.mapping.Property;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;

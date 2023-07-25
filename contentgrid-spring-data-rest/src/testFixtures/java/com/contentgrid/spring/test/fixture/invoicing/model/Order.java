@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.contentgrid.spring.querydsl.annotations.CollectionFilterParam;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.HashSet;
@@ -32,10 +33,12 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "customer")
+    @CollectionFilterParam
     private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "invoice", foreignKey = @ForeignKey(foreignKeyDefinition = "foreign key (\"invoice\") references \"invoice\" ON DELETE set NULL"))
+    @CollectionFilterParam
     private Invoice invoice;
 
     @ManyToMany
@@ -43,6 +46,7 @@ public class Order {
 
     @OneToOne
     @JsonProperty("shipping_address")
+    @CollectionFilterParam("shipping_address")
     private ShippingAddress shippingAddress;
 
     public Order(Customer customer) {

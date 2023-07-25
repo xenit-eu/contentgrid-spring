@@ -1,5 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.contentgrid.spring.querydsl.annotations.CollectionFilterParam;
+import com.contentgrid.spring.querydsl.predicate.None;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -33,10 +35,12 @@ public class Invoice {
     private UUID id;
 
     @Column(nullable = false)
+    @CollectionFilterParam
     private String number;
 
     private boolean draft;
 
+    @CollectionFilterParam
     private boolean paid;
 
     @ContentId
@@ -45,6 +49,9 @@ public class Invoice {
 
     @ContentLength
     @JsonProperty(value = "content_length", access = Access.READ_ONLY)
+    @CollectionFilterParam("content.length")
+    @CollectionFilterParam(value = "content.length.lt", predicate = None.class)
+    @CollectionFilterParam(value = "content.length.gt", predicate = None.class)
     private Long contentLength;
 
     @MimeType
@@ -76,6 +83,7 @@ public class Invoice {
     private Customer counterparty;
 
     @OneToMany(mappedBy = "invoice")
+    @CollectionFilterParam
     private Set<Order> orders = new HashSet<>();
 
     public Invoice(String number, boolean draft, boolean paid, Customer counterparty, Set<Order> orders) {

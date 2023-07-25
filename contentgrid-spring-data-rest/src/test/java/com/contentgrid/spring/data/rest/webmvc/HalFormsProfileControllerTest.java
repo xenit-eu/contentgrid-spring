@@ -88,6 +88,50 @@ class HalFormsProfileControllerTest {
                                             }
                                         }
                                     ]
+                                },
+                                search: {
+                                    method: "GET",
+                                    target: "http://localhost/customers",
+                                    properties: [
+                                        {
+                                            name: "vat",
+                                            type: "text"
+                                        },
+                                        {
+                                            name: "content.size",
+                                            type: "number"
+                                        },
+                                        {
+                                            name: "content.mimetype",
+                                            type: "text"
+                                        },
+                                        {
+                                            name: "content.filename",
+                                            type: "text"
+                                        },
+                                        {
+                                            name: "invoices.number",
+                                            type: "text"
+                                        },
+                                        {
+                                            name: "invoices.paid"
+                                        # ,type: "checkbox"
+                                        },
+                                        # invoices.content.length does not run against the max depth limit because
+                                        # they are static parameters on a field at depth 1
+                                        {
+                                            name: "invoices.content.length",
+                                            type: "number"
+                                        },
+                                        {
+                                            name: "invoices.content.length.lt",
+                                            type: "number"
+                                        },
+                                        {
+                                            name: "invoices.content.length.gt",
+                                            type: "number"
+                                        }
+                                    ]
                                 }
                             }
                         }
@@ -160,6 +204,35 @@ class HalFormsProfileControllerTest {
                                             }
                                         }
                                     }
+                                ]
+                            },
+                            search: {
+                                method: "GET",
+                                target: "http://localhost/invoices",
+                                properties: [
+                                    {
+                                        name: "number",
+                                        type: "text"
+                                    },
+                                    {
+                                        name: "paid"
+                                        # ,type: "checkbox"
+                                    },
+                                    {
+                                        name: "content.length",
+                                        type: "number"
+                                    },
+                                    {
+                                        name: "content.length.lt",
+                                        type: "number"
+                                    },
+                                    {
+                                        name: "content.length.gt",
+                                        type: "number"
+                                    }
+                                    # Note: no relation to orders is exposed,
+                                    # because the searchable properties on Order are
+                                    # also relations. We only expand one level deep
                                 ]
                             }
                         }

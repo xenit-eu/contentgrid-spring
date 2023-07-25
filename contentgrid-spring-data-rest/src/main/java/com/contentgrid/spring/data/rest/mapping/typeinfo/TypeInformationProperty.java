@@ -1,10 +1,11 @@
-package com.contentgrid.spring.data.rest.webmvc.mapping.typeinfo;
+package com.contentgrid.spring.data.rest.mapping.typeinfo;
 
-import com.contentgrid.spring.data.rest.webmvc.mapping.Container;
-import com.contentgrid.spring.data.rest.webmvc.mapping.Property;
+import com.contentgrid.spring.data.rest.mapping.Container;
+import com.contentgrid.spring.data.rest.mapping.Property;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Optional;
+import javax.persistence.Embedded;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.TypeInformation;
 
@@ -35,6 +36,9 @@ public class TypeInformationProperty implements Property {
 
     @Override
     public Optional<Container> nestedContainer() {
+        if(findAnnotation(Embedded.class).isPresent()) {
+            return Optional.of(new TypeInformationContainer(typeInformation));
+        }
         return Optional.empty();
     }
 

@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.contentgrid.spring.querydsl.annotations.CollectionFilterParam;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ public class PromotionCampaign {
     private UUID id;
 
     @Column(updatable = false, nullable = false)
+    @CollectionFilterParam(value = "promo_code")
     private String promoCode;
 
     String description;

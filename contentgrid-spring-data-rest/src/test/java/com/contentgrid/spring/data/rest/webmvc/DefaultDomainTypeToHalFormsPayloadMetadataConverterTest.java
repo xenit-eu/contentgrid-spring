@@ -9,6 +9,7 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
 import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
@@ -94,6 +95,54 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                     assertThat(counterparty.getName()).isEqualTo("counterparty");
                     assertThat(counterparty.isRequired()).isTrue();
                 }
+        );
+    }
+
+    @Test
+    void convertToSearchPayloadMetadata_embeddedContent() {
+        var metadata = converter.convertToSearchPayloadMetadata(Customer.class);
+
+        assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
+                "vat",
+                "content.size",
+                "content.mimetype",
+                "content.filename",
+                "invoices.number",
+                "invoices.paid",
+                "invoices.content.length",
+                "invoices.content.length.lt",
+                "invoices.content.length.gt"
+        );
+    }
+
+    @Test
+    void convertToSearchPayloadMetadata_toOneAssociation() {
+        var metadata = converter.convertToSearchPayloadMetadata(Order.class);
+
+        assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
+                "customer.vat",
+                "customer.content.size",
+                "customer.content.mimetype",
+                "customer.content.filename",
+                "invoice.number",
+                "invoice.paid",
+                "invoice.content.length",
+                "invoice.content.length.lt",
+                "invoice.content.length.gt",
+                "shipping_address.zip"
+        );
+    }
+
+    @Test
+    void convertToSearchPayloadMetadata_requiredAssociation() {
+        var metadata = converter.convertToSearchPayloadMetadata(Invoice.class);
+
+        assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
+                "number",
+                "paid",
+                "content.length",
+                "content.length.lt",
+                "content.length.gt"
         );
     }
 }

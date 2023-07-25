@@ -1,8 +1,8 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
-import com.contentgrid.spring.data.rest.webmvc.mapping.Container;
-import com.contentgrid.spring.data.rest.webmvc.mapping.DomainTypeMapping;
-import com.contentgrid.spring.data.rest.webmvc.mapping.Property;
+import com.contentgrid.spring.data.rest.mapping.Container;
+import com.contentgrid.spring.data.rest.mapping.DomainTypeMapping;
+import com.contentgrid.spring.data.rest.mapping.Property;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +29,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         DomainTypeToHalFormsPayloadMetadataConverter {
 
     private final DomainTypeMapping formMapping;
+    private final DomainTypeMapping searchMapping;
 
     @Override
     public PayloadMetadata convertToCreatePayloadMetadata(Class<?> domainType) {
@@ -58,13 +59,21 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
             @Override
             public Stream<PropertyMetadata> stream() {
                 return properties.stream();
-    }
+            }
 
             @Override
             public Class<?> getType() {
                 return domainType;
             }
         };
+    }
+
+    @Override
+    public PayloadMetadata convertToSearchPayloadMetadata(Class<?> domainType) {
+        List<PropertyMetadata> properties = new ArrayList<>();
+        extractPropertyMetadataForSearch(searchMapping.forDomainType(domainType))
+                .forEachOrdered(properties::add);
+        return properties::stream;
     }
 
     private Stream<PropertyMetadata> extractPropertyMetadataForForms(Container entity) {
@@ -87,6 +96,17 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
                         .withRequired(property.isRequired())
                         .withReadOnly(false),
                 this::extractPropertyMetadataForForms
+        ));
+        return output.build();
+    }
+
+    private Stream<PropertyMetadata> extractPropertyMetadataForSearch(Container entity) {
+        var output = Stream.<PropertyMetadata>builder();
+        entity.doWithAll(new RecursivePropertyConsumer(
+                output,
+                (property) -> new BasicPropertyMetadata(property.getName(), property.getTypeInformation().toTypeDescriptor().getResolvableType())
+                        .withReadOnly(false),
+                this::extractPropertyMetadataForSearch
         ));
         return output.build();
     }
