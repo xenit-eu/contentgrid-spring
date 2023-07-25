@@ -1,6 +1,7 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
 import java.util.Collections;
+import java.util.random.RandomGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
@@ -11,6 +12,9 @@ import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.TemplateVariable.VariableType;
+import org.springframework.hateoas.TemplateVariables;
+import org.springframework.hateoas.UriTemplate;
 import org.springframework.hateoas.mediatype.Affordances;
 import org.springframework.hateoas.server.EntityLinks;
 import org.springframework.http.HttpEntity;
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @RequiredArgsConstructor
 @BasePathAwareController
 public class HalFormsProfileController {
+    private static final RandomGenerator RANDOM = RandomGenerator.getDefault();
 
     private final RepositoryRestConfiguration configuration;
     private final EntityLinks entityLinks;
@@ -55,6 +60,20 @@ public class HalFormsProfileController {
                 .withRel(IanaLinkRelations.DESCRIBES)
                 .withName(IanaLinkRelations.COLLECTION_VALUE);
 
+        var placeholder = new StringBuilder("---");
+        while(placeholder.length() < 10) {
+            placeholder.append(RANDOM.nextInt('a', 'z'));
+        }
+        placeholder.append("---");
+        var itemLinkTemplate = entityLinks.linkToItemResource(information.getDomainType(), placeholder.toString())
+                .getTemplate()
+                .with("id", VariableType.SIMPLE);
+
+        var itemLink = Link.of(
+                UriTemplate.of(itemLinkTemplate.toString().replace(placeholder, ""), new TemplateVariables(itemLinkTemplate.getVariables())),
+                IanaLinkRelations.DESCRIBES
+        ).withName(IanaLinkRelations.ITEM_VALUE);
+
         var collectionAffordances = Affordances.of(collectionLink)
                 .afford(HttpMethod.HEAD) // This is to pin down the default affordance, which we don't care about
                 .andAfford(HttpMethod.POST)
@@ -64,6 +83,7 @@ public class HalFormsProfileController {
                 .build();
 
         model.add(collectionAffordances.toLink());
+        model.add(itemLink);
 
         return model;
     }

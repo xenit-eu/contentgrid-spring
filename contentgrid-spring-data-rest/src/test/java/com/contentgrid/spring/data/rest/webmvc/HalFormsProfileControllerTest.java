@@ -30,10 +30,17 @@ class HalFormsProfileControllerTest {
                 .andExpect(MockMvcResultMatchers.content().json("""
                         {
                             _links: {
-                                describes: {
-                                    name: "collection",
-                                    href: "http://localhost/customers"
-                                }
+                                describes: [
+                                    {
+                                        name: "collection",
+                                        href: "http://localhost/customers"
+                                    },
+                                    {
+                                        name: "item",
+                                        href: "http://localhost/customers/{id}",
+                                        templated: true
+                                    }
+                                ]
                             },
                             _templates: {
                                 "create-form": {
