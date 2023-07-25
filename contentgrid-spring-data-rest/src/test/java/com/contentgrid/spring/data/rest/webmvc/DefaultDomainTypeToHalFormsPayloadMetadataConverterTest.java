@@ -102,25 +102,16 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
     void convertToSearchPayloadMetadata_embeddedContent() {
         var metadata = converter.convertToSearchPayloadMetadata(Customer.class);
 
-        assertThat(metadata.stream()).satisfiesExactlyInAnyOrder(
-                vat -> {
-                    assertThat(vat.getName()).isEqualTo("vat");
-                },
-                contentSize -> {
-                    assertThat(contentSize.getName()).isEqualTo("content.size");
-                },
-                contentMimetype -> {
-                    assertThat(contentMimetype.getName()).isEqualTo("content.mimetype");
-                },
-                contentFilename -> {
-                    assertThat(contentFilename.getName()).isEqualTo("content.filename");
-                },
-                invoicesNumber -> {
-                    assertThat(invoicesNumber.getName()).isEqualTo("invoices.number");
-                },
-                invoicesNumber -> {
-                    assertThat(invoicesNumber.getName()).isEqualTo("invoices.paid");
-                }
+        assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
+                "vat",
+                "content.size",
+                "content.mimetype",
+                "content.filename",
+                "invoices.number",
+                "invoices.paid",
+                "invoices.content.length",
+                "invoices.content.length.lt",
+                "invoices.content.length.gt"
         );
     }
 
@@ -135,6 +126,9 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 "customer.content.filename",
                 "invoice.number",
                 "invoice.paid",
+                "invoice.content.length",
+                "invoice.content.length.lt",
+                "invoice.content.length.gt",
                 "shipping_address.zip"
         );
     }
@@ -145,7 +139,10 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
         assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
                 "number",
-                "paid"
+                "paid",
+                "content.length",
+                "content.length.lt",
+                "content.length.gt"
         );
     }
 }
