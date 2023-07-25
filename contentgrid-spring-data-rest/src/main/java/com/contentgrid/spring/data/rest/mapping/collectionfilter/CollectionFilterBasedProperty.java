@@ -1,8 +1,8 @@
-package com.contentgrid.spring.data.rest.webmvc.mapping.collectionfilter;
+package com.contentgrid.spring.data.rest.mapping.collectionfilter;
 
-import com.contentgrid.spring.data.rest.webmvc.mapping.Container;
-import com.contentgrid.spring.data.rest.webmvc.mapping.Property;
-import com.contentgrid.spring.data.rest.webmvc.mapping.typeinfo.TypeInformationContainer;
+import com.contentgrid.spring.data.rest.mapping.Container;
+import com.contentgrid.spring.data.rest.mapping.Property;
+import com.contentgrid.spring.data.rest.mapping.typeinfo.TypeInformationContainer;
 import com.contentgrid.spring.querydsl.annotations.CollectionFilterParam;
 import java.lang.annotation.Annotation;
 import java.util.Optional;

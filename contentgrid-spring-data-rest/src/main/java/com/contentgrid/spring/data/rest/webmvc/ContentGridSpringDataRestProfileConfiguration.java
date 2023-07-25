@@ -1,10 +1,10 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
-import com.contentgrid.spring.data.rest.webmvc.mapping.DomainTypeMapping;
-import com.contentgrid.spring.data.rest.webmvc.mapping.FormMapping;
-import com.contentgrid.spring.data.rest.webmvc.mapping.SearchMapping;
-import com.contentgrid.spring.data.rest.webmvc.mapping.collectionfilter.CollectionFilterBasedContainer;
-import com.contentgrid.spring.data.rest.webmvc.mapping.jackson.JacksonBasedContainer;
+import com.contentgrid.spring.data.rest.mapping.DomainTypeMapping;
+import com.contentgrid.spring.data.rest.mapping.FormMapping;
+import com.contentgrid.spring.data.rest.mapping.SearchMapping;
+import com.contentgrid.spring.data.rest.mapping.collectionfilter.CollectionFilterBasedContainer;
+import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedContainer;
 import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;

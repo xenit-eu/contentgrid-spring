@@ -1,7 +1,7 @@
-package com.contentgrid.spring.data.rest.webmvc.mapping.jackson;
+package com.contentgrid.spring.data.rest.mapping.jackson;
 
-import com.contentgrid.spring.data.rest.webmvc.mapping.Container;
-import com.contentgrid.spring.data.rest.webmvc.mapping.Property;
+import com.contentgrid.spring.data.rest.mapping.Container;
+import com.contentgrid.spring.data.rest.mapping.Property;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.function.Consumer;

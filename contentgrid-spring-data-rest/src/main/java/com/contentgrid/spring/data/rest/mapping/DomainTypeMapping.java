@@ -1,6 +1,6 @@
-package com.contentgrid.spring.data.rest.webmvc.mapping;
+package com.contentgrid.spring.data.rest.mapping;
 
-import com.contentgrid.spring.data.rest.webmvc.mapping.persistent.PersistentEntityContainer;
+import com.contentgrid.spring.data.rest.mapping.persistent.PersistentEntityContainer;
 import java.util.Iterator;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
-import com.contentgrid.spring.data.rest.webmvc.mapping.Container;
-import com.contentgrid.spring.data.rest.webmvc.mapping.DomainTypeMapping;
-import com.contentgrid.spring.data.rest.webmvc.mapping.Property;
+import com.contentgrid.spring.data.rest.mapping.Container;
+import com.contentgrid.spring.data.rest.mapping.DomainTypeMapping;
+import com.contentgrid.spring.data.rest.mapping.Property;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

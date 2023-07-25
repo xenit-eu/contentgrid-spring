@@ -1,4 +1,4 @@
-package com.contentgrid.spring.data.rest.webmvc.mapping;
+package com.contentgrid.spring.data.rest.mapping;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
