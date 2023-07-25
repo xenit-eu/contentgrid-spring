@@ -33,8 +33,6 @@ dependencies {
     implementation 'org.springframework.data:spring-data-rest-webmvc'
     implementation 'com.github.paulcwarren:spring-content-rest'
 
-    implementation 'com.contentgrid.hateoas:contentgrid-hateoas-spring:0.0.1-SNAPSHOT'
-
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'jakarta.transaction:jakarta.transaction-api'

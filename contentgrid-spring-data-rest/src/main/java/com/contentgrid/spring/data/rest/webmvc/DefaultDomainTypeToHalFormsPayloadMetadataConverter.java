@@ -1,6 +1,5 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
-import com.contentgrid.hateoas.spring.affordances.property.BasicPropertyMetadata;
 import com.contentgrid.spring.data.rest.webmvc.mapping.Container;
 import com.contentgrid.spring.data.rest.webmvc.mapping.DomainTypeMapping;
 import com.contentgrid.spring.data.rest.webmvc.mapping.Property;
@@ -11,12 +10,19 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import lombok.AccessLevel;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import lombok.Value;
+import lombok.With;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.hateoas.AffordanceModel.PayloadMetadata;
 import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
+import org.springframework.hateoas.mediatype.InputTypeFactory;
 import org.springframework.hateoas.mediatype.html.HtmlInputType;
+import org.springframework.lang.Nullable;
 
 @RequiredArgsConstructor
 public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
@@ -65,7 +71,8 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         var output = Stream.<PropertyMetadata>builder();
         entity.doWithProperties(new RecursivePropertyConsumer(
                 output,
-                (property) -> new BasicPropertyMetadata(property.getName(), property.getTypeInformation().toTypeDescriptor().getResolvableType())
+                (property) -> new BasicPropertyMetadata(property.getName(),
+                        property.getTypeInformation().toTypeDescriptor().getResolvableType())
                         .withRequired(property.isRequired())
                         .withReadOnly(false),
 
@@ -74,7 +81,8 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
 
         entity.doWithAssociations(new RecursivePropertyConsumer(
                 output,
-                property -> new BasicPropertyMetadata(property.getName(), property.getTypeInformation().toTypeDescriptor().getResolvableType())
+                property -> new BasicPropertyMetadata(property.getName(),
+                        property.getTypeInformation().toTypeDescriptor().getResolvableType())
                         .withInputType(HtmlInputType.URL_VALUE)
                         .withRequired(property.isRequired())
                         .withReadOnly(false),
@@ -140,6 +148,39 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         @Override
         public String getInputType() {
             return delegate.getInputType();
+        }
+    }
+
+    @Value
+    @With
+    @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+    public static class BasicPropertyMetadata implements PropertyMetadata {
+        private static final InputTypeFactory INPUT_TYPE_FACTORY;
+
+        static {
+            INPUT_TYPE_FACTORY = SpringFactoriesLoader.loadFactories(InputTypeFactory.class, BasicPropertyMetadata.class.getClassLoader()).get(0);
+        }
+
+        @NonNull
+        String name;
+        boolean required;
+        boolean readOnly;
+        @NonNull
+        ResolvableType type;
+        @Nullable
+        String inputType;
+
+        /**
+         * @param propertyName The name of the property
+         * @param type The type of the property
+         */
+        public BasicPropertyMetadata(String propertyName, ResolvableType type) {
+            this(propertyName, false, false, type, INPUT_TYPE_FACTORY.getInputType(type.resolve(Object.class)));
+        }
+
+        @Override
+        public Optional<String> getPattern() {
+            return Optional.empty();
         }
     }
 
