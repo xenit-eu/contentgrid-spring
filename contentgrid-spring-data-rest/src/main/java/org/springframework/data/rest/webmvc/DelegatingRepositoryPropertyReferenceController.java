@@ -69,11 +69,14 @@ public class DelegatingRepositoryPropertyReferenceController {
 
     private final ObjectProvider<QuerydslBindingsFactory> querydslBindingsFactoryProvider;
 
+    private final ContentGridRestProperties contentGridRestProperties;
+
     @Autowired
     DelegatingRepositoryPropertyReferenceController(RepositoryPropertyReferenceController delegate,
             Repositories repositories, RepositoryResourceMappings mappings,
             RepositoryEntityLinks entityLinks, SelfLinkProvider selfLinkProvider,
-            ObjectProvider<QuerydslBindingsFactory> querydslBindingsFactoryProvider) {
+            ObjectProvider<QuerydslBindingsFactory> querydslBindingsFactoryProvider,
+            ContentGridRestProperties contentGridRestProperties) {
 
         this.delegate = delegate;
 
@@ -82,11 +85,12 @@ public class DelegatingRepositoryPropertyReferenceController {
         this.entityLinks = entityLinks;
         this.selfLinkProvider = selfLinkProvider;
         this.querydslBindingsFactoryProvider = querydslBindingsFactoryProvider;
+        this.contentGridRestProperties = contentGridRestProperties;
     }
 
     @RequestMapping(value = BASE_MAPPING, method = GET)
     public ResponseEntity<?> followPropertyReference(final RootResourceInformation repoRequest,
-            @BackendId Serializable id, final @PathVariable String property) throws Exception {
+            @BackendId Serializable id, final @PathVariable String property, PersistentEntityResourceAssembler assembler) throws Exception {
 
         Function<ReferencedProperty, ResponseEntity<?>> handler = (ReferencedProperty prop) -> {
             if (prop.property.isCollectionLike()) {
@@ -137,7 +141,10 @@ public class DelegatingRepositoryPropertyReferenceController {
             }
         };
 
-        return doWithReferencedProperty(repoRequest, id, property, handler, HttpMethod.GET);
+        return fallbackIfNotImplemented(
+                doWithReferencedProperty(repoRequest, id, property, handler, HttpMethod.GET),
+                () -> delegate.followPropertyReference(repoRequest, id, property, assembler)
+        );
     }
 
     private static Optional<String> findReverseRelationPropertyName(PersistentProperty<?> property) {
@@ -192,7 +199,8 @@ public class DelegatingRepositoryPropertyReferenceController {
     //      - redirects
     @RequestMapping(value = BASE_MAPPING + "/{propertyId}", method = GET)
     public ResponseEntity<?> followPropertyReference(RootResourceInformation repoRequest,
-            @BackendId Serializable id, @PathVariable String property, @PathVariable String propertyId)
+            @BackendId Serializable id, @PathVariable String property, @PathVariable String propertyId,
+            PersistentEntityResourceAssembler assembler)
             throws Exception {
 
         Function<ReferencedProperty, ResponseEntity<?>> handler = prop -> {
@@ -248,7 +256,10 @@ public class DelegatingRepositoryPropertyReferenceController {
 
         };
 
-        return doWithReferencedProperty(repoRequest, id, property, handler, HttpMethod.GET);
+        return fallbackIfNotImplemented(
+                doWithReferencedProperty(repoRequest, id, property, handler, HttpMethod.GET),
+                () -> delegate.followPropertyReference(repoRequest, id, property, propertyId, assembler)
+        );
     }
 
     @RequestMapping(value = BASE_MAPPING, method = GET, produces = TEXT_URI_LIST_VALUE)
@@ -281,6 +292,16 @@ public class DelegatingRepositoryPropertyReferenceController {
     public ResponseEntity<Void> handle(
             RepositoryPropertyReferenceController.HttpRequestMethodNotSupportedException exception) {
         return exception.toResponse();
+    }
+
+    private ResponseEntity<?> fallbackIfNotImplemented(ResponseEntity<?> currentResponse, ThrowingSupplier<ResponseEntity<?>> fallbackSupplier) throws Exception {
+        if(!contentGridRestProperties.isFallbackToDefaultRelationController()) {
+            return currentResponse;
+        }
+        if(currentResponse.getStatusCode() == HttpStatus.NOT_IMPLEMENTED) {
+            return fallbackSupplier.get();
+        }
+        return currentResponse;
     }
 
     // See RepositoryPropertyReferenceController#doWithReferencedProperty
@@ -333,5 +354,10 @@ public class DelegatingRepositoryPropertyReferenceController {
         public <T> Optional<T> mapValue(Function<Object, T> function) {
             return Optional.ofNullable(accessor.getProperty(property)).map(function);
         }
+    }
+
+    @FunctionalInterface
+    private interface ThrowingSupplier<T> {
+        T get() throws Exception;
     }
 }
