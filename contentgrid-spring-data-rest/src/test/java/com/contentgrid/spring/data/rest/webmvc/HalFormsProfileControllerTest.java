@@ -14,7 +14,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @SpringBootTest
 @ContextConfiguration(classes = {
         InvoicingApplication.class,
-        ContentGridSpringDataRestProfileConfiguration.class
 })
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 class HalFormsProfileControllerTest {

@@ -8,6 +8,10 @@ spring:
     properties:
       hibernate:
         globally_quoted_identifiers: true
+  content:
+    storage:
+      type:
+        default: fs
 
 logging:
   level:
