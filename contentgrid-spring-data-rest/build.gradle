@@ -39,27 +39,17 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'jakarta.transaction:jakarta.transaction-api'
 
-    testFixturesAnnotationProcessor 'com.querydsl:querydsl-apt::jpa'
-    testFixturesAnnotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+    testFixturesAnnotationProcessor project(':contentgrid-spring-boot-starter-annotations')
 
     testFixturesImplementation platform(project(':contentgrid-spring-boot-platform'))
+    testFixturesImplementation project(':contentgrid-spring-boot-starter')
 
     testFixturesApi 'org.springframework.data:spring-data-jpa'
 
-    testFixturesImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    testFixturesImplementation 'org.springframework.boot:spring-boot-starter-data-rest'
-    testFixturesImplementation "com.github.paulcwarren:spring-content-rest-boot-starter"
-    testFixturesImplementation "com.github.paulcwarren:spring-content-fs-boot-starter"
-
     testFixturesCompileOnly 'org.projectlombok:lombok'
-
-    testFixturesImplementation 'com.querydsl:querydsl-core'
-    testFixturesImplementation project(':contentgrid-spring-querydsl')
 
     testFixturesRuntimeOnly 'org.postgresql:postgresql'
     testFixturesRuntimeOnly 'org.testcontainers:postgresql:1.18.3'
-    testFixturesRuntimeOnly 'com.querydsl:querydsl-jpa'
-
 }
 
 tasks.named('test') {

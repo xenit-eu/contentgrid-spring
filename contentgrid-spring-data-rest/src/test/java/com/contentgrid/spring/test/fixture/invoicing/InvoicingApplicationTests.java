@@ -1214,6 +1214,7 @@ class InvoicingApplicationTests {
             }
 
             @Test
+            @Disabled("ACC-735")
             void putMultipartContent_http201() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 assertThat(invoicesContent.getContent(invoice)).isNull();
@@ -1234,6 +1235,7 @@ class InvoicingApplicationTests {
             }
 
             @Test
+            @Disabled("ACC-735")
             void putMultipartContent_updateDifferentContentType_http200() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);

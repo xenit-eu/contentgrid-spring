@@ -1,4 +1,4 @@
-package com.contentgrid.spring.querydsl.annotations;
+package com.contentgrid.spring.querydsl.annotation;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;

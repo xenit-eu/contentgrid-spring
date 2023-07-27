@@ -10,6 +10,7 @@ dependencies {
     api project(':contentgrid-spring-boot-actuators')
     api project(':contentgrid-spring-integration-events')
     api project(':contentgrid-spring-data-rest')
+    api project(':contentgrid-spring-querydsl')
 
     api 'org.springframework.boot:spring-boot-starter-integration'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'

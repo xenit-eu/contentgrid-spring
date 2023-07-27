@@ -15,12 +15,11 @@ import org.springframework.test.context.ContextConfiguration;
 @SpringBootTest
 @ContextConfiguration(classes = {
         InvoicingApplication.class,
-        ContentGridSpringDataRestProfileConfiguration.class
 })
 class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Autowired
-    DefaultDomainTypeToHalFormsPayloadMetadataConverter converter;
+    DomainTypeToHalFormsPayloadMetadataConverter converter;
 
     @Test
     void convertToCreatePayloadMetadata_embeddedContent() {
