@@ -1,6 +1,6 @@
 package com.contentgrid.spring.querydsl.predicate;
 
-import com.contentgrid.spring.querydsl.annotations.QuerydslPredicateFactory;
+import com.contentgrid.spring.querydsl.annotation.QuerydslPredicateFactory;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;

@@ -1,4 +1,4 @@
-package com.contentgrid.spring.querydsl.annotations;
+package com.contentgrid.spring.querydsl.annotation;
 
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;

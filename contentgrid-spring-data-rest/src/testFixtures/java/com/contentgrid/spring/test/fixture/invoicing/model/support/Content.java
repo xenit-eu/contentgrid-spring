@@ -1,7 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model.support;
 
-import com.contentgrid.spring.querydsl.annotations.CollectionFilterParam;
-import com.contentgrid.spring.querydsl.annotations.CollectionFilterParams;
+import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
