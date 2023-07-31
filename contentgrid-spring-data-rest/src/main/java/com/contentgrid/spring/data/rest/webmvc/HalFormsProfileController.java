@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.random.RandomGenerator;
+import java.util.Random;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -43,7 +43,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @RequiredArgsConstructor
 @BasePathAwareController
 public class HalFormsProfileController implements InitializingBean {
-    private static final RandomGenerator RANDOM = RandomGenerator.getDefault();
 
     private final RepositoryRestConfiguration configuration;
     private final EntityLinks entityLinks;
@@ -83,8 +82,9 @@ public class HalFormsProfileController implements InitializingBean {
                 .withName(IanaLinkRelations.COLLECTION_VALUE);
 
         var placeholder = new StringBuilder("---");
+        var random = new Random();
         while(placeholder.length() < 10) {
-            placeholder.append(RANDOM.nextInt('a', 'z'));
+            placeholder.append(random.nextInt('a', 'z'));
         }
         placeholder.append("---");
         var itemLinkTemplate = entityLinks.linkToItemResource(information.getDomainType(), placeholder.toString())
