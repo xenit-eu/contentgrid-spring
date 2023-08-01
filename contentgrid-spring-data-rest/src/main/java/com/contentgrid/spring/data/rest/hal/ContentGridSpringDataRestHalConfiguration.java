@@ -1,6 +1,5 @@
 package com.contentgrid.spring.data.rest.hal;
 
-import java.util.Map;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
