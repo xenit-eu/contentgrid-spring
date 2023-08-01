@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
+import org.springframework.data.rest.core.annotation.RestResource;
 
 @Entity
 @Getter
@@ -34,19 +35,23 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "customer")
     @CollectionFilterParam
+    @RestResource(rel = "d:customer")
     private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "invoice", foreignKey = @ForeignKey(foreignKeyDefinition = "foreign key (\"invoice\") references \"invoice\" ON DELETE set NULL"))
     @CollectionFilterParam
+    @RestResource(rel = "d:invoice")
     private Invoice invoice;
 
     @ManyToMany
+    @RestResource(rel = "d:promos")
     private Set<PromotionCampaign> promos = new HashSet<>();
 
     @OneToOne
     @JsonProperty("shipping_address")
     @CollectionFilterParam("shipping_address")
+    @RestResource(rel = "d:shipping-address")
     private ShippingAddress shippingAddress;
 
     public Order(Customer customer) {

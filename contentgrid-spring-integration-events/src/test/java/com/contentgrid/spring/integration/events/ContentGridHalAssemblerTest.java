@@ -29,8 +29,8 @@ class ContentGridHalAssemblerTest {
         var model = assembler.toModel(invoice);
 
         assertThat(model.getLink(IanaLinkRelations.SELF)).isPresent();
-        assertThat(model.getLink("content")).isPresent();
-        assertThat(model.getLink("attachment")).isPresent();
+        assertThat(model.getLink("d:content")).isPresent();
+        assertThat(model.getLink("d:attachment")).isPresent();
     }
 
 }

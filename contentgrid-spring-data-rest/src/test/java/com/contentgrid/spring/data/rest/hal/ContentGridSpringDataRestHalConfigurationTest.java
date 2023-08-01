@@ -21,7 +21,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
 @ContextConfiguration(classes = {
-        InvoicingApplication.class,
+        ContentGridSpringDataRestHalConfiguration.class,
         CurieProviderCustomizers.class
 })
 @AutoConfigureMockMvc(printOnlyOnFailure = false)

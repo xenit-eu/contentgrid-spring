@@ -12,6 +12,7 @@ import javax.persistence.OneToOne;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.rest.core.annotation.RestResource;
 
 @Entity
 @Getter
@@ -30,6 +31,7 @@ public class ShippingAddress {
     private String city;
 
     @OneToOne(mappedBy = "shippingAddress")
+    @RestResource(rel = "d:order")
     private Order order;
 
     public ShippingAddress(String street, String zip, String city) {
