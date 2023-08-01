@@ -1,9 +1,11 @@
 package com.contentgrid.spring.boot.autoconfigure.data.web;
 
 import com.contentgrid.spring.data.rest.affordances.ContentGridSpringDataRestAffordancesConfiguration;
-import com.contentgrid.spring.data.rest.hal.ContentGridSpringDataRestHalConfiguration;
+import com.contentgrid.spring.data.rest.hal.ContentGridCurieConfiguration;
+import com.contentgrid.spring.data.rest.hal.CurieProviderCustomizer;
 import com.contentgrid.spring.data.rest.webmvc.ContentGridSpringDataRestProfileConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -19,8 +21,7 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguratio
 @Import({
         ContentGridSpringDataRestConfiguration.class,
         ContentGridSpringDataRestProfileConfiguration.class,
-        ContentGridSpringDataRestAffordancesConfiguration.class,
-        ContentGridSpringDataRestHalConfiguration.class
+        ContentGridSpringDataRestAffordancesConfiguration.class
 })
 @AutoConfigureAfter(HypermediaAutoConfiguration.class)
 public class ContentGridSpringDataRestAutoConfiguration {
@@ -29,6 +30,12 @@ public class ContentGridSpringDataRestAutoConfiguration {
     @ConfigurationProperties("contentgrid.rest")
     ContentGridRestProperties contentGridRestProperties() {
         return new ContentGridRestProperties();
+    }
+
+    @ConditionalOnBean(CurieProviderCustomizer.class)
+    @Import(ContentGridCurieConfiguration.class)
+    static class CurieAutoConfiguration {
+
     }
 
 }

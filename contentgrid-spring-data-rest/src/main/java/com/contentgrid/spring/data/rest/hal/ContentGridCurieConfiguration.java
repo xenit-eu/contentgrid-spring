@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.hateoas.mediatype.hal.CurieProvider;
 
 @Configuration(proxyBeanMethods = false)
-public class ContentGridSpringDataRestHalConfiguration {
+public class ContentGridCurieConfiguration {
 
     @Bean
     CurieProvider contentGridCurieProvider(ObjectProvider<CurieProviderCustomizer> customizers) {

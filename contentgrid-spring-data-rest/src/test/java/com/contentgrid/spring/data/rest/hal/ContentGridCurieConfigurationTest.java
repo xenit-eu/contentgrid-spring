@@ -1,10 +1,8 @@
 package com.contentgrid.spring.data.rest.hal;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
-import com.contentgrid.spring.data.rest.hal.ContentGridSpringDataRestHalConfigurationTest.CurieProviderCustomizers;
-import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
+import com.contentgrid.spring.data.rest.hal.ContentGridCurieConfigurationTest.CurieProviderCustomizers;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -21,11 +19,11 @@ import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
 @ContextConfiguration(classes = {
-        ContentGridSpringDataRestHalConfiguration.class,
+        ContentGridCurieConfiguration.class,
         CurieProviderCustomizers.class
 })
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
-class ContentGridSpringDataRestHalConfigurationTest {
+class ContentGridCurieConfigurationTest {
 
     @TestConfiguration(proxyBeanMethods = false)
     static class CurieProviderCustomizers {
