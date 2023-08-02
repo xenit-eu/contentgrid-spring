@@ -9,7 +9,6 @@ import com.contentgrid.spring.data.rest.webmvc.ContentGridSpringDataRestProfileC
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +25,15 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguratio
         ContentGridSpringDataRestProfileConfiguration.class,
         ContentGridSpringDataRestAffordancesConfiguration.class,
 })
-@AutoConfigureAfter(HypermediaAutoConfiguration.class)
+@AutoConfigureAfter(
+        name = {
+                // Specifically ContentGridSpringContentRestLinksAutoConfiguration must run after spring-content
+                // is initialized so @ConditionalOnBean works correctly. Putting the annotation directly on that class
+                // does not work, because it is not an autoconfiguration, but is initialized directly when this parent class
+                // is initialized.
+                "internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration"
+        }
+)
 public class ContentGridSpringDataRestAutoConfiguration {
 
     @Bean
@@ -35,7 +42,6 @@ public class ContentGridSpringDataRestAutoConfiguration {
         return new ContentGridRestProperties();
     }
 
-    @Configuration(proxyBeanMethods = false)
     @ConditionalOnBean(CurieProviderCustomizer.class)
     @Import({
             ContentGridCurieConfiguration.class,
@@ -45,10 +51,9 @@ public class ContentGridSpringDataRestAutoConfiguration {
 
     }
 
-    @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(RestConfiguration.class)
+    @ConditionalOnBean(type = "org.springframework.content.commons.storeservice.Stores")
     @Import(ContentGridSpringContentRestLinksConfiguration.class)
-    @AutoConfigureAfter(ContentGridSpringDataRestCurieAutoConfiguration.class)
     static class ContentGridSpringContentRestLinksAutoConfiguration {
 
     }
