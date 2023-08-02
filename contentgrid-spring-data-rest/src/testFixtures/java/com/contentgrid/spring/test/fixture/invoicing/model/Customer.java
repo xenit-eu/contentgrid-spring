@@ -44,15 +44,17 @@ public class Customer {
     @AttributeOverride(name = "length", column = @Column(name = "content__length"))
     @AttributeOverride(name = "mimetype", column = @Column(name = "content__mimetype"))
     @AttributeOverride(name = "filename", column = @Column(name = "content__filename"))
-    @RestResource(linkRel = "content", path = "content")
+    @RestResource(linkRel = "d:content", path = "content")
     @CollectionFilterParam
     private Content content;
 
     @OneToMany(mappedBy = "customer")
+    @org.springframework.data.rest.core.annotation.RestResource(rel = "d:orders")
     private Set<Order> orders = new HashSet<>();
 
     @OneToMany(mappedBy="counterparty")
     @CollectionFilterParam
+    @org.springframework.data.rest.core.annotation.RestResource(rel = "d:invoices")
     private Set<Invoice> invoices = new HashSet<>();
 
 }

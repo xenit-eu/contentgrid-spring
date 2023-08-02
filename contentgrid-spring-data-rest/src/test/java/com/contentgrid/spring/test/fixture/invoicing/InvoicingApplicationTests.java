@@ -143,7 +143,7 @@ class InvoicingApplicationTests {
                 mockMvc.perform(get("/invoices")
                                 .contentType("application/json"))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$._embedded.invoices.length()").value(2));
+                        .andExpect(jsonPath("$._embedded.['d:invoices'].length()").value(2));
             }
         }
 
@@ -188,7 +188,7 @@ class InvoicingApplicationTests {
                                         {
                                             "customer": "/customers/%s",
                                             "_links": {
-                                                "promos" : [
+                                                "d:promos" : [
                                                     { "href": "/promotions/XMAS-2022" },
                                                     { "href": "/promotions/FREE-SHIP" }
                                                 ]

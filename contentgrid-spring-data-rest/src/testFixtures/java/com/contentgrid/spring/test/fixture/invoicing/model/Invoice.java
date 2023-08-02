@@ -23,6 +23,7 @@ import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
+import org.springframework.content.rest.RestResource;
 
 @Entity
 @Getter
@@ -45,6 +46,7 @@ public class Invoice {
 
     @ContentId
     @JsonIgnore
+    @RestResource(linkRel = "d:content")
     private String contentId;
 
     @ContentLength
@@ -64,6 +66,7 @@ public class Invoice {
 
     @ContentId
     @JsonIgnore
+    @RestResource(linkRel = "d:attachment")
     private String attachmentId;
 
     @ContentLength
@@ -80,10 +83,12 @@ public class Invoice {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "counterparty", nullable = false)
+    @org.springframework.data.rest.core.annotation.RestResource(rel = "d:counterparty")
     private Customer counterparty;
 
     @OneToMany(mappedBy = "invoice")
     @CollectionFilterParam
+    @org.springframework.data.rest.core.annotation.RestResource(rel = "d:orders")
     private Set<Order> orders = new HashSet<>();
 
     public Invoice(String number, boolean draft, boolean paid, Customer counterparty, Set<Order> orders) {

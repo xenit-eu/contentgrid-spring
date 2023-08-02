@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
+import org.springframework.data.rest.core.annotation.RestResource;
 
 @Entity
 @Getter
@@ -30,11 +31,13 @@ public class PromotionCampaign {
 
     @Column(updatable = false, nullable = false)
     @CollectionFilterParam(value = "promo_code")
+    @RestResource(rel = "d:promo-code")
     private String promoCode;
 
     String description;
 
     @ManyToMany(mappedBy = "promos")
+    @RestResource(rel = "d:orders")
     private Set<Order> orders = new HashSet<>();
 
     public PromotionCampaign(String promoCode, String description) {
