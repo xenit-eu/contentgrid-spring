@@ -42,6 +42,7 @@ public class ContentGridSpringDataRestAutoConfiguration {
         return new ContentGridRestProperties();
     }
 
+    @Configuration(proxyBeanMethods = false)
     @ConditionalOnBean(CurieProviderCustomizer.class)
     @Import({
             ContentGridCurieConfiguration.class,
@@ -49,13 +50,13 @@ public class ContentGridSpringDataRestAutoConfiguration {
     })
     static class ContentGridSpringDataRestCurieAutoConfiguration {
 
-    }
+        @Configuration(proxyBeanMethods = false)
+        @ConditionalOnClass(RestConfiguration.class)
+        @ConditionalOnBean(type = "org.springframework.content.commons.storeservice.Stores")
+        @Import(ContentGridSpringContentRestLinksConfiguration.class)
+        static class ContentGridSpringContentRestLinksAutoConfiguration {
 
-    @ConditionalOnClass(RestConfiguration.class)
-    @ConditionalOnBean(type = "org.springframework.content.commons.storeservice.Stores")
-    @Import(ContentGridSpringContentRestLinksConfiguration.class)
-    static class ContentGridSpringContentRestLinksAutoConfiguration {
-
+        }
     }
 
 }
