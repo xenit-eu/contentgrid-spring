@@ -12,7 +12,7 @@ import org.springframework.data.rest.core.mapping.RepositoryResourceMappings;
 import org.springframework.data.rest.core.support.SelfLinkProvider;
 import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ContentGridSpringDataRestConfiguration {
 
     @Bean
