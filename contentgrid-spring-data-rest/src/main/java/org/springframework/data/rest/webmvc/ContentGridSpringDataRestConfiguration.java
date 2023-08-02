@@ -35,6 +35,19 @@ public class ContentGridSpringDataRestConfiguration {
             }
         };
     }
+    
+    @Bean
+    public BeanPostProcessor replaceProfileController() {
+        return new BeanPostProcessor() {
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+                if(bean instanceof ProfileController delegate) {
+                    return new DelegatingProfileController(delegate);
+                }
+                return bean;
+            }
+        };
+    }
 
     @Bean
     public ContentRestConfigurer contentRestConfigurer() {
