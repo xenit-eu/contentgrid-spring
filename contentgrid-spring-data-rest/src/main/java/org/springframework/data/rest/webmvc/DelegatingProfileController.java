@@ -25,6 +25,8 @@ public class DelegatingProfileController {
         var resource = new ProfileLinksResource();
         var originalModel = delegate.listAllFormsOfMetadata();
 
+        // The change from the spring-data-rest ProfileController is returning a specific ProfileLinksResource.
+        // This specific resource class can be used by a RepresentationModelProcessor to further enhance the response.
         resource.add(originalModel.getBody().getLinks().toList());
 
         return ResponseEntity.ok()
