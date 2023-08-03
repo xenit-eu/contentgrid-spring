@@ -22,7 +22,6 @@ import org.springframework.test.context.ContextConfiguration;
         ContentGridCurieConfiguration.class,
         CurieProviderCustomizers.class
 })
-@AutoConfigureMockMvc(printOnlyOnFailure = false)
 class ContentGridCurieConfigurationTest {
 
     @TestConfiguration(proxyBeanMethods = false)

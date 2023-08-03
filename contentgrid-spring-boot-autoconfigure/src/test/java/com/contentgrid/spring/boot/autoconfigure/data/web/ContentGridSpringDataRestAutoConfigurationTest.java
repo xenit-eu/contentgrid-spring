@@ -3,12 +3,14 @@ package com.contentgrid.spring.boot.autoconfigure.data.web;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.contentgrid.spring.data.rest.hal.CurieProviderCustomizer;
+import internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration;
 import org.springframework.boot.context.annotation.UserConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
+import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.webmvc.ContentGridSpringDataRestConfiguration;
@@ -85,6 +87,47 @@ class ContentGridSpringDataRestAutoConfigurationTest {
         CurieProviderCustomizer myCurieProviderCustomizer() {
             return CurieProviderCustomizer.register("test", "https://test.invalid/{rel}");
         }
+    }
 
+    @Test
+    void without_curieProviderCustomizer_when_springContent_isPresentAndConfigured() {
+        contextRunner
+                .withConfiguration(AutoConfigurations.of(ContentRestAutoConfiguration.class))
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean("contentGridSpringContentLinkCollector");
+                    assertThat(context).hasNotFailed();
+                });
+    }
+
+    @Test
+    void with_curieProviderCustomizer_when_springContent_isPresentAndConfigured() {
+        contextRunner
+                .withConfiguration(AutoConfigurations.of(ContentRestAutoConfiguration.class))
+                .withConfiguration(UserConfigurations.of(CurieCustomizerConfiguration.class))
+                .run(context -> {
+                    assertThat(context).hasBean("contentGridSpringContentLinkCollector");
+                    assertThat(context).hasNotFailed();
+                });
+    }
+
+    @Test
+    void with_curieProviderCustomizer_when_springContent_isPresentAndUnconfigured() {
+        contextRunner
+                .withConfiguration(UserConfigurations.of(CurieCustomizerConfiguration.class))
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean("contentGridSpringContentLinkCollector");
+                    assertThat(context).hasNotFailed();
+                });
+    }
+
+    @Test
+    void with_curieProviderCustomizer_when_springContent_isAbsent() {
+        contextRunner
+                .withClassLoader(new FilteredClassLoader(RestConfiguration.class))
+                .withConfiguration(UserConfigurations.of(CurieCustomizerConfiguration.class))
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean("contentGridSpringContentLinkCollector");
+                    assertThat(context).hasNotFailed();
+                });
     }
 }

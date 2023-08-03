@@ -12,7 +12,7 @@ import org.springframework.data.rest.core.mapping.RepositoryResourceMappings;
 import org.springframework.data.rest.core.support.SelfLinkProvider;
 import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class ContentGridSpringDataRestConfiguration {
 
     @Bean
@@ -31,6 +31,19 @@ public class ContentGridSpringDataRestConfiguration {
                             applicationContext.getBeanProvider(ContentGridRestProperties.class).getIfAvailable(ContentGridRestProperties::new));
                 }
 
+                return bean;
+            }
+        };
+    }
+    
+    @Bean
+    public BeanPostProcessor replaceProfileController() {
+        return new BeanPostProcessor() {
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+                if(bean instanceof ProfileController delegate) {
+                    return new DelegatingProfileController(delegate);
+                }
                 return bean;
             }
         };
