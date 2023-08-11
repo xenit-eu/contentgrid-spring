@@ -143,7 +143,8 @@ class InvoicingApplicationTests {
                 mockMvc.perform(get("/invoices")
                                 .contentType("application/json"))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$._embedded.['d:invoices'].length()").value(2));
+                        .andExpect(jsonPath("$._embedded.['item'].length()").value(2))
+                        .andExpect(jsonPath("$._embedded.['item'][0].number").exists());
             }
         }
 

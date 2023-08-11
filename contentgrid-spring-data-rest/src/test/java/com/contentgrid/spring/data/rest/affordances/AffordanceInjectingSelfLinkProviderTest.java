@@ -95,7 +95,7 @@ class AffordanceInjectingSelfLinkProviderTest {
                 .andExpect(MockMvcResultMatchers.content().json("""
                         {
                             _embedded: {
-                                "d:customers": [
+                                "item": [
                                     {
                                         _links: {
                                             self: {
@@ -137,7 +137,7 @@ class AffordanceInjectingSelfLinkProviderTest {
                 // No top-level _templates are present
                 .andExpect(MockMvcResultMatchers.jsonPath("$.keys()", Matchers.not(Matchers.contains("_templates"))))
                 // The templates of the embedded object only contain a default and a delete template
-                .andExpect(MockMvcResultMatchers.jsonPath("$._embedded.['d:customers'][0]._templates.keys()", Matchers.containsInAnyOrder("default", "delete")));
+                .andExpect(MockMvcResultMatchers.jsonPath("$._embedded.['item'][0]._templates.keys()", Matchers.containsInAnyOrder("default", "delete")));
         ;
     }
 

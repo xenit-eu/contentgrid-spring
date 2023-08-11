@@ -11,10 +11,10 @@ import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.core.mapping.ResourceMappings;
 import org.springframework.data.rest.core.support.SelfLinkProvider;
 import org.springframework.data.rest.webmvc.RepositoryLinksResource;
-import org.springframework.data.rest.webmvc.RestControllerConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.data.rest.webmvc.mapping.Associations;
 import org.springframework.data.rest.webmvc.mapping.LinkCollector;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.server.EntityLinks;
 import org.springframework.hateoas.server.RepresentationModelProcessor;
 
@@ -50,5 +50,10 @@ public class ContentGridSpringDataLinksConfiguration {
     @Bean
     RepresentationModelProcessor<ProfileLinksResource> contentGridProfileLinksResourceProcessor(Repositories repositories, ResourceMappings resourceMappings, RepositoryRestConfiguration configuration) {
         return new SpringDataProfileLinksResourceProcessor(repositories, resourceMappings, configuration);
+    }
+
+    @Bean
+    RepresentationModelProcessor<CollectionModel<?>> contentGridSpringDataEmbeddedItemResourceProcessor() {
+        return new SpringDataEmbeddedItemResourceProcessor();
     }
 }
