@@ -146,6 +146,13 @@ class InvoicingApplicationTests {
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(2))
                         .andExpect(jsonPath("$._embedded.['item'][0].number").exists());
             }
+
+            @Test
+            void listRefunds_returns_http200_ok() throws Exception {
+                mockMvc.perform(get("/refunds").contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.['item'].length()").value(0));
+            }
         }
 
         @Nested
