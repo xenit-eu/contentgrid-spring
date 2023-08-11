@@ -43,7 +43,9 @@ public class SpringDataEmbeddedItemResourceProcessor implements RepresentationMo
                     return wrappers.wrap(content, IanaLinkRelations.ITEM);
                 });
 
-        return createModelCopy(model, List.of(wrapper));
+        return createModelCopy(model, List.of(wrapper))
+                .add(model.getLinks())
+                .withFallbackType(model.getResolvableType());
     }
 
     private CollectionModel<?> createModelCopy(CollectionModel<?> model, Iterable<?> content) {
