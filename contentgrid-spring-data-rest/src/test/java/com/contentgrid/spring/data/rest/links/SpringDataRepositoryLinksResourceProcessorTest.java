@@ -51,6 +51,11 @@ class SpringDataRepositoryLinksResourceProcessorTest {
                                         name: "shipping-addresses",
                                         href: "http://localhost/shipping-addresses{?page,size,sort}",
                                         templated: true
+                                    },
+                                    {
+                                        name: "refunds",
+                                        href: "http://localhost/refunds{?page,size,sort}",
+                                        templated: true
                                     }
                                 ]
                             }
