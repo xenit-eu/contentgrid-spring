@@ -3,7 +3,7 @@ package com.contentgrid.spring.integration.events;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
 import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
@@ -48,11 +48,6 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         registry.getEventListenerGroup(EventType.POST_UPDATE).appendListener(this);
         registry.getEventListenerGroup(EventType.POST_DELETE).appendListener(this);
         registry.getEventListenerGroup(EventType.POST_COLLECTION_UPDATE).appendListener(this);
-    }
-
-    @Override
-    public boolean requiresPostCommitHanding(EntityPersister persister) {
-        return this.requiresPostCommitHandling(persister);
     }
 
     @Override

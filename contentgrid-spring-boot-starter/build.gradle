@@ -22,7 +22,7 @@ dependencies {
     api "com.github.paulcwarren:spring-content-fs-boot-starter"
     api "com.github.paulcwarren:spring-content-s3-boot-starter"
 
-    api 'com.querydsl:querydsl-jpa'
+    api 'com.querydsl:querydsl-jpa::jakarta'
 
     implementation project(':contentgrid-spring-boot-autoconfigure')
 

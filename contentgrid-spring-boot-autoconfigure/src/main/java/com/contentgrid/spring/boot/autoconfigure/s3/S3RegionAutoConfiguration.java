@@ -7,17 +7,17 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.services.s3.S3Client;
 
-@Configuration
+@AutoConfiguration
 // @AutoConfigureAfter uses a string because the class may not be present on the classpath,
 // and we don't want an exception in that case
 @AutoConfigureBefore(name="internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration")

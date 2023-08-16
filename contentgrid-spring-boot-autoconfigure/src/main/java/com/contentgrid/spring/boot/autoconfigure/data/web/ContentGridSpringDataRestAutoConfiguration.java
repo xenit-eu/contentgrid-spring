@@ -6,6 +6,7 @@ import com.contentgrid.spring.data.rest.hal.CurieProviderCustomizer;
 import com.contentgrid.spring.data.rest.links.ContentGridSpringContentRestLinksConfiguration;
 import com.contentgrid.spring.data.rest.links.ContentGridSpringDataLinksConfiguration;
 import com.contentgrid.spring.data.rest.webmvc.ContentGridSpringDataRestProfileConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -18,7 +19,7 @@ import org.springframework.data.rest.webmvc.ContentGridRestProperties;
 import org.springframework.data.rest.webmvc.ContentGridSpringDataRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @ConditionalOnClass({ContentGridSpringDataRestConfiguration.class, RepositoryRestMvcConfiguration.class})
 @Import({
         ContentGridSpringDataRestConfiguration.class,
@@ -42,18 +43,18 @@ public class ContentGridSpringDataRestAutoConfiguration {
         return new ContentGridRestProperties();
     }
 
-    @Configuration(proxyBeanMethods = false)
     @ConditionalOnBean(CurieProviderCustomizer.class)
     @Import({
             ContentGridCurieConfiguration.class,
             ContentGridSpringDataLinksConfiguration.class
     })
+    @Configuration(proxyBeanMethods = false)
     static class ContentGridSpringDataRestCurieAutoConfiguration {
 
-        @Configuration(proxyBeanMethods = false)
         @ConditionalOnClass(RestConfiguration.class)
         @ConditionalOnBean(type = "org.springframework.content.commons.storeservice.Stores")
         @Import(ContentGridSpringContentRestLinksConfiguration.class)
+        @Configuration(proxyBeanMethods = false)
         static class ContentGridSpringContentRestLinksAutoConfiguration {
 
         }

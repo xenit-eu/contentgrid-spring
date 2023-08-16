@@ -8,10 +8,10 @@ import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.TypeInformation;
 
