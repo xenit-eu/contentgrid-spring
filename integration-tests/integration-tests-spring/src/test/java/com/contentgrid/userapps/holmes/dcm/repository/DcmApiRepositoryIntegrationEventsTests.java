@@ -2,20 +2,27 @@ package com.contentgrid.userapps.holmes.dcm.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
+import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties;
+import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties.EventProperties;
+import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties.SystemProperties;
+import com.contentgrid.spring.integration.events.ContentGridEventPublisher;
+import com.contentgrid.spring.integration.events.ContentGridMessageHandler;
+import com.contentgrid.spring.integration.events.ContentGridPublisherEventListener;
+import com.contentgrid.userapps.holmes.dcm.model.Case;
+import com.contentgrid.userapps.holmes.dcm.model.Evidence;
+import com.contentgrid.userapps.holmes.dcm.model.Person;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManagerFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-
 import java.util.UUID;
-import jakarta.persistence.EntityManagerFactory;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,19 +33,6 @@ import org.springframework.data.repository.support.Repositories;
 import org.springframework.integration.dsl.MessageHandlerSpec;
 import org.springframework.integration.test.mock.MockIntegration;
 import org.springframework.messaging.MessageHandler;
-
-import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties;
-import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties.EventProperties;
-import com.contentgrid.spring.integration.events.ContentGridEventHandlerProperties.SystemProperties;
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher;
-import com.contentgrid.spring.integration.events.ContentGridMessageHandler;
-import com.contentgrid.spring.integration.events.ContentGridPublisherEventListener;
-import com.contentgrid.userapps.holmes.dcm.model.Case;
-import com.contentgrid.userapps.holmes.dcm.model.Person;
-import com.contentgrid.userapps.holmes.dcm.model.Evidence;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -101,10 +95,21 @@ class DcmApiRepositoryIntegrationEventsTests {
                 }
             });
 
-            MessageHandlerSpec mockMessageHandlerSpec = mock(MessageHandlerSpec.class);
-            when(mockMessageHandlerSpec.get()).thenReturn(messageHandler);
 
-            return () -> mockMessageHandlerSpec;
+            return () -> new MockMessageHandlerSpec(messageHandler);
+        }
+    }
+
+    private static class MockMessageHandlerSpec extends MessageHandlerSpec<MockMessageHandlerSpec, MessageHandler> {
+        private MockMessageHandlerSpec(MessageHandler messageHandler) {
+            this.messageHandler = messageHandler;
+        }
+
+        private final MessageHandler messageHandler;
+
+        @Override
+        protected MessageHandler doGet() {
+            return messageHandler;
         }
     }
 
