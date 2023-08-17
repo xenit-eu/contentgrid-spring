@@ -21,7 +21,7 @@ dependencies {
 
     api 'org.springframework.integration:spring-integration-amqp'
 
-    implementation 'org.hibernate:hibernate-core'
+    implementation 'org.hibernate.orm:hibernate-core'
     implementation 'org.springframework.data:spring-data-rest-webmvc'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

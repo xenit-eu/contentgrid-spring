@@ -18,8 +18,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -90,7 +90,7 @@ public class DelegatingRepositoryPropertyReferenceController {
 
     @RequestMapping(value = BASE_MAPPING, method = GET)
     public ResponseEntity<?> followPropertyReference(final RootResourceInformation repoRequest,
-            @BackendId Serializable id, final @PathVariable String property, PersistentEntityResourceAssembler assembler) throws Exception {
+            @BackendId Serializable id, final @PathVariable String property, RepresentationModelAssemblers assembler) throws Exception {
 
         Function<ReferencedProperty, ResponseEntity<?>> handler = (ReferencedProperty prop) -> {
             if (prop.property.isCollectionLike()) {
@@ -200,7 +200,7 @@ public class DelegatingRepositoryPropertyReferenceController {
     @RequestMapping(value = BASE_MAPPING + "/{propertyId}", method = GET)
     public ResponseEntity<?> followPropertyReference(RootResourceInformation repoRequest,
             @BackendId Serializable id, @PathVariable String property, @PathVariable String propertyId,
-            PersistentEntityResourceAssembler assembler)
+            RepresentationModelAssemblers assembler)
             throws Exception {
 
         Function<ReferencedProperty, ResponseEntity<?>> handler = prop -> {
@@ -265,7 +265,7 @@ public class DelegatingRepositoryPropertyReferenceController {
     @RequestMapping(value = BASE_MAPPING, method = GET, produces = TEXT_URI_LIST_VALUE)
     public ResponseEntity<RepresentationModel<?>> followPropertyReferenceCompact(RootResourceInformation repoRequest,
             @BackendId Serializable id, @PathVariable String property, @RequestHeader HttpHeaders requestHeaders,
-            PersistentEntityResourceAssembler assembler) throws Exception {
+            RepresentationModelAssemblers assembler) throws Exception {
 
         return this.delegate.followPropertyReferenceCompact(repoRequest, id, property, requestHeaders, assembler);
     }

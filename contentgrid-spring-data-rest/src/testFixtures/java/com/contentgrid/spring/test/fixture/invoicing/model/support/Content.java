@@ -4,7 +4,7 @@ import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;

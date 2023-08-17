@@ -2,6 +2,7 @@ package com.contentgrid.spring.boot.autoconfigure.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.contentgrid.spring.integration.events.ContentGridPublisherEventListener;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -10,8 +11,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
-
-import com.contentgrid.spring.integration.events.ContentGridPublisherEventListener;
 
 class EventsAutoConfigurationTest {
 

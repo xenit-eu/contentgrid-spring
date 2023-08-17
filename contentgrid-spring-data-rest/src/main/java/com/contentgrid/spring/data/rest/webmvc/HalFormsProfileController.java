@@ -14,7 +14,7 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Random;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.InitializingBean;

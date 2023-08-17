@@ -5,7 +5,7 @@ import com.contentgrid.spring.data.rest.mapping.Property;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Optional;
-import javax.persistence.Embedded;
+import jakarta.persistence.Embedded;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.TypeInformation;
 
