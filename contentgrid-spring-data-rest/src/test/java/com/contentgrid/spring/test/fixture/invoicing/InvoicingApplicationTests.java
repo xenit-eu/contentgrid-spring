@@ -145,7 +145,7 @@ class InvoicingApplicationTests {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(2))
                         .andExpect(jsonPath("$._embedded.['item'][0].number").exists())
-                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/invoices"));
+                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/invoices?page=0&size=20"));
             }
 
             @Test
@@ -153,7 +153,7 @@ class InvoicingApplicationTests {
                 mockMvc.perform(get("/refunds").contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(0))
-                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/refunds"));
+                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/refunds?page=0&size=20"));
             }
         }
 
