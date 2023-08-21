@@ -43,16 +43,14 @@ public class SpringDataEmbeddedItemResourceProcessor implements RepresentationMo
                     return wrappers.wrap(content, IanaLinkRelations.ITEM);
                 });
 
-        return createModelCopy(model, List.of(wrapper))
-                .add(model.getLinks())
-                .withFallbackType(model.getResolvableType());
+        return createModelCopy(model, List.of(wrapper));
     }
 
-    private CollectionModel<?> createModelCopy(CollectionModel<?> model, Iterable<?> content) {
+    private CollectionModel<?> createModelCopy(CollectionModel<?> model, Collection<?> content) {
         if (model instanceof PagedModel<?> pagedModel) {
-            return new PageModel<>(content, pagedModel.getMetadata());
+            return PagedModel.of(content, pagedModel.getMetadata(), model.getLinks());
         } else {
-            return CollectionModel.of(content);
+            return CollectionModel.of(content, model.getLinks());
         }
     }
 
@@ -79,43 +77,9 @@ public class SpringDataEmbeddedItemResourceProcessor implements RepresentationMo
         return Optional.empty();
     }
 
-    private Collection<EmbeddedWrapper> ensureWrapped(Collection<?> content) {
-        List<EmbeddedWrapper> allWrappers = new ArrayList<>();
-        List<Object> unwrapped = new ArrayList<>();
-        for (Object item : content) {
-            if (item instanceof EmbeddedWrapper wrapper) {
-                allWrappers.add(wrapper);
-            } else {
-                unwrapped.add(item);
-            }
-        }
-
-        if (!unwrapped.isEmpty()) {
-            allWrappers.add(wrappers.wrap(unwrapped, IanaLinkRelations.ITEM));
-        }
-
-        return allWrappers;
-    }
-
     @Override
     public int getOrder() {
         return Ordered.HIGHEST_PRECEDENCE;
-    }
-
-    private static class PageModel<T> extends CollectionModel<T> {
-
-        private final PageMetadata pageMetadata;
-
-        private PageModel(Iterable<T> content, PageMetadata pageMetadata) {
-            super(content);
-            this.pageMetadata = pageMetadata;
-        }
-
-        @JsonProperty("page")
-        @Nullable
-        public PageMetadata getMetadata() {
-            return pageMetadata;
-        }
     }
 
     @RequiredArgsConstructor

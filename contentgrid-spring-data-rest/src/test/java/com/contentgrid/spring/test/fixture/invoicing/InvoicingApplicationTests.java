@@ -143,6 +143,10 @@ class InvoicingApplicationTests {
                 mockMvc.perform(get("/invoices")
                                 .contentType("application/json"))
                         .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.page.size").value(20))
+                        .andExpect(jsonPath("$.page.totalElements").value(2))
+                        .andExpect(jsonPath("$.page.totalPages").value(1))
+                        .andExpect(jsonPath("$.page.number").value(0))
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(2))
                         .andExpect(jsonPath("$._embedded.['item'][0].number").exists())
                         .andExpect(jsonPath("$._links.self.href").value("http://localhost/invoices?page=0&size=20"));
@@ -152,6 +156,10 @@ class InvoicingApplicationTests {
             void listRefunds_returns_http200_ok() throws Exception {
                 mockMvc.perform(get("/refunds").contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.page.size").value(20))
+                        .andExpect(jsonPath("$.page.totalElements").value(0))
+                        .andExpect(jsonPath("$.page.totalPages").value(0))
+                        .andExpect(jsonPath("$.page.number").value(0))
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(0))
                         .andExpect(jsonPath("$._links.self.href").value("http://localhost/refunds?page=0&size=20"));
             }
