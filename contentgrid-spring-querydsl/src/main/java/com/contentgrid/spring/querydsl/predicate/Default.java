@@ -47,7 +47,7 @@ public class Default implements QuerydslPredicateFactory<Path<?>, Object> {
 
     @Override
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public Optional<Predicate> bind(@NonNull Path<?> path, @NonNull Collection<? extends Object> values) {
+    public Optional<Predicate> bind(@NonNull Path<? extends Object> path, @NonNull Collection<? extends Object> values) {
         if(values.isEmpty()) {
             return Optional.empty();
         }

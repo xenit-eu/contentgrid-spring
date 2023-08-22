@@ -8,8 +8,8 @@ import java.util.stream.Stream;
 
 public interface QuerydslPredicateFactory<T extends Path<? extends S>, S> {
 
-    default Stream<Path<?>> boundPaths(T path) {
-        return Stream.of(path);
+    default Stream<T> boundPaths(Path<?> path) {
+        return Stream.of((T)path);
     }
 
     Optional<Predicate> bind(T path, Collection<? extends S> values);

@@ -7,6 +7,9 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Creates no predicate under any circumstances
+ */
 public class None implements QuerydslPredicateFactory<Path<?>, Object> {
 
     @Override
