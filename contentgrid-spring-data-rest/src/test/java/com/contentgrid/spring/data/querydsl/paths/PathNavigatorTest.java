@@ -1,16 +1,19 @@
 package com.contentgrid.spring.data.querydsl.paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import com.contentgrid.spring.test.fixture.invoicing.model.QCustomer;
 import com.contentgrid.spring.test.fixture.invoicing.model.QInvoice;
+import com.contentgrid.spring.test.fixture.invoicing.model.QOrder;
+import com.contentgrid.spring.test.fixture.invoicing.model.QShippingAddress;
+import com.querydsl.core.types.dsl.PathInits;
 import org.junit.jupiter.api.Test;
 
 class PathNavigatorTest {
 
     public static final PathNavigator CUSTOMER_NAVIGATOR = new PathNavigator(QCustomer.customer);
     public static final PathNavigator INVOICE_NAVIGATOR = new PathNavigator(QInvoice.invoice);
+    public static final PathNavigator ORDER_NAVIGATOR = new PathNavigator(QOrder.order);
 
     @Test
     void navigateToDirectProperty() {
@@ -34,6 +37,24 @@ class PathNavigatorTest {
         assertThat(INVOICE_NAVIGATOR.get("counterparty").get("vat").getPath()).isEqualTo(QInvoice.invoice.counterparty.vat);
 
         assertThat(INVOICE_NAVIGATOR.get("counterparty").get("invoices").get("number").getPath()).isEqualTo(QInvoice.invoice.counterparty.invoices.any().number);
+    }
+
+    @Test
+    void navigateToDeepProperty() {
+        assertThat(ORDER_NAVIGATOR.get("invoice").get("counterparty").get("content").get("filename").getPath()).isEqualTo(
+                // This is so we don't run into a PathInits problem ourselves here when reading the property
+                new QOrder(QOrder.order.getMetadata(), new PathInits("*.*.*")).invoice.counterparty.content.filename
+        );
+
+        assertThat(new PathNavigator(QShippingAddress.shippingAddress).get("order").get("invoice").get("counterparty").get("content").get("filename").getPath()).isEqualTo(
+                new QShippingAddress(QShippingAddress.shippingAddress.getMetadata(), new PathInits("*.*.*.*"))
+                        .order.invoice.counterparty.content.filename
+        );
+
+        assertThat(new PathNavigator(QShippingAddress.shippingAddress).get("order").get("invoice").get("counterparty").get("vat").getPath()).isEqualTo(
+                new QShippingAddress(QShippingAddress.shippingAddress.getMetadata(), new PathInits("*.*.*"))
+                        .order.invoice.counterparty.vat
+        );
     }
 
 }

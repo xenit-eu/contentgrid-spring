@@ -15,7 +15,7 @@ import org.springframework.data.rest.core.support.SelfLinkProvider;
 import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
 
 @Configuration(proxyBeanMethods = false)
-@Import(ContentGridCollectionFilterMappingConfiguration.class)
+@Import({ContentGridCollectionFilterMappingConfiguration.class})
 public class ContentGridSpringDataRestConfiguration {
 
     @Bean
