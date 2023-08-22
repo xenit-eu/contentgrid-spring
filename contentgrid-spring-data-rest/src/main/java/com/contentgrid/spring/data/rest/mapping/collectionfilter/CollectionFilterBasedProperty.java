@@ -2,16 +2,10 @@ package com.contentgrid.spring.data.rest.mapping.collectionfilter;
 
 import com.contentgrid.spring.data.rest.mapping.Container;
 import com.contentgrid.spring.data.rest.mapping.Property;
-import com.contentgrid.spring.data.rest.mapping.typeinfo.TypeInformationContainer;
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.TypeInformation;
 
@@ -19,14 +13,6 @@ import org.springframework.data.util.TypeInformation;
 public class CollectionFilterBasedProperty implements Property {
     private final Property delegate;
     private final CollectionFilterParam filterParam;
-    private final int maxDepth;
-
-    private final static Set<Class<? extends Annotation>> ASSOCIATION_ANNOTATIONS = Set.of(
-            OneToOne.class,
-            OneToMany.class,
-            ManyToOne.class,
-            ManyToMany.class
-    );
 
     @Override
     public <A extends Annotation> Optional<A> findAnnotation(Class<A> annotationClass) {
@@ -63,15 +49,7 @@ public class CollectionFilterBasedProperty implements Property {
     @Override
     public Optional<Container> nestedContainer() {
         return delegate.nestedContainer()
-                .<Container>map(container -> new CollectionFilterBasedContainer(container, maxDepth))
-                .or(this::relationContainer);
+                .map(CollectionFilterBasedContainer::new);
     }
 
-    private Optional<Container> relationContainer() {
-        if(ASSOCIATION_ANNOTATIONS.stream()
-                .anyMatch(annotation -> delegate.findAnnotation(annotation).isPresent())) {
-            return Optional.of(new CollectionFilterBasedContainer(new TypeInformationContainer(delegate.getTypeInformation().getRequiredActualType()), maxDepth-1));
-        }
-        return Optional.empty();
-    }
 }

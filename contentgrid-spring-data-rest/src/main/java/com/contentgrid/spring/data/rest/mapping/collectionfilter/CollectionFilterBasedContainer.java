@@ -15,7 +15,6 @@ import org.springframework.data.util.TypeInformation;
 @RequiredArgsConstructor
 public class CollectionFilterBasedContainer implements Container {
     private final Container delegate;
-    private final int maxDepth;
 
     @Override
     public <A extends Annotation> Optional<A> findAnnotation(Class<A> annotationClass) {
@@ -37,24 +36,18 @@ public class CollectionFilterBasedContainer implements Container {
 
     @Override
     public void doWithProperties(Consumer<Property> handler) {
-        if(maxDepth <= 0) {
-            return;
-        }
         delegate.doWithProperties(property -> {
             getFilterParams(property).forEachOrdered(filterParam -> {
-                handler.accept(new CollectionFilterBasedProperty(property, filterParam, maxDepth));
+                handler.accept(new CollectionFilterBasedProperty(property, filterParam));
             });
         });
     }
 
     @Override
     public void doWithAssociations(Consumer<Property> handler) {
-        if(maxDepth <= 0) {
-            return;
-        }
         delegate.doWithAssociations(property -> {
             getFilterParams(property).forEachOrdered(filterParam -> {
-                handler.accept(new CollectionFilterBasedProperty(property, filterParam, maxDepth));
+                handler.accept(new CollectionFilterBasedProperty(property, filterParam));
             });
         });
     }
