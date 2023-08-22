@@ -5,6 +5,7 @@ import com.contentgrid.spring.data.rest.mapping.collectionfilter.CollectionFilte
 import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedContainer;
 import com.contentgrid.spring.data.rest.webmvc.DefaultDomainTypeToHalFormsPayloadMetadataConverter;
 import com.contentgrid.spring.data.rest.webmvc.DomainTypeToHalFormsPayloadMetadataConverter;
+import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.repository.support.Repositories;
@@ -33,5 +34,7 @@ public class ContentGridDomainTypeMappingConfiguration {
                 searchDomainTypeMapping
         );
     }
+
+
 
 }

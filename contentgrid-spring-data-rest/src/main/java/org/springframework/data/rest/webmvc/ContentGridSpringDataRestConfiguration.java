@@ -1,11 +1,13 @@
 package org.springframework.data.rest.webmvc;
 
+import com.contentgrid.spring.data.querydsl.mapping.ContentGridCollectionFilterMappingConfiguration;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.content.rest.config.ContentRestConfigurer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.querydsl.binding.QuerydslBindingsFactory;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.core.mapping.RepositoryResourceMappings;
@@ -13,6 +15,7 @@ import org.springframework.data.rest.core.support.SelfLinkProvider;
 import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
 
 @Configuration(proxyBeanMethods = false)
+@Import(ContentGridCollectionFilterMappingConfiguration.class)
 public class ContentGridSpringDataRestConfiguration {
 
     @Bean

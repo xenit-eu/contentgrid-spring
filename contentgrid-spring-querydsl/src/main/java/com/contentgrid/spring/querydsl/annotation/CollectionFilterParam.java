@@ -5,6 +5,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.contentgrid.spring.querydsl.predicate.Default;
+import com.querydsl.core.types.EntityPath;
+import com.querydsl.core.types.Path;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -35,6 +37,6 @@ public @interface CollectionFilterParam {
      * We'll try to obtain a Spring bean of this type,
      * but fall back to plain instantiation if no bean is found in the current BeanFactory.
      */
-    Class<? extends QuerydslPredicateFactory<?, ?>> predicate() default Default.class;
+    Class<? extends QuerydslPredicateFactory<Path<?>, ?>> predicate() default Default.class;
 
 }
