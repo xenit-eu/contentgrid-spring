@@ -122,6 +122,23 @@ class CollectionFiltersMappingImplTest {
         assertThat(collectionFiltersMapping.forIdProperty(EntityWithRenamedId.class, "order")).hasValueSatisfying(filter -> {
             assertThat(filter.getFilterName()).isEqualTo("order$id");
         });
+
+        assertThat(collectionFiltersMapping.forIdProperty(Order.class, "invoice")).hasValueSatisfying(filter -> {
+            assertThat(filter.getFilterName()).isEqualTo("invoice._id");
+            assertThat(filter.getPath()).isEqualTo(QOrder.order.invoice.id);
+        });
+
+        assertThat(collectionFiltersMapping.forIdProperty(Invoice.class, "counterparty")).hasValueSatisfying(filter -> {
+            assertThat(filter.getFilterName()).isEqualTo("counterparty");
+            assertThat(filter.getPath()).isEqualTo(QInvoice.invoice.counterparty.id);
+        });
+
+        assertThat(collectionFiltersMapping.forIdProperty(Invoice.class, "orders")).hasValueSatisfying(filter -> {
+            assertThat(filter.getFilterName()).isEqualTo("orders.id");
+            assertThat(filter.getPath()).isEqualTo(QInvoice.invoice.orders.any().id);
+        });
+
+        assertThat(collectionFiltersMapping.forIdProperty(ShippingAddress.class, "order")).isEmpty();
     }
 
     @Configuration(proxyBeanMethods = false)
