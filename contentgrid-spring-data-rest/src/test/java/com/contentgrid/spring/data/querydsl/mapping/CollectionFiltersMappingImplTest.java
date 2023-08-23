@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.contentgrid.spring.data.querydsl.mapping.CollectionFiltersMappingImplTest.LocalConfiguration;
+import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
+import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
@@ -14,15 +17,29 @@ import com.contentgrid.spring.test.fixture.invoicing.model.QCustomer;
 import com.contentgrid.spring.test.fixture.invoicing.model.QInvoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.QOrder;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import java.util.UUID;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest
 @ContextConfiguration(classes = {
-        InvoicingApplication.class
+        InvoicingApplication.class,
+        LocalConfiguration.class
 })
 class CollectionFiltersMappingImplTest {
     @Autowired
@@ -101,6 +118,31 @@ class CollectionFiltersMappingImplTest {
         });
 
         assertThat(collectionFiltersMapping.forIdProperty(ShippingAddress.class, "order")).isEmpty();
+
+        assertThat(collectionFiltersMapping.forIdProperty(EntityWithRenamedId.class, "order")).hasValueSatisfying(filter -> {
+            assertThat(filter.getFilterName()).isEqualTo("order$id");
+        });
     }
+
+    @Configuration(proxyBeanMethods = false)
+    @EntityScan(basePackageClasses = {CollectionFiltersMappingImplTest.class, InvoicingApplication.class})
+    @EnableJpaRepositories(basePackageClasses = {CollectionFiltersMappingImplTest.class, InvoicingApplication.class}, considerNestedRepositories = true)
+    public static class LocalConfiguration {
+
+    }
+
+    @Entity
+    public static class EntityWithRenamedId {
+        @Id
+        @GeneratedValue(strategy = GenerationType.AUTO)
+        private UUID renamedId;
+
+        @OneToOne
+        @CollectionFilterParam(value = "order$id", predicate = EntityId.class)
+        private Order order;
+    }
+
+    @RepositoryRestResource
+    public interface EntityWithRenamedIdRepository extends JpaRepository<EntityWithRenamedId, UUID>, QuerydslPredicateExecutor<EntityWithRenamedId> {}
 
 }

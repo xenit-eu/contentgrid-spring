@@ -54,9 +54,13 @@ class CollectionFiltersMappingImpl implements CollectionFiltersMapping {
             pathNavigator = pathNavigator.get(propertyName);
         }
 
-        var entityIdProperty = persistentEntity.getRequiredIdProperty().getName();
+        var targetDomainType = pathNavigator.getTargetType();
 
-        pathNavigator = pathNavigator.get(entityIdProperty);
+        var targetIdProperty = repositories.getPersistentEntity(targetDomainType)
+                .getRequiredIdProperty()
+                .getName();
+
+        pathNavigator = pathNavigator.get(targetIdProperty);
 
         return forPersistentEntity(persistentEntity).forPath(pathNavigator.getPath()).filters().findFirst();
     }
