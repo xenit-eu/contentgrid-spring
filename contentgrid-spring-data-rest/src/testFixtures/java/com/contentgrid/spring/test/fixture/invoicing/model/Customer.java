@@ -1,6 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
+import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.contentgrid.spring.test.fixture.invoicing.model.support.Content;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -50,10 +51,12 @@ public class Customer {
 
     @OneToMany(mappedBy = "customer")
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:orders")
+    @CollectionFilterParam(predicate = EntityId.class, documented = false)
     private Set<Order> orders = new HashSet<>();
 
     @OneToMany(mappedBy="counterparty")
     @CollectionFilterParam
+    @CollectionFilterParam(value = "invoices.$$id", predicate = EntityId.class, documented = false)
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:invoices")
     private Set<Invoice> invoices = new HashSet<>();
 

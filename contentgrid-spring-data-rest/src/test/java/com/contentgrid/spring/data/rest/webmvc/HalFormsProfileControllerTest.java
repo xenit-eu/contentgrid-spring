@@ -121,7 +121,7 @@ class HalFormsProfileControllerTest {
                                         {
                                             name: "invoices.content.length",
                                             type: "number"
-                                        }
+                                        },
                                         # These have predicate=None set, so they are not present in the documentation
                                         #{
                                         #    name: "invoices.content.length.lt",
@@ -130,7 +130,11 @@ class HalFormsProfileControllerTest {
                                         #{
                                         #    name: "invoices.content.length.gt",
                                         #    type: "number"
-                                        #}
+                                        #},
+                                        # this is also a static parameter on a field at depth 1, so it is present
+                                        {
+                                            name: "invoices.orders.id"
+                                        }
                                     ]
                                 }
                             }
@@ -221,7 +225,7 @@ class HalFormsProfileControllerTest {
                                     {
                                         name: "content.length",
                                         type: "number"
-                                    }
+                                    },
                                     # These have predicate=None set, so they are not present in the documentation
                                     #{
                                     #    name: "content.length.lt",
@@ -234,6 +238,10 @@ class HalFormsProfileControllerTest {
                                     # Note: no relation to orders is exposed,
                                     # because the searchable properties on Order are
                                     # also relations. We only expand one level deep
+                                    # orders.id itself is exposed directly on invoice itself, so it is present
+                                    {
+                                        name: "orders.id"
+                                    }
                                 ]
                             }
                         }
