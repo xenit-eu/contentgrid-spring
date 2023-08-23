@@ -35,6 +35,8 @@ dependencies {
 
     implementation project(':contentgrid-spring-querydsl')
 
+    testAnnotationProcessor project(':contentgrid-spring-boot-starter-annotations')
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'jakarta.transaction:jakarta.transaction-api'

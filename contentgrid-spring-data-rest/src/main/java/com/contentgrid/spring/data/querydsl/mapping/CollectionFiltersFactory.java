@@ -11,7 +11,9 @@ import com.contentgrid.spring.querydsl.mapping.CollectionFilters;
 import com.querydsl.core.types.Path;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +33,13 @@ class CollectionFiltersFactory {
     private final PathNavigator pathNavigator;
 
     public CollectionFilters createFilters() {
-        return new CollectionFiltersImpl(filters().toList());
+        return new CollectionFiltersImpl(filters().collect(Collectors.toUnmodifiableMap(
+                CollectionFilter::getFilterName,
+                Function.identity(),
+                (a, b) -> {
+                    throw new IllegalStateException("Duplicate filter name '%s' mapping to paths '%s' and '%s'".formatted(a.getFilterName(), a.getPath(), b.getPath()));
+                }
+        )));
     }
 
     private Stream<CollectionFilter> filters() {
