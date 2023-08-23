@@ -121,15 +121,16 @@ class HalFormsProfileControllerTest {
                                         {
                                             name: "invoices.content.length",
                                             type: "number"
-                                        },
-                                        {
-                                            name: "invoices.content.length.lt",
-                                            type: "number"
-                                        },
-                                        {
-                                            name: "invoices.content.length.gt",
-                                            type: "number"
                                         }
+                                        # These have predicate=None set, so they are not present in the documentation
+                                        #{
+                                        #    name: "invoices.content.length.lt",
+                                        #    type: "number"
+                                        #},
+                                        #{
+                                        #    name: "invoices.content.length.gt",
+                                        #    type: "number"
+                                        #}
                                     ]
                                 }
                             }
@@ -220,15 +221,16 @@ class HalFormsProfileControllerTest {
                                     {
                                         name: "content.length",
                                         type: "number"
-                                    },
-                                    {
-                                        name: "content.length.lt",
-                                        type: "number"
-                                    },
-                                    {
-                                        name: "content.length.gt",
-                                        type: "number"
                                     }
+                                    # These have predicate=None set, so they are not present in the documentation
+                                    #{
+                                    #    name: "content.length.lt",
+                                    #    type: "number"
+                                    #},
+                                    #{
+                                    #    name: "content.length.gt",
+                                    #    type: "number"
+                                    #}
                                     # Note: no relation to orders is exposed,
                                     # because the searchable properties on Order are
                                     # also relations. We only expand one level deep

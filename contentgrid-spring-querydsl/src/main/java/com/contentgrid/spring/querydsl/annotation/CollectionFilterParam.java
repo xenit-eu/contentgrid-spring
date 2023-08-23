@@ -5,7 +5,6 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.contentgrid.spring.querydsl.predicate.Default;
-import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Path;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
