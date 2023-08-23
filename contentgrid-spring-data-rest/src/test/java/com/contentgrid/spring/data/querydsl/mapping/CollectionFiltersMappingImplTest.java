@@ -47,12 +47,14 @@ class CollectionFiltersMappingImplTest {
                 .hasValueSatisfying(filter -> {
                     assertThat(filter.getFilterName()).isEqualTo("vat");
                     assertThat(filter.getPath()).isEqualTo(QCustomer.customer.vat);
+                    assertThat(filter.isDocumented()).isTrue();
                 });
 
         assertThat(collectionFiltersMapping.forProperty(Customer.class, "content", "length"))
                 .hasValueSatisfying(filter -> {
                     assertThat(filter.getFilterName()).isEqualTo("content.size");
                     assertThat(filter.getPath()).isEqualTo(QCustomer.customer.content.length);
+                    assertThat(filter.isDocumented()).isTrue();
                 });
 
         assertThat(collectionFiltersMapping.forProperty(Customer.class, "content")).isEmpty();

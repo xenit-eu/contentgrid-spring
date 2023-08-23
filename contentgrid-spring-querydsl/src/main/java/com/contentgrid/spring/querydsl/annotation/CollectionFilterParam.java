@@ -39,4 +39,12 @@ public @interface CollectionFilterParam {
      */
     Class<? extends QuerydslPredicateFactory<Path<?>, ?>> predicate() default Default.class;
 
+    /**
+     * Can be set to false to mark the filter parameter as undocumented.
+     * <p>
+     * Undocumented parameters will be omitted from schemas and descriptions,
+     * but they will participate in filtering when they are present
+     */
+    boolean documented() default true;
+
 }

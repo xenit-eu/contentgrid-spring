@@ -17,6 +17,9 @@ class CollectionFilterImpl implements CollectionFilter {
     @Getter
     private final Path<? extends Object> path;
 
+    @Getter
+    private final boolean documented;
+
     private final QuerydslPredicateFactory<Path<?>, Object> predicateFactory;
 
     @Override

@@ -60,6 +60,7 @@ class CollectionFiltersFactory {
                 .map(boundPath -> new CollectionFilterImpl(
                         prefix+getName(property, filterParam),
                         boundPath,
+                        filterParam.documented(),
                         (QuerydslPredicateFactory<Path<?>, Object>) predicateFactory
                 ));
     }

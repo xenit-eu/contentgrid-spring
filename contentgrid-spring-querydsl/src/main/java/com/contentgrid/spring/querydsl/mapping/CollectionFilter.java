@@ -7,6 +7,7 @@ import java.util.Optional;
 
 public interface CollectionFilter {
     String getFilterName();
+    boolean isDocumented();
     Path<?> getPath();
     Optional<Predicate> createPredicate(Collection<?> parameters);
 }
