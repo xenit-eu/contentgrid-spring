@@ -1,24 +1,22 @@
-package com.contentgrid.spring.data.rest.mapping.collectionfilter;
+package com.contentgrid.spring.data.rest.mapping.persistent;
 
 import com.contentgrid.spring.data.rest.mapping.Container;
 import com.contentgrid.spring.data.rest.mapping.Property;
-import com.contentgrid.spring.data.rest.mapping.typeinfo.TypeInformationContainer;
-import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
-import java.lang.annotation.Annotation;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import java.lang.annotation.Annotation;
+import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.util.TypeInformation;
 
 @RequiredArgsConstructor
-public class CollectionFilterBasedProperty implements Property {
+public class ThroughAssociationsProperty implements Property {
     private final Property delegate;
-    private final CollectionFilterParam filterParam;
+    private final Repositories repositories;
     private final int maxDepth;
 
     private final static Set<Class<? extends Annotation>> ASSOCIATION_ANNOTATIONS = Set.of(
@@ -35,9 +33,7 @@ public class CollectionFilterBasedProperty implements Property {
 
     @Override
     public String getName() {
-        return Optional.of(filterParam.value())
-                .filter(Predicate.not(Predicate.isEqual(CollectionFilterParam.USE_DEFAULT_NAME)))
-                .orElseGet(delegate::getName);
+        return delegate.getName();
     }
 
     @Override
@@ -63,14 +59,15 @@ public class CollectionFilterBasedProperty implements Property {
     @Override
     public Optional<Container> nestedContainer() {
         return delegate.nestedContainer()
-                .<Container>map(container -> new CollectionFilterBasedContainer(container, maxDepth))
+                .<Container>map(container -> new ThroughAssociationsContainer(container, repositories, maxDepth))
                 .or(this::relationContainer);
     }
 
     private Optional<Container> relationContainer() {
         if(ASSOCIATION_ANNOTATIONS.stream()
                 .anyMatch(annotation -> delegate.findAnnotation(annotation).isPresent())) {
-            return Optional.of(new CollectionFilterBasedContainer(new TypeInformationContainer(delegate.getTypeInformation().getRequiredActualType()), maxDepth-1));
+            var persistentEntity = repositories.getPersistentEntity(delegate.getTypeInformation().getRequiredActualType().getType());
+            return Optional.of(new ThroughAssociationsContainer(new PersistentEntityContainer(persistentEntity), repositories, maxDepth-1));
         }
         return Optional.empty();
     }

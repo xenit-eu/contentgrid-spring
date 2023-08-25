@@ -1,33 +1,23 @@
-package com.contentgrid.spring.data.rest.mapping.collectionfilter;
+package com.contentgrid.spring.data.rest.mapping.persistent;
 
 import com.contentgrid.spring.data.rest.mapping.Container;
 import com.contentgrid.spring.data.rest.mapping.Property;
-import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
-import com.contentgrid.spring.querydsl.annotation.CollectionFilterParams;
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.util.TypeInformation;
 
 @RequiredArgsConstructor
-public class CollectionFilterBasedContainer implements Container {
+public class ThroughAssociationsContainer implements Container {
     private final Container delegate;
+    private final Repositories repositories;
     private final int maxDepth;
 
     @Override
     public <A extends Annotation> Optional<A> findAnnotation(Class<A> annotationClass) {
         return delegate.findAnnotation(annotationClass);
-    }
-
-    private static Stream<CollectionFilterParam> getFilterParams(Property property) {
-        return property.findAnnotation(CollectionFilterParams.class)
-                .map(CollectionFilterParams::value)
-                .map(Arrays::stream)
-                .or(() -> property.findAnnotation(CollectionFilterParam.class).map(Stream::of))
-                .orElseGet(Stream::empty);
     }
 
     @Override
@@ -41,9 +31,7 @@ public class CollectionFilterBasedContainer implements Container {
             return;
         }
         delegate.doWithProperties(property -> {
-            getFilterParams(property).forEachOrdered(filterParam -> {
-                handler.accept(new CollectionFilterBasedProperty(property, filterParam, maxDepth));
-            });
+                handler.accept(new ThroughAssociationsProperty(property, repositories, maxDepth));
         });
     }
 
@@ -53,9 +41,7 @@ public class CollectionFilterBasedContainer implements Container {
             return;
         }
         delegate.doWithAssociations(property -> {
-            getFilterParams(property).forEachOrdered(filterParam -> {
-                handler.accept(new CollectionFilterBasedProperty(property, filterParam, maxDepth));
-            });
+            handler.accept(new ThroughAssociationsProperty(property, repositories, maxDepth));
         });
     }
 }

@@ -1,6 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
+import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.HashSet;
@@ -38,6 +39,7 @@ public class PromotionCampaign {
 
     @ManyToMany(mappedBy = "promos")
     @RestResource(rel = "d:orders")
+    @CollectionFilterParam(predicate = EntityId.class, documented = false)
     private Set<Order> orders = new HashSet<>();
 
     public PromotionCampaign(String promoCode, String description) {

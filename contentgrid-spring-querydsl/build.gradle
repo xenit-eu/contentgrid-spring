@@ -13,5 +13,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     api platform(project(':contentgrid-spring-boot-platform'))
+    implementation platform(project(':contentgrid-spring-boot-platform'))
     api 'com.querydsl:querydsl-core'
+    implementation 'org.springframework.data:spring-data-commons'
 }

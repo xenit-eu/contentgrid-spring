@@ -102,16 +102,17 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
         var metadata = converter.convertToSearchPayloadMetadata(Customer.class);
 
         assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
-                "vat",
-                "content.size",
-                "content.mimetype",
-                "content.filename",
-                "invoices.number",
-                "invoices.paid",
-                "invoices.content.length",
-                "invoices.content.length.lt",
-                "invoices.content.length.gt"
-        );
+                        "vat",
+                        "content.size",
+                        "content.mimetype",
+                        "content.filename",
+                        "invoices.number",
+                        "invoices.paid",
+                        "invoices.content.length",
+                        /*"invoices.content.length.lt",
+                        "invoices.content.length.gt"*/
+                        "invoices.orders.id"
+                );
     }
 
     @Test
@@ -126,8 +127,9 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 "invoice.number",
                 "invoice.paid",
                 "invoice.content.length",
-                "invoice.content.length.lt",
-                "invoice.content.length.gt",
+                /*"invoice.content.length.lt",
+                "invoice.content.length.gt",*/
+                "invoice.orders.id",
                 "shipping_address.zip"
         );
     }
@@ -140,8 +142,9 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 "number",
                 "paid",
                 "content.length",
-                "content.length.lt",
-                "content.length.gt"
+                /*"content.length.lt",
+                "content.length.gt"*/
+                "orders.id"
         );
     }
 }

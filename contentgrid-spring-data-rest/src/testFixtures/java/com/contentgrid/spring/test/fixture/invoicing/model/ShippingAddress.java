@@ -1,6 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
+import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.UUID;

@@ -1,6 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
+import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.util.HashSet;
@@ -35,22 +36,26 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "customer")
     @CollectionFilterParam
+    @CollectionFilterParam(value = "customer._id", predicate = EntityId.class, documented = false)
     @RestResource(rel = "d:customer")
     private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "invoice", foreignKey = @ForeignKey(foreignKeyDefinition = "foreign key (\"invoice\") references \"invoice\" ON DELETE set NULL"))
     @CollectionFilterParam
+    @CollectionFilterParam(value = "invoice._id", predicate = EntityId.class, documented = false)
     @RestResource(rel = "d:invoice")
     private Invoice invoice;
 
     @ManyToMany
     @RestResource(rel = "d:promos")
+    @CollectionFilterParam(value = "promos._id", predicate = EntityId.class, documented = false)
     private Set<PromotionCampaign> promos = new HashSet<>();
 
     @OneToOne
     @JsonProperty("shipping_address")
     @CollectionFilterParam("shipping_address")
+    @CollectionFilterParam(value = "shipping_address._id", predicate = EntityId.class, documented = false)
     @RestResource(rel = "d:shipping-address")
     private ShippingAddress shippingAddress;
 

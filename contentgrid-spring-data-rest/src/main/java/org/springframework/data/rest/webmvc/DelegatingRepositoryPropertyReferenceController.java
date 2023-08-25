@@ -1,6 +1,5 @@
 package org.springframework.data.rest.webmvc;
 
-import static org.springframework.data.querydsl.QuerydslUtils.QUERY_DSL_PRESENT;
 import static org.springframework.data.rest.webmvc.RestMediaTypes.SPRING_DATA_COMPACT_JSON_VALUE;
 import static org.springframework.data.rest.webmvc.RestMediaTypes.TEXT_URI_LIST_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
@@ -9,7 +8,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
-import com.contentgrid.spring.data.querydsl.QuerydslBindingsInspector;
+import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URI;
@@ -22,15 +21,12 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
-import org.springframework.data.querydsl.binding.QuerydslBindingsFactory;
-import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.data.rest.core.mapping.PropertyAwareResourceMapping;
@@ -61,30 +57,28 @@ public class DelegatingRepositoryPropertyReferenceController {
 
     private final RepositoryPropertyReferenceController delegate;
     private final Repositories repositories;
-    private final RepositoryResourceMappings mappings;
 
     private final RepositoryEntityLinks entityLinks;
 
     private final SelfLinkProvider selfLinkProvider;
 
-    private final ObjectProvider<QuerydslBindingsFactory> querydslBindingsFactoryProvider;
+    private final CollectionFiltersMapping collectionFiltersMapping;
 
     private final ContentGridRestProperties contentGridRestProperties;
 
     @Autowired
     DelegatingRepositoryPropertyReferenceController(RepositoryPropertyReferenceController delegate,
-            Repositories repositories, RepositoryResourceMappings mappings,
+            Repositories repositories,
             RepositoryEntityLinks entityLinks, SelfLinkProvider selfLinkProvider,
-            ObjectProvider<QuerydslBindingsFactory> querydslBindingsFactoryProvider,
+            CollectionFiltersMapping collectionFiltersMapping,
             ContentGridRestProperties contentGridRestProperties) {
 
         this.delegate = delegate;
 
         this.repositories = repositories;
-        this.mappings = mappings;
         this.entityLinks = entityLinks;
         this.selfLinkProvider = selfLinkProvider;
-        this.querydslBindingsFactoryProvider = querydslBindingsFactoryProvider;
+        this.collectionFiltersMapping = collectionFiltersMapping;
         this.contentGridRestProperties = contentGridRestProperties;
     }
 
@@ -103,29 +97,15 @@ public class DelegatingRepositoryPropertyReferenceController {
                     log.warn("Could not find other side of relation {}", prop.property);
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
+                var idPropertyFilter = collectionFiltersMapping.forIdProperty(targetType.getType(), mappedBy.get());
 
-                var isQueryDslRepository = this.repositories.getRepositoryInformationFor(targetType.getType())
-                        .filter(repoMetadata -> QUERY_DSL_PRESENT)
-                        .map(RepositoryMetadata::getRepositoryInterface)
-                        .filter(QuerydslPredicateExecutor.class::isAssignableFrom)
-                        .isPresent();
-
-                var querydslBindingsFactory = this.querydslBindingsFactoryProvider.getIfAvailable();
-                if (isQueryDslRepository && querydslBindingsFactory != null) {
-                    var querydslBinding = querydslBindingsFactory.createBindingsFor(targetType);
-                    var querydslFilter = new QuerydslBindingsInspector(querydslBinding)
-                            .findPathBindingFor(mappedBy.get(), targetType.getType());
-
-                    if (querydslFilter.isPresent()) {
-                        var filter = querydslFilter.get();
-                        var locationUri = URI.create(url.expand().getHref() + "?" + filter + "=" + id);
-                        return ResponseEntity.status(HttpStatus.FOUND).location(locationUri).build();
-                    } else {
-                        log.warn("Querydsl binding for path '{}' type {} not found.",
-                                mappedBy.get(), targetType.getType().getName());
-                    }
+                if (idPropertyFilter.isPresent()) {
+                    var filter = idPropertyFilter.get().getFilterName();
+                    var locationUri = URI.create(url.expand().getHref() + "?" + filter + "=" + id);
+                    return ResponseEntity.status(HttpStatus.FOUND).location(locationUri).build();
                 } else {
-                    log.warn("No Querydsl-repository or -bindings found for domain type {}.", targetType.getType());
+                    log.warn("Querydsl binding for path '{}' type {} not found.",
+                            mappedBy.get(), targetType.getType().getName());
                 }
 
                 // Is a fallback possible to query-methods if target type repo is NOT a querydsl repo ?!
