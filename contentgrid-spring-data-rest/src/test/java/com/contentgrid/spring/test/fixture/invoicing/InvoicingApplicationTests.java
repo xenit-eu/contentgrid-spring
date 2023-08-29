@@ -1041,7 +1041,6 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            @Disabled("ACC-735")
             void postInvoiceContent_missingContentType_http400() throws Exception {
                 mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                 .content(UNICODE_TEXT))
@@ -1227,7 +1226,6 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            @Disabled("ACC-735")
             void putInvoiceContent_missingContentType_http400() throws Exception {
                 mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                 .content(UNICODE_TEXT))
@@ -1235,7 +1233,6 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            @Disabled("ACC-735")
             void putMultipartContent_http201() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 assertThat(invoicesContent.getContent(invoice)).isNull();
@@ -1256,7 +1253,6 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            @Disabled("ACC-735")
             void putMultipartContent_updateDifferentContentType_http200() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
