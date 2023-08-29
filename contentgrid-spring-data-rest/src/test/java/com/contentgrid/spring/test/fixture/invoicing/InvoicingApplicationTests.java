@@ -3,7 +3,6 @@ package com.contentgrid.spring.test.fixture.invoicing;
 import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
@@ -28,16 +27,20 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.PromotionCampaignRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingAddressRepository;
 import com.contentgrid.spring.test.fixture.invoicing.store.InvoiceContentStore;
+import jakarta.transaction.Transactional;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -49,11 +52,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.rest.webmvc.RestMediaTypes;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Links;
+import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultHandler;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
@@ -82,6 +89,9 @@ class InvoicingApplicationTests {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private CurieProvider curieProvider;
 
     @Autowired
     CustomerRepository customers;
@@ -131,6 +141,31 @@ class InvoicingApplicationTests {
 
     }
 
+    private Matcher<Object> curies() {
+        var curies =  ((List<Link>)curieProvider.getCurieInformation(Links.NONE))
+                .stream()
+                .map(curie -> Map.of(
+                        "href", curie.getHref(),
+                        "templated", curie.isTemplated(),
+                        "name", curie.getName()
+                ))
+                .toList();
+        return new BaseMatcher<Object>() {
+            @Override
+            public boolean matches(Object actual) {
+                if(actual instanceof List<?> items) {
+                    return curies.equals(items);
+                }
+                return false;
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendValueList("[", ", ", "]", curies);
+            }
+        };
+    }
+
     @Nested
     class CollectionResource {
 
@@ -149,7 +184,8 @@ class InvoicingApplicationTests {
                         .andExpect(jsonPath("$.page.number").value(0))
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(2))
                         .andExpect(jsonPath("$._embedded.['item'][0].number").exists())
-                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/invoices?page=0&size=20"));
+                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/invoices?page=0&size=20"))
+                        .andExpect(jsonPath("$._links.curies").value(curies()));
             }
 
             @Test
@@ -170,7 +206,8 @@ class InvoicingApplicationTests {
                         .andExpect(jsonPath("$.page.totalPages").value(0))
                         .andExpect(jsonPath("$.page.number").value(0))
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(0))
-                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/refunds?page=0&size=20"));
+                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/refunds?page=0&size=20"))
+                        .andExpect(jsonPath("$._links.curies").value(curies()));
             }
         }
 
@@ -253,7 +290,8 @@ class InvoicingApplicationTests {
                 mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .contentType("application/json"))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1));
+                        .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
+                        .andExpect(jsonPath("$._links.curies").value(curies()));
             }
 
         }
