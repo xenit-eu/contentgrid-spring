@@ -153,6 +153,15 @@ class InvoicingApplicationTests {
             }
 
             @Test
+            void listInvoices_withFilter_returns_http200_ok() throws Exception {
+                mockMvc.perform(get("/invoices?number={number}", INVOICE_NUMBER_1)
+                        .contentType("application/json"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.['item'].length()").value(1))
+                        .andExpect(jsonPath("$._embedded.['item'][0].number").value(INVOICE_NUMBER_1));
+            }
+
+            @Test
             void listRefunds_returns_http200_ok() throws Exception {
                 mockMvc.perform(get("/refunds").contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
