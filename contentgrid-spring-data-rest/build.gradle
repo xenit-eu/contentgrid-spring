@@ -51,7 +51,7 @@ dependencies {
     testFixturesCompileOnly 'org.projectlombok:lombok'
 
     testFixturesRuntimeOnly 'org.postgresql:postgresql'
-    testFixturesRuntimeOnly 'org.testcontainers:postgresql:1.18.3'
+    testFixturesRuntimeOnly 'org.testcontainers:postgresql:1.19.0'
 }
 
 tasks.named('test') {
