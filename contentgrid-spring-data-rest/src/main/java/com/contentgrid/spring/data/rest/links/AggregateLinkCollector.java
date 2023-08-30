@@ -25,7 +25,7 @@ class AggregateLinkCollector implements LinkCollector {
 
     @Override
     public Links getLinksForNested(Object object, Links existing) {
-        existing = delegate.getLinksFor(object, existing);
+        existing = delegate.getLinksForNested(object, existing);
         for (var collector : collectors) {
             existing = collector.getLinksForNested(object, existing);
         }
