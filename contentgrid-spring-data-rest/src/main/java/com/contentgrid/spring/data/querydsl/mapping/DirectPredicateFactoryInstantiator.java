@@ -7,7 +7,7 @@ import org.springframework.beans.BeanUtils;
 class DirectPredicateFactoryInstantiator implements PredicateFactoryInstantiator {
     @Override
     @SuppressWarnings("unchecked")
-    public QuerydslPredicateFactory<Path<?>, ?> instantiate(Class<? extends QuerydslPredicateFactory<Path<?>, ?>> clazz) {
+    public QuerydslPredicateFactory<? extends Path<?>, ?> instantiate(Class<? extends QuerydslPredicateFactory> clazz) {
         return BeanUtils.instantiateClass((Class<? extends QuerydslPredicateFactory<Path<?>,?>>) clazz);
     }
 }

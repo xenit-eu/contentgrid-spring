@@ -36,7 +36,7 @@ public @interface CollectionFilterParam {
      * We'll try to obtain a Spring bean of this type,
      * but fall back to plain instantiation if no bean is found in the current BeanFactory.
      */
-    Class<? extends QuerydslPredicateFactory<Path<?>, ?>> predicate() default Default.class;
+    Class<? extends QuerydslPredicateFactory> predicate() default Default.class;
 
     /**
      * Can be set to false to mark the filter parameter as undocumented.
