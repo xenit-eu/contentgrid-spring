@@ -33,6 +33,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -196,6 +197,15 @@ class InvoicingApplicationTests {
             void listInvoices_withFilter_returns_http200_ok() throws Exception {
                 mockMvc.perform(get("/invoices?number={number}", INVOICE_NUMBER_1)
                         .contentType("application/json"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.['item'].length()").value(1))
+                        .andExpect(jsonPath("$._embedded.['item'][0].number").value(INVOICE_NUMBER_1));
+            }
+
+            @Test
+            void listInvoices_withFilter_ignoreCase_returns_http200_ok() throws Exception {
+                mockMvc.perform(get("/invoices?number={number}", INVOICE_NUMBER_1.toLowerCase(Locale.ROOT))
+                                .contentType("application/json"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(1))
                         .andExpect(jsonPath("$._embedded.['item'][0].number").value(INVOICE_NUMBER_1));
