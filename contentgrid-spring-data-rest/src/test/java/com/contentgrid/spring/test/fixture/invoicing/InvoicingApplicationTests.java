@@ -26,6 +26,7 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepositor
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.PromotionCampaignRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingAddressRepository;
+import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
 import com.contentgrid.spring.test.fixture.invoicing.store.InvoiceContentStore;
 import jakarta.transaction.Transactional;
 import java.io.ByteArrayInputStream;
@@ -110,6 +111,9 @@ class InvoicingApplicationTests {
 
     @Autowired
     InvoiceContentStore invoicesContent;
+
+    @Autowired
+    CustomerContentStore customersContent;
 
     @BeforeEach
     void setupTestData() {
@@ -922,479 +926,674 @@ class InvoicingApplicationTests {
         private static final String MIMETYPE_PLAINTEXT_UTF8 = "text/plain;charset=UTF-8";
         private static final String MIMETYPE_PLAINTEXT_LATIN1 = "text/plain;charset=ISO-8859-1";
 
-
         @Nested
-        @DisplayName("GET /{repository}/{entityId}/{contentProperty}")
-        class Get {
+        class DirectProperty {
 
-            @Test
-            void getInvoiceContent() throws Exception {
-                var filename = "💩 and 📝.txt";
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
-                invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
-                invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
-                invoice.setContentFilename(filename);
-                invoices.save(invoice);
+            @Nested
+            @DisplayName("GET /{repository}/{entityId}/{contentProperty}")
+            class Get {
 
-                var encodedFilename = UriUtils.encodeQuery(filename, StandardCharsets.UTF_8);
-                mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .accept(MediaType.ALL_VALUE))
-                        .andExpect(status().isOk())
-                        .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
-                        .andExpect(content().string(EXT_ASCII_TEXT))
-                        ;
-                        /* This assertion is changed in SB3; and is technically incorrect
-                        (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
-                        .andExpect(headers().string("Content-Disposition",
-                                is("form-data; name=\"attachment\"; filename*=UTF-8''%s".formatted(encodedFilename)))) */;
+                @Test
+                void getInvoiceContent() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
+                    invoice.setContentFilename(filename);
+                    invoices.save(invoice);
+
+                    var encodedFilename = UriUtils.encodeQuery(filename, StandardCharsets.UTF_8);
+                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .accept(MediaType.ALL_VALUE))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().string(EXT_ASCII_TEXT))
+                    ;
+                            /* This assertion is changed in SB3; and is technically incorrect
+                            (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
+                            .andExpect(headers().string("Content-Disposition",
+                                    is("form-data; name=\"attachment\"; filename*=UTF-8''%s".formatted(encodedFilename)))) */
+                    ;
+                }
+
+                @Test
+                void getInvoiceContent_missingEntity_http404() throws Exception {
+                    mockMvc.perform(get("/invoices/{id}/content", UUID.randomUUID())
+                                    .accept(MediaType.ALL_VALUE))
+                            .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void getInvoiceContent_missingContent_http404() throws Exception {
+                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .accept(MediaType.ALL_VALUE))
+                            .andExpect(status().isNotFound());
+                }
             }
 
-            @Test
-            void getInvoiceContent_missingEntity_http404() throws Exception {
-                mockMvc.perform(get("/invoices/{id}/content", UUID.randomUUID())
-                                .accept(MediaType.ALL_VALUE))
-                        .andExpect(status().isNotFound());
+            @Nested
+            @DisplayName("POST /{repository}/{entityId}/{contentProperty}")
+            class Post {
+
+                @Test
+                void postInvoiceContent_textPlainUtf8_http201() throws Exception {
+                    mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void postInvoiceContent_textPlainLatin1_http201() throws Exception {
+                    mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void postInvoiceContent_textPlainLatin1_noCharset_http201() throws Exception {
+                    mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType("text/plain")
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    // you have to "know" the charset encoding
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.TEXT_PLAIN_VALUE);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void postInvoiceAttachment_secondaryContentProperty_http201() throws Exception {
+                    mockMvc.perform(post("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getAttachmentId()).isNotBlank();
+                    assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getAttachmentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getAttachmentFilename()).isNull();
+
+                    assertThat(invoice.getContentId()).isNull();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void postInvoiceContent_update_http200() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    invoice.setContentFilename("content.txt");
+                    invoices.save(invoice);
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT))
+                            .andExpect(status().isOk());
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            EXT_ASCII_TEXT);
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
+
+                    // keeps original filename
+                    assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
+                }
+
+                @Test
+                void postInvoiceContent_missingEntity_http404() throws Exception {
+                    mockMvc.perform(post("/invoices/{id}/content", UUID.randomUUID())
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void postInvoiceContent_missingContentType_http400() throws Exception {
+                    mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isBadRequest());
+                }
+
+                @Test
+                void postMultipartContent_http201() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoicesContent.getContent(invoice)).isNull();
+
+                    var bytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
+                    var file = new MockMultipartFile("file", "content.txt", MIMETYPE_PLAINTEXT_UTF8, bytes);
+                    mockMvc.perform(multipart(HttpMethod.POST, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .file(file))
+                            .andExpect(status().isCreated());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
+                }
+
+                @Test
+                void postMultipartContent_updateDifferentContentType_http200() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    invoice.setContentFilename("content.txt");
+                    invoices.save(invoice);
+
+                    var image = new ClassPathResource("contentgrid-logo.png");
+                    var content = image.getInputStream().readAllBytes();
+                    var file = new MockMultipartFile("file", "logo.png", MediaType.IMAGE_PNG_VALUE, content);
+                    mockMvc.perform(multipart(HttpMethod.POST, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .file(file))
+                            .andExpect(status().isOk());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(content);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
+                    assertThat(invoice.getContentLength()).isEqualTo(image.contentLength());
+                    assertThat(invoice.getContentFilename()).isEqualTo("logo.png");
+                }
+
+                @Test
+                void postMultipartContent_noPayload_http400() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoicesContent.getContent(invoice)).isNull();
+
+                    mockMvc.perform(multipart(HttpMethod.POST, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
+                            .andExpect(status().isBadRequest());
+                }
             }
 
-            @Test
-            void getInvoiceContent_missingContent_http404() throws Exception {
-                mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .accept(MediaType.ALL_VALUE))
-                        .andExpect(status().isNotFound());
+            @Nested
+            @DisplayName("PUT /{repository}/{entityId}/{contentProperty}")
+            class Put {
+
+                @Test
+                void putInvoiceContent_textPlainUtf8_http201() throws Exception {
+                    mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void putInvoiceContent_textPlainLatin1_http201() throws Exception {
+                    mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void putInvoiceContent_textPlainLatin1_noCharset_http201() throws Exception {
+                    mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType("text/plain")
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    // you have to "know" the charset encoding
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.TEXT_PLAIN_VALUE);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void putInvoiceAttachment_secondaryContentProperty_http201() throws Exception {
+                    mockMvc.perform(put("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getAttachmentId()).isNotBlank();
+                    assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getAttachmentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getAttachmentFilename()).isNull();
+
+                    assertThat(invoice.getContentId()).isNull();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void putInvoiceContent_update_http200() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    invoice.setContentFilename("content.txt");
+                    invoices.save(invoice);
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT))
+                            .andExpect(status().isOk());
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            EXT_ASCII_TEXT);
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
+
+                    // keeps original filename
+                    assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
+                }
+
+                @Test
+                void putInvoiceContent_missingEntity_http404() throws Exception {
+                    mockMvc.perform(put("/invoices/{id}/content", UUID.randomUUID())
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void putInvoiceContent_missingContentType_http400() throws Exception {
+                    mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isBadRequest());
+                }
+
+                @Test
+                void putMultipartContent_http201() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoicesContent.getContent(invoice)).isNull();
+
+                    var bytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
+                    var file = new MockMultipartFile("file", "content.txt", MIMETYPE_PLAINTEXT_UTF8, bytes);
+                    mockMvc.perform(multipart(HttpMethod.PUT, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .file(file))
+                            .andExpect(status().isCreated());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
+                }
+
+                @Test
+                void putMultipartContent_updateDifferentContentType_http200() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    invoice.setContentFilename("content.txt");
+                    invoices.save(invoice);
+
+                    var image = new ClassPathResource("contentgrid-logo.png");
+                    var content = image.getInputStream().readAllBytes();
+                    var file = new MockMultipartFile("file", "logo.png", MediaType.IMAGE_PNG_VALUE, content);
+                    mockMvc.perform(multipart(HttpMethod.PUT, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .file(file))
+                            .andExpect(status().isOk());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(content);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
+                    assertThat(invoice.getContentLength()).isEqualTo(image.contentLength());
+                    assertThat(invoice.getContentFilename()).isEqualTo("logo.png");
+                }
+
+                @Test
+                void putMultipartContent_noPayload_http400() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoicesContent.getContent(invoice)).isNull();
+
+                    mockMvc.perform(multipart(HttpMethod.PUT, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
+                            .andExpect(status().isBadRequest());
+                }
+            }
+
+            @Nested
+            @DisplayName("DELETE /{repository}/{entityId}/{contentProperty}")
+            class Delete {
+
+                @Test
+                void deleteContent_http204() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    invoice.setContentFilename("content.txt");
+                    invoices.save(invoice);
+
+                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
+                            .andExpect(status().isNoContent());
+
+                    var content = invoicesContent.getResource(invoice, PropertyPath.from("content"));
+                    assertThat(content).isNull();
+
+                    assertThat(invoice.getContentId()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void deleteContent_noContent_http404() throws Exception {
+                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
+                            .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void deleteContent_noEntity_http404() throws Exception {
+                    mockMvc.perform(delete("/invoices/{id}/content", UUID.randomUUID()))
+                            .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void deleteMultipleContentProperties() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var contentBytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"),
+                            new ByteArrayInputStream(contentBytes));
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
+                    invoice.setContentFilename("content.txt");
+
+                    var attachmentBytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
+                    invoicesContent.setContent(invoice, PropertyPath.from("attachment"),
+                            new ByteArrayInputStream(attachmentBytes));
+                    invoice.setAttachmentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    invoice.setAttachmentFilename("attachment.txt");
+                    invoices.save(invoice);
+
+                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNotNull();
+                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNotNull();
+
+                    mockMvc.perform(delete("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1)))
+                            .andExpect(status().isNoContent());
+
+                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNotNull();
+                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNull();
+
+                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
+                            .andExpect(status().isNoContent());
+
+                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNull();
+                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNull();
+                }
             }
         }
 
         @Nested
-        @DisplayName("POST /{repository}/{entityId}/{contentProperty}")
-        class Post {
+        class EmbeddedProperty {
 
-            @Test
-            void postInvoiceContent_textPlainUtf8_http201() throws Exception {
-                mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .content(UNICODE_TEXT))
-                        .andExpect(status().isCreated());
+            @Nested
+            @DisplayName("GET /{repository}/{entityId}/{contentProperty}")
+            class Get {
 
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                @Test
+                void getCustomerContent() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
+                    customersContent.setContent(customer, PropertyPath.from("content"), stream);
+                    customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
+                    customer.getContent().setFilename(filename);
+                    customers.save(customer);
 
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(UNICODE_TEXT);
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                assertThat(invoice.getContentFilename()).isNull();
+                    var encodedFilename = UriUtils.encodeQuery(filename, StandardCharsets.UTF_8);
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .accept(MediaType.ALL_VALUE))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().string(EXT_ASCII_TEXT))
+                    ;
+                            /* This assertion is changed in SB3; and is technically incorrect
+                            (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
+                            .andExpect(headers().string("Content-Disposition",
+                                    is("form-data; name=\"attachment\"; filename*=UTF-8''%s".formatted(encodedFilename)))) */
+                    ;
+                }
+
+                @Test
+                void getCustomerContent_missingEntity_http404() throws Exception {
+                    mockMvc.perform(get("/customers/{id}/content", UUID.randomUUID())
+                                    .accept(MediaType.ALL_VALUE))
+                            .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void getCustomerContent_missingContent_http404() throws Exception {
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .accept(MediaType.ALL_VALUE))
+                            .andExpect(status().isNotFound());
+                }
             }
 
-            @Test
-            void postInvoiceContent_textPlainLatin1_http201() throws Exception {
-                mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .characterEncoding(StandardCharsets.ISO_8859_1)
-                                .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                        .andExpect(status().isCreated());
+            @Nested
+            @DisplayName("POST /{repository}/{entityId}/{contentProperty}")
+            class Post {
 
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                @Test
+                void postCustomerContent_textPlainUtf8_http201() throws Exception {
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
 
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                        .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                assertThat(invoice.getContentFilename()).isNull();
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isNull();
+                }
+
+                @Test
+                void postCustomerContent_update_http200() throws Exception {
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    customersContent.setContent(customer, PropertyPath.from("content"), stream);
+                    customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    customer.getContent().setFilename("content.txt");
+                    customers.save(customer);
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isEqualTo("content.txt");
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT))
+                            .andExpect(status().isOk());
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            EXT_ASCII_TEXT);
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
+
+                    // keeps original filename
+                    assertThat(customer.getContent().getFilename()).isEqualTo("content.txt");
+                }
+
+                @Test
+                void postCustomerContent_missingEntity_http404() throws Exception {
+                    mockMvc.perform(post("/customers/{id}/content", UUID.randomUUID())
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void postCustomerContent_missingContentType_http400() throws Exception {
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isBadRequest());
+                }
+
             }
 
-            @Test
-            void postInvoiceContent_textPlainLatin1_noCharset_http201() throws Exception {
-                mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .contentType("text/plain")
-                                .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                        .andExpect(status().isCreated());
+            @Nested
+            @DisplayName("PUT /{repository}/{entityId}/{contentProperty}")
+            class Put {
 
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                @Test
+                void putCustomerContent_textPlainUtf8_http201() throws Exception {
+                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
 
-                // you have to "know" the charset encoding
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                        .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.TEXT_PLAIN_VALUE);
-                assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isNull();
+                }
+
             }
 
-            @Test
-            void postInvoiceAttachment_secondaryContentProperty_http201() throws Exception {
-                mockMvc.perform(post("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1))
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .content(UNICODE_TEXT))
-                        .andExpect(status().isCreated());
+            @Nested
+            @DisplayName("DELETE /{repository}/{entityId}/{contentProperty}")
+            class Delete {
+
+                @Test
+                void deleteContent_http204() throws Exception {
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
+                    customersContent.setContent(customer, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
+                    customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    customer.getContent().setFilename("content.txt");
+                    customers.save(customer);
+
+                    mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(status().isNoContent());
+
+                    var content = customersContent.getResource(customer, PropertyPath.from("content"));
+                    assertThat(content).isNull();
+                }
+
+                @Test
+                void deleteContent_noContent_http404() throws Exception {
+                    mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void deleteContent_noEntity_http404() throws Exception {
+                    mockMvc.perform(delete("/customers/{id}/content", UUID.randomUUID()))
+                            .andExpect(status().isNotFound());
+                }
 
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment"))).hasContent(
-                        UNICODE_TEXT);
-                assertThat(invoice.getAttachmentId()).isNotBlank();
-                assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                assertThat(invoice.getAttachmentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                assertThat(invoice.getAttachmentFilename()).isNull();
-
-                assertThat(invoice.getContentId()).isNull();
-                assertThat(invoice.getContentMimetype()).isNull();
-                assertThat(invoice.getContentLength()).isNull();
-                assertThat(invoice.getContentFilename()).isNull();
-            }
-
-            @Test
-            void postInvoiceContent_update_http200() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
-                invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
-                invoice.setContentFilename("content.txt");
-                invoices.save(invoice);
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                        .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
-
-                // update content, ONLY changing the charset
-                mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .content(EXT_ASCII_TEXT))
-                        .andExpect(status().isOk());
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                        EXT_ASCII_TEXT);
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-
-                // keeps original filename
-                assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
-            }
-
-            @Test
-            void postInvoiceContent_missingEntity_http404() throws Exception {
-                mockMvc.perform(post("/invoices/{id}/content", UUID.randomUUID())
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .content(UNICODE_TEXT))
-                        .andExpect(status().isNotFound());
-            }
-
-            @Test
-            void postInvoiceContent_missingContentType_http400() throws Exception {
-                mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .content(UNICODE_TEXT))
-                        .andExpect(status().isBadRequest());
-            }
-
-            @Test
-            void postMultipartContent_http201() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                assertThat(invoicesContent.getContent(invoice)).isNull();
-
-                var bytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
-                var file = new MockMultipartFile("file", "content.txt", MIMETYPE_PLAINTEXT_UTF8, bytes);
-                mockMvc.perform(multipart(HttpMethod.POST, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .file(file))
-                        .andExpect(status().isCreated());
-
-                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(UNICODE_TEXT);
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
-            }
-
-            @Test
-            void postMultipartContent_updateDifferentContentType_http200() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
-                invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
-                invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
-                invoice.setContentFilename("content.txt");
-                invoices.save(invoice);
-
-                var image = new ClassPathResource("contentgrid-logo.png");
-                var content = image.getInputStream().readAllBytes();
-                var file = new MockMultipartFile("file", "logo.png", MediaType.IMAGE_PNG_VALUE, content);
-                mockMvc.perform(multipart(HttpMethod.POST, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .file(file))
-                        .andExpect(status().isOk());
-
-                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                        .hasBinaryContent(content);
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
-                assertThat(invoice.getContentLength()).isEqualTo(image.contentLength());
-                assertThat(invoice.getContentFilename()).isEqualTo("logo.png");
-            }
-
-            @Test
-            void postMultipartContent_noPayload_http400() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                assertThat(invoicesContent.getContent(invoice)).isNull();
-
-                mockMvc.perform(multipart(HttpMethod.POST, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
-                        .andExpect(status().isBadRequest());
-            }
-        }
-
-        @Nested
-        @DisplayName("PUT /{repository}/{entityId}/{contentProperty}")
-        class Put {
-
-            @Test
-            void putInvoiceContent_textPlainUtf8_http201() throws Exception {
-                mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .content(UNICODE_TEXT))
-                        .andExpect(status().isCreated());
-
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(UNICODE_TEXT);
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                assertThat(invoice.getContentFilename()).isNull();
-            }
-
-            @Test
-            void putInvoiceContent_textPlainLatin1_http201() throws Exception {
-                mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .characterEncoding(StandardCharsets.ISO_8859_1)
-                                .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                        .andExpect(status().isCreated());
-
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                        .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                assertThat(invoice.getContentFilename()).isNull();
-            }
-
-            @Test
-            void putInvoiceContent_textPlainLatin1_noCharset_http201() throws Exception {
-                mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .contentType("text/plain")
-                                .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                        .andExpect(status().isCreated());
-
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-
-                // you have to "know" the charset encoding
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                        .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.TEXT_PLAIN_VALUE);
-                assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                assertThat(invoice.getContentFilename()).isNull();
-            }
-
-            @Test
-            void putInvoiceAttachment_secondaryContentProperty_http201() throws Exception {
-                mockMvc.perform(put("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1))
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .content(UNICODE_TEXT))
-                        .andExpect(status().isCreated());
-
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment"))).hasContent(
-                        UNICODE_TEXT);
-                assertThat(invoice.getAttachmentId()).isNotBlank();
-                assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                assertThat(invoice.getAttachmentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                assertThat(invoice.getAttachmentFilename()).isNull();
-
-                assertThat(invoice.getContentId()).isNull();
-                assertThat(invoice.getContentMimetype()).isNull();
-                assertThat(invoice.getContentLength()).isNull();
-                assertThat(invoice.getContentFilename()).isNull();
-            }
-
-            @Test
-            void putInvoiceContent_update_http200() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
-                invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
-                invoice.setContentFilename("content.txt");
-                invoices.save(invoice);
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                        .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
-
-                // update content, ONLY changing the charset
-                mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .content(EXT_ASCII_TEXT))
-                        .andExpect(status().isOk());
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                        EXT_ASCII_TEXT);
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-
-                // keeps original filename
-                assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
-            }
-
-            @Test
-            void putInvoiceContent_missingEntity_http404() throws Exception {
-                mockMvc.perform(put("/invoices/{id}/content", UUID.randomUUID())
-                                .contentType(MediaType.TEXT_PLAIN)
-                                .characterEncoding(StandardCharsets.UTF_8)
-                                .content(UNICODE_TEXT))
-                        .andExpect(status().isNotFound());
-            }
-
-            @Test
-            void putInvoiceContent_missingContentType_http400() throws Exception {
-                mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .content(UNICODE_TEXT))
-                        .andExpect(status().isBadRequest());
-            }
-
-            @Test
-            void putMultipartContent_http201() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                assertThat(invoicesContent.getContent(invoice)).isNull();
-
-                var bytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
-                var file = new MockMultipartFile("file", "content.txt", MIMETYPE_PLAINTEXT_UTF8, bytes);
-                mockMvc.perform(multipart(HttpMethod.PUT, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .file(file))
-                        .andExpect(status().isCreated());
-
-                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(UNICODE_TEXT);
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
-            }
-
-            @Test
-            void putMultipartContent_updateDifferentContentType_http200() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
-                invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
-                invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
-                invoice.setContentFilename("content.txt");
-                invoices.save(invoice);
-
-                var image = new ClassPathResource("contentgrid-logo.png");
-                var content = image.getInputStream().readAllBytes();
-                var file = new MockMultipartFile("file", "logo.png", MediaType.IMAGE_PNG_VALUE, content);
-                mockMvc.perform(multipart(HttpMethod.PUT, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                .file(file))
-                        .andExpect(status().isOk());
-
-                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-
-                assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                        .hasBinaryContent(content);
-                assertThat(invoice.getContentId()).isNotBlank();
-                assertThat(invoice.getContentMimetype()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
-                assertThat(invoice.getContentLength()).isEqualTo(image.contentLength());
-                assertThat(invoice.getContentFilename()).isEqualTo("logo.png");
-            }
-
-            @Test
-            void putMultipartContent_noPayload_http400() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                assertThat(invoicesContent.getContent(invoice)).isNull();
-
-                mockMvc.perform(multipart(HttpMethod.PUT, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
-                        .andExpect(status().isBadRequest());
-            }
-        }
-
-        @Nested
-        @DisplayName("DELETE /{repository}/{entityId}/{contentProperty}")
-        class Delete {
-
-            @Test
-            void deleteContent_http204() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
-                invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
-                invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
-                invoice.setContentFilename("content.txt");
-                invoices.save(invoice);
-
-                mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
-                        .andExpect(status().isNoContent());
-
-                var content = invoicesContent.getResource(invoice, PropertyPath.from("content"));
-                assertThat(content).isNull();
-            }
-
-            @Test
-            void deleteContent_noContent_http404() throws Exception {
-                mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
-                        .andExpect(status().isNotFound());
-            }
-
-            @Test
-            void deleteContent_noEntity_http404() throws Exception {
-                mockMvc.perform(delete("/invoices/{id}/content", UUID.randomUUID()))
-                        .andExpect(status().isNotFound());
-            }
-
-            @Test
-            void deleteMultipleContentProperties() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
-                var contentBytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
-                invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(contentBytes));
-                invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
-                invoice.setContentFilename("content.txt");
-
-                var attachmentBytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
-                invoicesContent.setContent(invoice, PropertyPath.from("attachment"), new ByteArrayInputStream(attachmentBytes));
-                invoice.setAttachmentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
-                invoice.setAttachmentFilename("attachment.txt");
-                invoices.save(invoice);
-
-                assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNotNull();
-                assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNotNull();
-
-                mockMvc.perform(delete("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1)))
-                        .andExpect(status().isNoContent());
-
-                assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNotNull();
-                assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNull();
-
-                mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
-                        .andExpect(status().isNoContent());
-
-                assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNull();
-                assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNull();
             }
         }
     }
