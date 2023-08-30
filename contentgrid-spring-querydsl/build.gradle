@@ -6,6 +6,9 @@ configurations {
     compileOnly {
         extendsFrom(annotationProcessor)
     }
+    testCompileOnly {
+        extendsFrom(testAnnotationProcessor)
+    }
 }
 
 dependencies {
@@ -13,7 +16,19 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     api platform(project(':contentgrid-spring-boot-platform'))
-    implementation platform(project(':contentgrid-spring-boot-platform'))
     api 'com.querydsl:querydsl-core'
+
+    implementation platform(project(':contentgrid-spring-boot-platform'))
     implementation 'org.springframework.data:spring-data-commons'
+    implementation 'com.contentgrid.thunx:spring-data-querydsl-predicate-injector'
+
+    testAnnotationProcessor platform(project(':contentgrid-spring-boot-platform'))
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params'
+    testImplementation 'org.assertj:assertj-core'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
