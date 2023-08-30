@@ -15,7 +15,9 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.data.rest.webmvc.mapping.Associations;
 import org.springframework.data.rest.webmvc.mapping.LinkCollector;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.hateoas.server.EntityLinks;
+import org.springframework.hateoas.server.LinkRelationProvider;
 import org.springframework.hateoas.server.RepresentationModelProcessor;
 
 @Configuration(proxyBeanMethods = false)
@@ -55,5 +57,12 @@ public class ContentGridSpringDataLinksConfiguration {
     @Bean
     RepresentationModelProcessor<CollectionModel<?>> contentGridSpringDataEmbeddedItemResourceProcessor() {
         return new SpringDataEmbeddedItemResourceProcessor();
+    }
+
+    @Bean
+    RepresentationModelProcessor<CollectionModel<?>> contentGridSpringDataEmbeddedCuriesResourceProcessor(
+            LinkRelationProvider linkRelationProvider, CurieProvider curieProvider
+    ) {
+        return new SpringDataEmbeddedCuriesResourceProcessor(linkRelationProvider, curieProvider);
     }
 }

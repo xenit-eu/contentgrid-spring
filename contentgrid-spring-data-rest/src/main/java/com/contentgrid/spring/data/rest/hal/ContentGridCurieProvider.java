@@ -77,7 +77,7 @@ class ContentGridCurieProvider implements CurieProvider, CurieProviderBuilder {
 
         if(curie == null) {
             // Not curie -> need to check if it's a registered link relation
-            if(!IanaLinkRelations.isIanaRel(relation)) {
+            if(!IanaLinkRelations.isIanaRel(relation) && !HalLinkRelation.CURIES.isSameAs(rel)) {
                 throw new IllegalArgumentException("Relation '%s' is not an IANA-registered relation".formatted(relation));
             }
             return;
