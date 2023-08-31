@@ -9,6 +9,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
+import jakarta.persistence.Column;
+import jakarta.persistence.JoinColumn;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.URI;
@@ -97,7 +99,9 @@ public class DelegatingRepositoryPropertyReferenceController {
                     log.warn("Could not find other side of relation {}", prop.property);
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
-                var idPropertyFilter = collectionFiltersMapping.forIdProperty(targetType.getType(), mappedBy.get());
+
+                var idPropertyFilter = collectionFiltersMapping.forProperty(targetType.getType(), mappedBy.get())
+                        .or(() -> collectionFiltersMapping.forIdProperty(targetType.getType(), mappedBy.get()));
 
                 if (idPropertyFilter.isPresent()) {
                     var filter = idPropertyFilter.get().getFilterName();
@@ -127,12 +131,25 @@ public class DelegatingRepositoryPropertyReferenceController {
         );
     }
 
-    private static Optional<String> findReverseRelationPropertyName(PersistentProperty<?> property) {
+    private Optional<String> findReverseRelationPropertyName(PersistentProperty<?> property) {
         var oneToMany = property.findAnnotation(OneToMany.class);
         if (oneToMany != null) {
             // when this side is the inverse side of a bi-directional relation
             if (!"".equals(oneToMany.mappedBy())) {
                 return Optional.of(oneToMany.mappedBy());
+            }
+
+            // It's also possible there is an implicit relation with the other side being a plain @Column that matches our @JoinColumn
+            var joinColumn = property.findAnnotation(JoinColumn.class);
+            if(joinColumn != null) {
+                var ourColumnName = joinColumn.name();
+                var inverseSide = repositories.getPersistentEntity(property.getAssociationTargetType());
+                for (PersistentProperty<? extends PersistentProperty<?>> inverseProperty : inverseSide.getPersistentProperties(
+                        Column.class)) {
+                    if (Objects.equals(ourColumnName, inverseProperty.findAnnotation(Column.class).name())) {
+                        return Optional.of(inverseProperty.getName());
+                    }
+                }
             }
 
             // while it is also possible this is a uni-directional relation using a jointable
