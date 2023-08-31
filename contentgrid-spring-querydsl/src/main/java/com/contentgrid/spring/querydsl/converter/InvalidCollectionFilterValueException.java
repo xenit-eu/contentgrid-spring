@@ -6,26 +6,26 @@ import lombok.experimental.StandardException;
 
 public class InvalidCollectionFilterValueException extends RuntimeException {
     @Getter
-    private final CollectionFilter filter;
+    private final CollectionFilter<?> filter;
 
     @Getter
-    private final String invalidValue;
+    private final Object invalidValue;
 
-    public InvalidCollectionFilterValueException(CollectionFilter filter, String invalidValue) {
+    public InvalidCollectionFilterValueException(CollectionFilter<?> filter, Object invalidValue) {
         super(createMessage(filter, invalidValue));
         this.filter = filter;
         this.invalidValue = invalidValue;
     }
 
-    public InvalidCollectionFilterValueException(CollectionFilter filter, String invalidValue, Throwable cause) {
+    public InvalidCollectionFilterValueException(CollectionFilter<?> filter, Object invalidValue, Throwable cause) {
         this(filter, invalidValue);
         initCause(cause);
     }
 
-    private static String createMessage(CollectionFilter filter, String invalidValue) {
+    private static String createMessage(CollectionFilter<?> filter, Object invalidValue) {
         return "Failed to convert value for filter '%s' to type '%s' for value [%s]".formatted(
                 filter.getFilterName(),
-                filter.getPath().getType(),
+                filter.getParameterType(),
                 invalidValue
         );
     }

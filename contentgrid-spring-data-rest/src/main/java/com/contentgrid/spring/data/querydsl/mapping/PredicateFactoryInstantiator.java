@@ -5,5 +5,5 @@ import com.querydsl.core.types.Path;
 
 @FunctionalInterface
 public interface PredicateFactoryInstantiator {
-    QuerydslPredicateFactory<? extends Path<?>, ?> instantiate(Class<? extends QuerydslPredicateFactory> clazz);
+    QuerydslPredicateFactory<Path<?>, ?> instantiate(Class<? extends QuerydslPredicateFactory> clazz);
 }

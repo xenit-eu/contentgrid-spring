@@ -34,7 +34,7 @@ class CollectionFiltersMappingImpl implements CollectionFiltersMapping {
     }
 
     @Override
-    public Optional<CollectionFilter> forProperty(Class<?> domainType, String... properties) {
+    public Optional<CollectionFilter<?>> forProperty(Class<?> domainType, String... properties) {
         var persistentEntity = repositories.getPersistentEntity(domainType);
 
         var pathNavigator = createEntityPathNavigatorFor(persistentEntity);
@@ -46,7 +46,7 @@ class CollectionFiltersMappingImpl implements CollectionFiltersMapping {
     }
 
     @Override
-    public Optional<CollectionFilter> forIdProperty(Class<?> domainType, String... properties) {
+    public Optional<CollectionFilter<?>> forIdProperty(Class<?> domainType, String... properties) {
         var persistentEntity = repositories.getPersistentEntity(domainType);
 
         var pathNavigator = createEntityPathNavigatorFor(persistentEntity);

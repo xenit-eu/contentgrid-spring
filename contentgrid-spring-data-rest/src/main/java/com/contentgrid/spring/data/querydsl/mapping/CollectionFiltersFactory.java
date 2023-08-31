@@ -42,8 +42,8 @@ class CollectionFiltersFactory {
         )));
     }
 
-    private Stream<CollectionFilter> filters() {
-        var filters = Stream.<CollectionFilter>builder();
+    private Stream<CollectionFilter<?>> filters() {
+        var filters = Stream.<CollectionFilter<?>>builder();
 
         container.doWithAll(property -> {
             getFilterParams(property)
@@ -60,15 +60,16 @@ class CollectionFiltersFactory {
 
     }
 
-    private Stream<CollectionFilter> createFilter(Property property, CollectionFilterParam filterParam) {
-        var propertyPath = pathNavigator.get(property.getName());
-        QuerydslPredicateFactory<? extends Path<?>, ?> predicateFactory = instantiator.instantiate(filterParam.predicate());
+    private Stream<CollectionFilter<?>> createFilter(Property property, CollectionFilterParam filterParam) {
+        var propertyPath = pathNavigator.get(property.getName()).getPath();
+        QuerydslPredicateFactory<Path<?>, ?> predicateFactory = instantiator.instantiate(filterParam.predicate());
 
-        return predicateFactory.boundPaths(propertyPath.getPath())
-                .map(boundPath -> new CollectionFilterImpl(
+        return predicateFactory.boundPaths(propertyPath)
+                .map(boundPath -> new CollectionFilterImpl<>(
                         prefix+getName(property, filterParam),
                         boundPath,
                         filterParam.documented(),
+                        propertyPath,
                         (QuerydslPredicateFactory<Path<?>, Object>) predicateFactory
                 ));
     }
@@ -81,7 +82,7 @@ class CollectionFiltersFactory {
         }
 
         var propertyPath = pathNavigator.get(property.getName());
-        QuerydslPredicateFactory<? extends Path<?>, ?> predicateFactory = instantiator.instantiate(filterParam.predicate());
+        QuerydslPredicateFactory<Path<?>, ?> predicateFactory = instantiator.instantiate(filterParam.predicate());
 
         // If there is any mapping at this level, don't descend into the filter's children
         if(predicateFactory.boundPaths(propertyPath.getPath()).findAny().isPresent()) {

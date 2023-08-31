@@ -34,26 +34,26 @@ import org.springframework.data.convert.Jsr310Converters;
 
 class CollectionFilterQuerydslPredicateConverterTest {
 
-    private static CollectionFiltersMapping createMapping(CollectionFilter filter) {
+    private static CollectionFiltersMapping createMapping(CollectionFilter<?> filter) {
         return new CollectionFiltersMapping() {
 
             @Override
             public CollectionFilters forDomainType(Class<?> domainType) {
                 return new CollectionFilters() {
                     @Override
-                    public Stream<CollectionFilter> filters() {
+                    public Stream<CollectionFilter<?>> filters() {
                         return Stream.of(filter);
                     }
                 };
             }
 
             @Override
-            public Optional<CollectionFilter> forProperty(Class<?> domainType, String... properties) {
+            public Optional<CollectionFilter<?>> forProperty(Class<?> domainType, String... properties) {
                 return Optional.empty();
             }
 
             @Override
-            public Optional<CollectionFilter> forIdProperty(Class<?> domainType, String... properties) {
+            public Optional<CollectionFilter<?>> forIdProperty(Class<?> domainType, String... properties) {
                 return Optional.empty();
             }
         };
@@ -62,17 +62,19 @@ class CollectionFilterQuerydslPredicateConverterTest {
 
     @Builder
     @Getter
-    private static class TestCollectionFilter implements CollectionFilter {
+    private static class TestCollectionFilter<T> implements CollectionFilter<T> {
         private final String filterName;
         @Builder.Default
         private final boolean documented = true;
 
-        private final Path<?> path;
+        private final Path<T> path;
 
-        Collection<?> lastParameters;
+        private final Class<T> parameterType;
+
+        Collection<T> lastParameters;
 
         @Override
-        public Optional<Predicate> createPredicate(Collection<?> parameters) {
+        public Optional<Predicate> createPredicate(Collection<T> parameters) {
             lastParameters = parameters;
             return Optional.empty();
         }
@@ -122,8 +124,8 @@ class CollectionFilterQuerydslPredicateConverterTest {
 
     @ParameterizedTest
     @MethodSource
-    void typeConversion(Path<?> path, Collection<String> inputValues, Collection<?> outputValues) {
-        var filter = TestCollectionFilter.builder()
+    <T> void typeConversion(Path<T> path, Collection<String> inputValues, Collection<T> outputValues) {
+        var filter = TestCollectionFilter.<T>builder()
                 .filterName("test")
                 .path(path)
                 .build();
@@ -148,8 +150,8 @@ class CollectionFilterQuerydslPredicateConverterTest {
 
     @ParameterizedTest
     @MethodSource
-    void failedTypeConversion(Path<?> path, Collection<String> inputValues) {
-        var filter = TestCollectionFilter.builder()
+    <T> void failedTypeConversion(Path<T> path, Collection<String> inputValues) {
+        var filter = TestCollectionFilter.<T>builder()
                 .filterName("test")
                 .path(path)
                 .build();

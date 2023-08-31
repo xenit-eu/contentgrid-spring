@@ -11,8 +11,8 @@ public class BeanFactoryPredicateFactoryInstantiator implements PredicateFactory
     private final PredicateFactoryInstantiator fallback;
 
     @Override
-    public QuerydslPredicateFactory<? extends Path<?>, ?> instantiate(Class<? extends QuerydslPredicateFactory> clazz) {
-        return (QuerydslPredicateFactory<? extends Path<?>, ?>) beanFactory.getBeanProvider((Class)clazz)
+    public QuerydslPredicateFactory<Path<?>, ?> instantiate(Class<? extends QuerydslPredicateFactory> clazz) {
+        return (QuerydslPredicateFactory<Path<?>, ?>) beanFactory.getBeanProvider((Class)clazz)
                 .getIfAvailable(() -> fallback.instantiate(clazz));
     }
 }

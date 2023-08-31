@@ -78,4 +78,9 @@ public class Default implements QuerydslPredicateFactory<Path<?>, Object> {
 
         throw new IllegalArgumentException("Can not create predicate for path '%s'".formatted(path));
     }
+
+    @Override
+    public Class<?> valueType(Path<?> path) {
+        return path.getType();
+    }
 }
