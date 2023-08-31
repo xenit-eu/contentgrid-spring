@@ -27,6 +27,10 @@ public class EqualsIgnoreCase extends AbstractSimpleQuerydslPredicateFactory<Str
         if(values.isEmpty()) {
             return Optional.empty();
         }
+        if(values.size() == 1) {
+            var value = values.iterator().next();
+            return Optional.of(path.equalsIgnoreCase(value));
+        }
         return Optional.of(path.lower().in(values.stream().map(String::toLowerCase).toList()));
     }
 }

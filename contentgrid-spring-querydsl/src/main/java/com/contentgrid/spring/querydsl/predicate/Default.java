@@ -1,6 +1,8 @@
 package com.contentgrid.spring.querydsl.predicate;
 
 import com.contentgrid.spring.querydsl.annotation.QuerydslPredicateFactory;
+import com.contentgrid.spring.querydsl.mapping.UnsupportedCollectionFilterPredicateException;
+import com.contentgrid.spring.querydsl.mapping.UnsupportedCollectionFilterPredicatePathTypeException;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
@@ -9,6 +11,7 @@ import com.querydsl.core.types.dsl.CollectionPathBase;
 import com.querydsl.core.types.dsl.SimpleExpression;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import lombok.NonNull;
 
@@ -33,7 +36,6 @@ public class Default implements QuerydslPredicateFactory<Path<?>, Object> {
             return false;
         }
         if(path instanceof SimpleExpression<?>) {
-
             return true;
         }
         if(path instanceof CollectionPathBase<?, ?, ?> collectionPathBase) {
@@ -55,14 +57,19 @@ public class Default implements QuerydslPredicateFactory<Path<?>, Object> {
         if(path instanceof CollectionPathBase collectionPath) {
             BooleanBuilder builder = new BooleanBuilder();
 
+            assertNotBeanPath(collectionPath.any());
+
             for (Object value : values) {
                 builder.and(collectionPath.contains(value));
             }
 
-            return Optional.of(builder.getValue());
+            return Optional.ofNullable(builder.getValue());
         }
 
+
         if(path instanceof SimpleExpression expression) {
+            assertNotBeanPath(expression);
+
             if(values.size() > 1) {
                 return Optional.of(expression.in(values));
             }
@@ -75,8 +82,16 @@ public class Default implements QuerydslPredicateFactory<Path<?>, Object> {
                 return Optional.of(expression.eq(item));
             }
         }
+        throw new UnsupportedCollectionFilterPredicatePathTypeException(this, path, Set.of(
+                CollectionPathBase.class,
+                SimpleExpression.class
+        ));
+    }
 
-        throw new IllegalArgumentException("Can not create predicate for path '%s'".formatted(path));
+    private void assertNotBeanPath(SimpleExpression<?> expression) {
+        if(expression instanceof BeanPath<?> beanPath) {
+            throw new UnsupportedCollectionFilterPredicateException(this, beanPath, "must not be of type BeanPath");
+        }
     }
 
     @Override
