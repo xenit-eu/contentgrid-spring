@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'java-test-fixtures'
     id 'maven-publish'
 }
 configurations {
@@ -8,6 +9,9 @@ configurations {
     }
     testCompileOnly {
         extendsFrom(testAnnotationProcessor)
+    }
+    testFixturesCompileOnly {
+        extendsFrom(testFixturesAnnotationProcessor)
     }
 }
 
@@ -27,6 +31,11 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-engine'
     testImplementation 'org.junit.jupiter:junit-jupiter-params'
     testImplementation 'org.assertj:assertj-core'
+
+    testFixturesAnnotationProcessor platform(project(':contentgrid-spring-boot-platform'))
+    testFixturesAnnotationProcessor 'org.projectlombok:lombok'
+    testFixturesApi 'com.querydsl:querydsl-core'
+    testFixturesApi 'org.springframework:spring-core'
 }
 
 tasks.named('test') {

@@ -9,10 +9,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class PredicateCollectionFiltersImpl extends AbstractCollectionFiltersImpl{
     private final CollectionFilters collectionFilters;
-    private final Predicate<CollectionFilter> predicate;
+    private final Predicate<CollectionFilter<?>> predicate;
 
     @Override
-    public Stream<CollectionFilter> filters() {
+    public Stream<CollectionFilter<?>> filters() {
         return collectionFilters.filters().filter(predicate);
     }
 }

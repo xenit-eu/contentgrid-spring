@@ -21,4 +21,9 @@ public class None implements QuerydslPredicateFactory<Path<?>, Object> {
     public Optional<Predicate> bind(Path<?> path, Collection<?> values) {
         return Optional.empty();
     }
+
+    @Override
+    public Class<Object> valueType(Path<?> path) {
+        return Object.class;
+    }
 }

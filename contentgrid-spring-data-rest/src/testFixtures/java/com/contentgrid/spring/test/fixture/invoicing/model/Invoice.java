@@ -2,6 +2,7 @@ package com.contentgrid.spring.test.fixture.invoicing.model;
 
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
+import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
 import com.contentgrid.spring.querydsl.predicate.None;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,7 +38,7 @@ public class Invoice {
     private UUID id;
 
     @Column(nullable = false)
-    @CollectionFilterParam
+    @CollectionFilterParam(predicate = EqualsIgnoreCase.class)
     private String number;
 
     private boolean draft;

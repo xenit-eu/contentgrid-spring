@@ -42,8 +42,8 @@ class CollectionFiltersFactory {
         )));
     }
 
-    private Stream<CollectionFilter> filters() {
-        var filters = Stream.<CollectionFilter>builder();
+    private Stream<CollectionFilter<?>> filters() {
+        var filters = Stream.<CollectionFilter<?>>builder();
 
         container.doWithAll(property -> {
             getFilterParams(property)
@@ -60,15 +60,16 @@ class CollectionFiltersFactory {
 
     }
 
-    private Stream<CollectionFilter> createFilter(Property property, CollectionFilterParam filterParam) {
-        var propertyPath = pathNavigator.get(property.getName());
+    private Stream<CollectionFilter<?>> createFilter(Property property, CollectionFilterParam filterParam) {
+        var propertyPath = pathNavigator.get(property.getName()).getPath();
         QuerydslPredicateFactory<Path<?>, ?> predicateFactory = instantiator.instantiate(filterParam.predicate());
 
-        return predicateFactory.boundPaths(propertyPath.getPath())
-                .map(boundPath -> new CollectionFilterImpl(
+        return predicateFactory.boundPaths(propertyPath)
+                .map(boundPath -> new CollectionFilterImpl<>(
                         prefix+getName(property, filterParam),
                         boundPath,
                         filterParam.documented(),
+                        propertyPath,
                         (QuerydslPredicateFactory<Path<?>, Object>) predicateFactory
                 ));
     }

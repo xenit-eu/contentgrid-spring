@@ -5,9 +5,10 @@ import com.querydsl.core.types.Predicate;
 import java.util.Collection;
 import java.util.Optional;
 
-public interface CollectionFilter {
+public interface CollectionFilter<T> {
     String getFilterName();
     boolean isDocumented();
-    Path<?> getPath();
-    Optional<Predicate> createPredicate(Collection<?> parameters);
+    Path<T> getPath();
+    Class<T> getParameterType();
+    Optional<Predicate> createPredicate(Collection<T> parameters);
 }

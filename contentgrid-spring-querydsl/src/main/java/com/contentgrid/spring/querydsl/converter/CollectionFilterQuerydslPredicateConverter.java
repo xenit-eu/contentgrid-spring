@@ -1,5 +1,6 @@
 package com.contentgrid.spring.querydsl.converter;
 
+import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
@@ -24,25 +25,23 @@ public class CollectionFilterQuerydslPredicateConverter {
             mapping.named(paramName).ifPresent(filter -> {
                 Collection<?> typedParameters;
                 try {
-                     typedParameters = convertParametersToType(filter.getPath().getType(), paramValues);
+                     typedParameters = convertParametersToType(filter.getParameterType(), paramValues);
                 } catch(ConversionFailedException e) {
-                    throw new InvalidCollectionFilterValueException(filter, (String)e.getValue(), e);
+                    throw new InvalidCollectionFilterValueException(filter, e.getValue(), e);
                 }
-                filter.createPredicate(typedParameters).ifPresent(predicateBuilder::and);
+                ((CollectionFilter<Object>)filter)
+                        .createPredicate((Collection<Object>) typedParameters)
+                        .ifPresent(predicateBuilder::and);
             });
         });
 
         return Optional.ofNullable(predicateBuilder.getValue());
     }
 
-    private Collection<?> convertParametersToType(Class<?> targetType, Collection<String> params) {
-        if(conversionService.canConvert(String.class, targetType)) {
-            return params.stream()
-                    .map(value -> conversionService.convert(value, targetType))
-                    .toList();
-        } else {
-            return params;
-        }
+    private <T> Collection<T> convertParametersToType(Class<T> targetType, Collection<String> params) {
+        return params.stream()
+                .map(value -> conversionService.convert(value, targetType))
+                .toList();
     }
 
 }

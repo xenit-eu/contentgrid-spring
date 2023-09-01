@@ -8,6 +8,6 @@ import com.querydsl.core.types.Path;
  *
  * This predicate type can only be used on associations, not on basic properties or on embedded objects
  */
-public interface EntityId extends QuerydslPredicateFactory<Path<? extends Object>, Object> {
+public interface EntityId extends QuerydslPredicateFactory<Path<?>, Object> {
 
 }

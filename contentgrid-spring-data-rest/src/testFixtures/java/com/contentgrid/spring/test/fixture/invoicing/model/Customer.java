@@ -2,6 +2,7 @@ package com.contentgrid.spring.test.fixture.invoicing.model;
 
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
+import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
 import com.contentgrid.spring.test.fixture.invoicing.model.support.Content;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -37,7 +38,7 @@ public class Customer {
     private String name;
 
     @Column(unique=true, nullable = false)
-    @CollectionFilterParam
+    @CollectionFilterParam(predicate = EqualsIgnoreCase.class)
     private String vat;
 
     @Embedded
