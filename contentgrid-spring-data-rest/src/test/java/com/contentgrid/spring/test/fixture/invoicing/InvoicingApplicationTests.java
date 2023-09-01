@@ -501,6 +501,28 @@ class InvoicingApplicationTests {
                         });
                     });
                 }
+
+                @Test
+                void putUriList_shouldReplaceLinksAndReturn_http204_noContent() throws Exception {
+                    var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                    var newOrderId = orders.save(new Order(xenit)).getId();
+                    mockMvc.perform(put("/invoices/{id}/orders", INVOICE_1_ID)
+                            .contentType(RestMediaTypes.TEXT_URI_LIST)
+                            .content(
+                                    """
+                                    /orders/%s
+                                    /orders/%s
+                                    """.formatted(ORDER_1_ID, newOrderId)
+                            )
+                    ).andExpect(status().isNoContent());
+
+                    assertThat(invoices.findById(INVOICE_1_ID)).hasValueSatisfying(invoice -> {
+                        assertThat(invoice.getOrders())
+                                .map(Order::getId)
+                                .containsExactlyInAnyOrder(ORDER_1_ID, newOrderId);
+                    });
+
+                }
             }
 
             @Nested
