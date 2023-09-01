@@ -35,7 +35,7 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguratio
                 // does not work, because it is not an autoconfiguration, but is initialized directly when this parent class
                 // is initialized.
                 "internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration",
-                "org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration"
+                "org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration"
         }
 )
 public class ContentGridSpringDataRestAutoConfiguration {
