@@ -32,13 +32,12 @@ public class PromotionCampaign {
 
     @Column(updatable = false, nullable = false)
     @CollectionFilterParam(value = "promo_code")
-    @RestResource(rel = "d:promo-code")
     private String promoCode;
 
     String description;
 
     @ManyToMany(mappedBy = "promos")
-    @RestResource(rel = "d:orders")
+    @RestResource(exported = false)
     @CollectionFilterParam(predicate = EntityId.class, documented = false)
     private Set<Order> orders = new HashSet<>();
 

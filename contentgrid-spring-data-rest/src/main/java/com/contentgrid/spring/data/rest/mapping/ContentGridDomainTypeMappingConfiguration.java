@@ -2,6 +2,7 @@ package com.contentgrid.spring.data.rest.mapping;
 
 import com.contentgrid.spring.data.querydsl.mapping.ContentGridCollectionFilterMappingConfiguration;
 import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedContainer;
+import com.contentgrid.spring.data.rest.mapping.rest.DataRestBasedContainer;
 import com.contentgrid.spring.data.rest.webmvc.DefaultDomainTypeToHalFormsPayloadMetadataConverter;
 import com.contentgrid.spring.data.rest.webmvc.DomainTypeToHalFormsPayloadMetadataConverter;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
@@ -16,7 +17,7 @@ public class ContentGridDomainTypeMappingConfiguration {
     @Bean
     @FormMapping
     DomainTypeMapping halFormsFormMappingDomainTypeMapping(Repositories repositories) {
-        return new DomainTypeMapping(repositories, JacksonBasedContainer::new);
+        return new DomainTypeMapping(repositories, c -> new JacksonBasedContainer(new DataRestBasedContainer(c)));
     }
 
     @Bean

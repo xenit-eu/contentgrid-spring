@@ -6,6 +6,7 @@ import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
+import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -93,6 +94,22 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 counterparty -> {
                     assertThat(counterparty.getName()).isEqualTo("counterparty");
                     assertThat(counterparty.isRequired()).isTrue();
+                }
+        );
+    }
+
+    @Test
+    void convertToCreatePayloadMetadata_nonExportedAssociation() {
+        var metadata = converter.convertToCreatePayloadMetadata(PromotionCampaign.class);
+
+        assertThat(metadata.stream()).satisfiesExactlyInAnyOrder(
+                promoCode -> {
+                    assertThat(promoCode.getName()).isEqualTo("promoCode");
+                    assertThat(promoCode.isRequired()).isTrue();
+                },
+                description -> {
+                    assertThat(description.getName()).isEqualTo("description");
+                    assertThat(description.isRequired()).isFalse();
                 }
         );
     }
