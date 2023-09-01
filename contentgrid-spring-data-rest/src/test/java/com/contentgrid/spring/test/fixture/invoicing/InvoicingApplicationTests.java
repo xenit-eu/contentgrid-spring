@@ -405,6 +405,13 @@ class InvoicingApplicationTests {
                             .andExpect(
                                     headers().location().uri("http://localhost/invoices?counterparty={id}", XENIT_ID));
                 }
+
+                @Test
+                void getOrders_forInvoice_shouldReturn_http302_redirect() throws Exception {
+                    mockMvc.perform(get("/invoices/{id}/orders", INVOICE_1_ID).accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isFound())
+                            .andExpect(headers().location().uri("http://localhost/orders?invoice._id={id}", INVOICE_1_ID));
+                }
             }
 
             @Nested
