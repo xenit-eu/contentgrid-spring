@@ -42,9 +42,8 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "invoice", foreignKey = @ForeignKey(foreignKeyDefinition = "foreign key (\"invoice\") references \"invoice\" ON DELETE set NULL"))
-    @CollectionFilterParam
     @CollectionFilterParam(value = "invoice._id", predicate = EntityId.class, documented = false)
-    @RestResource(rel = "d:invoice")
+    @RestResource(exported = false)
     private Invoice invoice;
 
     @ManyToMany

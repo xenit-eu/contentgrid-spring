@@ -70,11 +70,6 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                     assertThat(customer.isReadOnly()).isFalse();
                     assertThat(customer.isRequired()).isFalse();
                 },
-                invoice -> {
-                    assertThat(invoice.getName()).isEqualTo("invoice");
-                    assertThat(invoice.isReadOnly()).isFalse();
-                    assertThat(invoice.isRequired()).isFalse();
-                },
                 shippingAddress -> {
                     assertThat(shippingAddress.getName()).isEqualTo("shipping_address");
                     assertThat(shippingAddress.isReadOnly()).isFalse();
@@ -141,12 +136,6 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 "customer.content.size",
                 "customer.content.mimetype",
                 "customer.content.filename",
-                "invoice.number",
-                "invoice.paid",
-                "invoice.content.length",
-                /*"invoice.content.length.lt",
-                "invoice.content.length.gt",*/
-                "invoice.orders.id",
                 "shipping_address.zip"
         );
     }
