@@ -99,9 +99,9 @@ class CollectionFiltersMappingImplTest {
             assertThat(filter.isDocumented()).isFalse();
         });
 
-        assertThat(collectionFiltersMapping.forIdProperty(Order.class, "invoice")).hasValueSatisfying(filter -> {
-            assertThat(filter.getFilterName()).isEqualTo("invoice._id");
-            assertThat(filter.getPath()).isEqualTo(QOrder.order.invoice.id);
+        assertThat(collectionFiltersMapping.forIdProperty(Order.class, "customer")).hasValueSatisfying(filter -> {
+            assertThat(filter.getFilterName()).isEqualTo("customer._id");
+            assertThat(filter.getPath()).isEqualTo(QOrder.order.customer.id);
             assertThat(filter.isDocumented()).isFalse();
         });
 
@@ -115,27 +115,6 @@ class CollectionFiltersMappingImplTest {
             assertThat(filter.getFilterName()).isEqualTo("orders.id");
             assertThat(filter.getPath()).isEqualTo(QInvoice.invoice.orders.any().id);
             assertThat(filter.isDocumented()).isTrue();
-        });
-
-        assertThat(collectionFiltersMapping.forIdProperty(ShippingAddress.class, "order")).isEmpty();
-
-        assertThat(collectionFiltersMapping.forIdProperty(EntityWithRenamedId.class, "order")).hasValueSatisfying(filter -> {
-            assertThat(filter.getFilterName()).isEqualTo("order$id");
-        });
-
-        assertThat(collectionFiltersMapping.forIdProperty(Order.class, "invoice")).hasValueSatisfying(filter -> {
-            assertThat(filter.getFilterName()).isEqualTo("invoice._id");
-            assertThat(filter.getPath()).isEqualTo(QOrder.order.invoice.id);
-        });
-
-        assertThat(collectionFiltersMapping.forIdProperty(Invoice.class, "counterparty")).hasValueSatisfying(filter -> {
-            assertThat(filter.getFilterName()).isEqualTo("counterparty");
-            assertThat(filter.getPath()).isEqualTo(QInvoice.invoice.counterparty.id);
-        });
-
-        assertThat(collectionFiltersMapping.forIdProperty(Invoice.class, "orders")).hasValueSatisfying(filter -> {
-            assertThat(filter.getFilterName()).isEqualTo("orders.id");
-            assertThat(filter.getPath()).isEqualTo(QInvoice.invoice.orders.any().id);
         });
 
         assertThat(collectionFiltersMapping.forIdProperty(ShippingAddress.class, "order")).isEmpty();
