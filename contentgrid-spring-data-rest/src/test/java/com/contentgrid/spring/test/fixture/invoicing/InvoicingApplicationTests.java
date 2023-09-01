@@ -19,7 +19,6 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
-import com.contentgrid.spring.test.fixture.invoicing.model.QOrder;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
@@ -38,7 +37,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -62,7 +60,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultHandler;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
@@ -800,17 +797,11 @@ class InvoicingApplicationTests {
 
                 @Test
                 void getInvoicesOrders_shouldReturn_http302() throws Exception {
-                    var ordersIterable = orders.findAll(QOrder.order.invoice.number.eq(INVOICE_NUMBER_1));
-                    var result = StreamSupport.stream(ordersIterable.spliterator(), false).toList();
-                    assertThat(result).hasSize(2);
 
-                    var firstOrderId = result.get(0).getId();
-
-                    mockMvc.perform(get("/invoices/{invoice}/orders/{order}", invoiceId(INVOICE_NUMBER_1), firstOrderId)
+                    mockMvc.perform(get("/invoices/{invoice}/orders/{order}", invoiceId(INVOICE_NUMBER_1), ORDER_1_ID)
                                     .accept("application/json"))
                             .andExpect(status().isFound())
-                            .andExpect(header().string(HttpHeaders.LOCATION,
-                                    endsWith("/orders/%s".formatted(firstOrderId))));
+                            .andExpect(headers().location().uri("http://localhost/orders/{id}", ORDER_1_ID));
                 }
             }
 
