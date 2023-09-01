@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -28,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @AutoConfiguration
 @ConditionalOnClass({PolicyActuator.class, WebHooksConfigActuator.class})
+@ConditionalOnAvailableEndpoint(endpoint = PolicyActuator.class)
 @Slf4j
 public class ActuatorAutoConfiguration {
     

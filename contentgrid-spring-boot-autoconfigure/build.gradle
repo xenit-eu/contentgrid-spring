@@ -28,6 +28,7 @@ dependencies {
 
     implementation platform(project(':contentgrid-spring-boot-platform'))
     implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation 'org.springframework.boot:spring-boot-actuator-autoconfigure'
 
     compileOnly project(':contentgrid-spring-boot-actuators')
     compileOnly project(':contentgrid-spring-integration-events')

@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -20,6 +21,7 @@ import org.springframework.data.rest.webmvc.ContentGridSpringDataRestConfigurati
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
 
 @AutoConfiguration
+@ConditionalOnBean(RepositoryRestMvcConfiguration.class)
 @ConditionalOnClass({ContentGridSpringDataRestConfiguration.class, RepositoryRestMvcConfiguration.class})
 @Import({
         ContentGridSpringDataRestConfiguration.class,
@@ -32,7 +34,8 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguratio
                 // is initialized so @ConditionalOnBean works correctly. Putting the annotation directly on that class
                 // does not work, because it is not an autoconfiguration, but is initialized directly when this parent class
                 // is initialized.
-                "internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration"
+                "internal.org.springframework.content.rest.boot.autoconfigure.ContentRestAutoConfiguration",
+                "org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration"
         }
 )
 public class ContentGridSpringDataRestAutoConfiguration {
