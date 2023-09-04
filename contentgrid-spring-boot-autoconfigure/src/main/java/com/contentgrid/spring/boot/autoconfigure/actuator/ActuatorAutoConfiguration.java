@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -13,6 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
@@ -27,40 +29,51 @@ import com.contentgrid.spring.boot.actuator.webhooks.WebhookVariables;
 import lombok.extern.slf4j.Slf4j;
 
 @AutoConfiguration
-@ConditionalOnClass({PolicyActuator.class, WebHooksConfigActuator.class})
+@ConditionalOnClass({PolicyActuator.class, WebHooksConfigActuator.class, ConditionalOnAvailableEndpoint.class})
 @Slf4j
 public class ActuatorAutoConfiguration {
-    
+
     @Autowired
     private ApplicationContext applicationContext;
-    
-    @Bean
-    @ConditionalOnProperty(name = "contentgrid.system.policyPackage")
-    @ConditionalOnMissingBean(PolicyVariables.class)
-    PolicyVariables policyVariables(ContentGridApplicationProperties applicationProperties) {
-        return PolicyVariables.builder()
-                .policyPackageName(applicationProperties.getSystem().getPolicyPackage())
-                .build();
+
+
+    @Configuration
+    @ConditionalOnAvailableEndpoint(endpoint = PolicyActuator.class)
+    class PolicyActuatorConfiguration {
+        @Bean
+        @ConditionalOnProperty(name = "contentgrid.system.policyPackage")
+        @ConditionalOnMissingBean(PolicyVariables.class)
+        PolicyVariables policyVariables(ContentGridApplicationProperties applicationProperties) {
+            return PolicyVariables.builder()
+                    .policyPackageName(applicationProperties.getSystem().getPolicyPackage())
+                    .build();
+        }
+
+        @Bean
+        @ConditionalOnBean(PolicyVariables.class)
+        PolicyActuator policyActuator(PolicyVariables policyVariables) {
+            return new PolicyActuator(applicationContext.getResource("classpath:rego/policy.rego"), policyVariables);
+        }
     }
 
-    @Bean    
-    @ConditionalOnBean(PolicyVariables.class)  
-    PolicyActuator policyActuator(PolicyVariables policyVariables) {
-        return new PolicyActuator(applicationContext.getResource("classpath:rego/policy.rego"), policyVariables);
-    }
 
-    @Bean
-    WebHooksConfigActuator webHooksConfigActuator(WebhookVariables webhookVariables) {
-        return new WebHooksConfigActuator(applicationContext.getResource("classpath:eventhandler/webhooks.json"), webhookVariables);
-    }
+    @Configuration
+    @ConditionalOnAvailableEndpoint(endpoint = WebHooksConfigActuator.class)
+    class WebhooksConfigActuatorConfiguration {
+        @Bean
+        WebHooksConfigActuator webHooksConfigActuator(WebhookVariables webhookVariables) {
+            return new WebHooksConfigActuator(applicationContext.getResource("classpath:eventhandler/webhooks.json"),
+                    webhookVariables);
+        }
 
-    @Bean
-    @ConditionalOnMissingBean(WebhookVariables.class)
-    WebhookVariables webhookVariables(ContentGridApplicationProperties applicationProperties) {
-        return WebhookVariables.builder()
-                .systemProperties(applicationProperties.getSystem())
-                .userVariables(applicationProperties.getVariables())
-                .build();
+        @Bean
+        @ConditionalOnMissingBean(WebhookVariables.class)
+        WebhookVariables webhookVariables(ContentGridApplicationProperties applicationProperties) {
+            return WebhookVariables.builder()
+                    .systemProperties(applicationProperties.getSystem())
+                    .userVariables(applicationProperties.getVariables())
+                    .build();
+        }
     }
 
     @Bean
