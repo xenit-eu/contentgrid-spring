@@ -19,7 +19,6 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
-import com.contentgrid.spring.test.fixture.invoicing.model.QOrder;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
@@ -38,7 +37,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.StreamSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -62,7 +60,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultHandler;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
@@ -408,6 +405,13 @@ class InvoicingApplicationTests {
                             .andExpect(
                                     headers().location().uri("http://localhost/invoices?counterparty={id}", XENIT_ID));
                 }
+
+                @Test
+                void getOrders_forInvoice_shouldReturn_http302_redirect() throws Exception {
+                    mockMvc.perform(get("/invoices/{id}/orders", INVOICE_1_ID).accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isFound())
+                            .andExpect(headers().location().uri("http://localhost/orders?invoice._id={id}", INVOICE_1_ID));
+                }
             }
 
             @Nested
@@ -496,6 +500,28 @@ class InvoicingApplicationTests {
                             assertThat(order.getId()).isEqualTo(newOrderId);
                         });
                     });
+                }
+
+                @Test
+                void putUriList_shouldReplaceLinksAndReturn_http204_noContent() throws Exception {
+                    var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                    var newOrderId = orders.save(new Order(xenit)).getId();
+                    mockMvc.perform(put("/invoices/{id}/orders", INVOICE_1_ID)
+                            .contentType(RestMediaTypes.TEXT_URI_LIST)
+                            .content(
+                                    """
+                                    /orders/%s
+                                    /orders/%s
+                                    """.formatted(ORDER_1_ID, newOrderId)
+                            )
+                    ).andExpect(status().isNoContent());
+
+                    assertThat(invoices.findById(INVOICE_1_ID)).hasValueSatisfying(invoice -> {
+                        assertThat(invoice.getOrders())
+                                .map(Order::getId)
+                                .containsExactlyInAnyOrder(ORDER_1_ID, newOrderId);
+                    });
+
                 }
             }
 
@@ -800,17 +826,11 @@ class InvoicingApplicationTests {
 
                 @Test
                 void getInvoicesOrders_shouldReturn_http302() throws Exception {
-                    var ordersIterable = orders.findAll(QOrder.order.invoice.number.eq(INVOICE_NUMBER_1));
-                    var result = StreamSupport.stream(ordersIterable.spliterator(), false).toList();
-                    assertThat(result).hasSize(2);
 
-                    var firstOrderId = result.get(0).getId();
-
-                    mockMvc.perform(get("/invoices/{invoice}/orders/{order}", invoiceId(INVOICE_NUMBER_1), firstOrderId)
+                    mockMvc.perform(get("/invoices/{invoice}/orders/{order}", invoiceId(INVOICE_NUMBER_1), ORDER_1_ID)
                                     .accept("application/json"))
                             .andExpect(status().isFound())
-                            .andExpect(header().string(HttpHeaders.LOCATION,
-                                    endsWith("/orders/%s".formatted(firstOrderId))));
+                            .andExpect(headers().location().uri("http://localhost/orders/{id}", ORDER_1_ID));
                 }
             }
 

@@ -7,6 +7,8 @@ import com.contentgrid.spring.querydsl.predicate.None;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.OneToOne;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -89,11 +91,16 @@ public class Invoice {
     @CollectionFilterParam(predicate = EntityId.class, documented = false)
     private Customer counterparty;
 
-    @OneToMany(mappedBy = "invoice")
+    @OneToMany
+    @JoinColumn(name = "__invoice_id__orders", foreignKey = @ForeignKey(foreignKeyDefinition = "foreign key (\"invoice\") references \"invoice\" ON DELETE set NULL"))
     @CollectionFilterParam
     @CollectionFilterParam(value = "orders.id", predicate = EntityId.class)
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:orders")
     private Set<Order> orders = new HashSet<>();
+
+    @OneToOne(mappedBy = "invoice")
+    @org.springframework.data.rest.core.annotation.RestResource(rel = "d:refund")
+    private Refund refund;
 
     public Invoice(String number, boolean draft, boolean paid, Customer counterparty, Set<Order> orders) {
         this.number = number;
@@ -107,7 +114,7 @@ public class Invoice {
 
         this.orders = orders;
         if (orders != null) {
-            orders.forEach(order -> order.setInvoice(this));
+            orders.forEach(order -> order.set__internal_invoice_id(this.id));
         }
     }
 

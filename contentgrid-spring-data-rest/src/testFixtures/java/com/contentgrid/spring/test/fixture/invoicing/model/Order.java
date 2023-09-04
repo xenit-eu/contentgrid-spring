@@ -2,13 +2,14 @@ package com.contentgrid.spring.test.fixture.invoicing.model;
 
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.persistence.Column;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.Entity;
-import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -40,12 +41,10 @@ public class Order {
     @RestResource(rel = "d:customer")
     private Customer customer;
 
-    @ManyToOne
-    @JoinColumn(name = "invoice", foreignKey = @ForeignKey(foreignKeyDefinition = "foreign key (\"invoice\") references \"invoice\" ON DELETE set NULL"))
-    @CollectionFilterParam
-    @CollectionFilterParam(value = "invoice._id", predicate = EntityId.class, documented = false)
-    @RestResource(rel = "d:invoice")
-    private Invoice invoice;
+    @Column(name = "__invoice_id__orders", insertable = false, updatable = false)
+    @CollectionFilterParam(value = "invoice._id", documented = false)
+    @JsonIgnore
+    private UUID __internal_invoice_id;
 
     @ManyToMany
     @RestResource(rel = "d:promos")

@@ -198,6 +198,18 @@ class HalFormsProfileControllerTest {
                                         }
                                     },
                                     {
+                                        name: "refund",
+                                        type: "url",
+                                        options: {
+                                            valueField: "/_links/self/href",
+                                            minItems: 0,
+                                            maxItems: 1,
+                                            link: {
+                                                href: "http://localhost/refunds"
+                                            }
+                                        }
+                                    },
+                                    {
                                         name: "orders",
                                         type: "url",
                                         options: {

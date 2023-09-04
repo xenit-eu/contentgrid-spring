@@ -6,6 +6,7 @@ import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.test.fixture.invoicing.model.QCustomer;
 import com.contentgrid.spring.test.fixture.invoicing.model.QInvoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.QOrder;
+import com.contentgrid.spring.test.fixture.invoicing.model.QRefund;
 import com.contentgrid.spring.test.fixture.invoicing.model.QShippingAddress;
 import com.querydsl.core.types.dsl.PathInits;
 import jakarta.persistence.Entity;
@@ -21,6 +22,7 @@ class PathNavigatorTest {
     public static final PathNavigator CUSTOMER_NAVIGATOR = new PathNavigator(QCustomer.customer);
     public static final PathNavigator INVOICE_NAVIGATOR = new PathNavigator(QInvoice.invoice);
     public static final PathNavigator ORDER_NAVIGATOR = new PathNavigator(QOrder.order);
+    public static final PathNavigator REFUND_NAVIGATOR = new PathNavigator(QRefund.refund);
 
     @Test
     void navigateToDirectProperty() {
@@ -48,19 +50,17 @@ class PathNavigatorTest {
 
     @Test
     void navigateToDeepProperty() {
-        assertThat(ORDER_NAVIGATOR.get("invoice").get("counterparty").get("content").get("filename").getPath()).isEqualTo(
+        assertThat(REFUND_NAVIGATOR.get("invoice").get("counterparty").get("content").get("filename").getPath()).isEqualTo(
                 // This is so we don't run into a PathInits problem ourselves here when reading the property
-                new QOrder(QOrder.order.getMetadata(), new PathInits("*.*.*")).invoice.counterparty.content.filename
+                new QRefund(QRefund.refund.getMetadata(), new PathInits("*.*.*")).invoice.counterparty.content.filename
         );
 
-        assertThat(new PathNavigator(QShippingAddress.shippingAddress).get("order").get("invoice").get("counterparty").get("content").get("filename").getPath()).isEqualTo(
-                new QShippingAddress(QShippingAddress.shippingAddress.getMetadata(), new PathInits("*.*.*.*"))
-                        .order.invoice.counterparty.content.filename
+        assertThat(INVOICE_NAVIGATOR.get("refund").get("invoice").get("counterparty").get("vat").getPath()).isEqualTo(
+                new QInvoice(QInvoice.invoice.getMetadata(), new PathInits("*.*.*.*")).refund.invoice.counterparty.vat
         );
 
-        assertThat(new PathNavigator(QShippingAddress.shippingAddress).get("order").get("invoice").get("counterparty").get("vat").getPath()).isEqualTo(
-                new QShippingAddress(QShippingAddress.shippingAddress.getMetadata(), new PathInits("*.*.*"))
-                        .order.invoice.counterparty.vat
+        assertThat(INVOICE_NAVIGATOR.get("refund").get("invoice").get("counterparty").get("content").get("filename").getPath()).isEqualTo(
+                new QInvoice(QInvoice.invoice.getMetadata(), new PathInits("*.*.*.*")).refund.invoice.counterparty.content.filename
         );
     }
 
