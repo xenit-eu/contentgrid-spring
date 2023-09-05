@@ -69,7 +69,17 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
     }
 
     private Link addAssociationAffordance(Link associationLink, Class<?> owner, Property association) {
-        if (!association.getTypeInformation().isCollectionLike()) {
+        if(association.getTypeInformation().isMap()) {
+            // Map types are not really supported yet, so they don't get any affordances
+            return associationLink;
+        } if (association.getTypeInformation().isCollectionLike()) {
+            return Affordances.of(associationLink)
+                    .afford(HttpMethod.POST)
+                    .withName("add-" + associationLink.getName())
+                    .withInput(createPayloadMetadataForRelation(owner, association))
+                    .withInputMediaType(RestMediaTypes.TEXT_URI_LIST)
+                    .toLink();
+        } else {
             var affordances = Affordances.of(associationLink);
             affordances = affordances.afford(HttpMethod.PUT)
                     .withName("set-" + associationLink.getName())
@@ -83,13 +93,6 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
                         .build();
             }
             return affordances.toLink();
-        } else {
-            return Affordances.of(associationLink)
-                    .afford(HttpMethod.POST)
-                    .withName("add-" + associationLink.getName())
-                    .withInput(createPayloadMetadataForRelation(owner, association))
-                    .withInputMediaType(RestMediaTypes.TEXT_URI_LIST)
-                    .toLink();
         }
     }
 
