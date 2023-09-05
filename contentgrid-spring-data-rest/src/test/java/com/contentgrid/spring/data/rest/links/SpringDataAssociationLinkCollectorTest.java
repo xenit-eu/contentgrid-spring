@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
+import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ class SpringDataAssociationLinkCollectorTest {
     SpringDataAssociationLinkCollector associationLinkCollector;
 
     @Test
-    void associationLinksForToOne() {
+    void optional_toOne() {
         var entity = new ShippingAddress();
         entity.setId(UUID.randomUUID());
 
@@ -63,7 +64,28 @@ class SpringDataAssociationLinkCollectorTest {
     }
 
     @Test
-    void associationLinksForToMany() {
+    void required_toOne() {
+        var entity = new Invoice();
+        entity.setId(UUID.randomUUID());
+
+        assertThat(associationLinkCollector.getLinksFor(entity, Links.NONE))
+                .allSatisfy(link -> {
+                    assertThat(link.getRel()).isEqualTo(ContentGridLinkRelations.RELATION);
+                })
+                .satisfiesOnlyOnce(link -> {
+                    assertThat(link.getName()).isEqualTo("counterparty");
+                    assertThat(link.getHref()).isEqualTo("http://localhost/invoices/%s/counterparty".formatted(entity.getId()));
+
+                    assertThat(link.getAffordances()).<AffordanceModel>map(affordance -> affordance.getAffordanceModel(MediaTypes.HAL_FORMS_JSON))
+                            .satisfiesExactly(setCounterpartyAffordance -> {
+                                assertThat(setCounterpartyAffordance.getName()).isEqualTo("set-counterparty");
+                                assertThat(setCounterpartyAffordance.getHttpMethod()).isEqualTo(HttpMethod.PUT);
+                            });
+                });
+    }
+
+    @Test
+    void toMany() {
         var entity = new Customer();
         entity.setId(UUID.randomUUID());
 

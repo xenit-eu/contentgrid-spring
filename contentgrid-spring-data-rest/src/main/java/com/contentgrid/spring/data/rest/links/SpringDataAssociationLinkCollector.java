@@ -70,14 +70,19 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
 
     private Link addAssociationAffordance(Link associationLink, Class<?> owner, Property association) {
         if (!association.getTypeInformation().isCollectionLike()) {
-            return Affordances.of(associationLink)
-                    .afford(HttpMethod.PUT)
+            var affordances = Affordances.of(associationLink);
+            affordances = affordances.afford(HttpMethod.PUT)
                     .withName("set-" + associationLink.getName())
                     .withInput(createPayloadMetadataForRelation(owner, association))
                     .withInputMediaType(RestMediaTypes.TEXT_URI_LIST)
-                    .andAfford(HttpMethod.DELETE)
-                    .withName("clear-" + associationLink.getName())
-                    .toLink();
+                    .build();
+            if(!association.isRequired()) {
+                // An association that is required can't be cleared, that would cause a constraint violation error
+                affordances = affordances.afford(HttpMethod.DELETE)
+                        .withName("clear-" + associationLink.getName())
+                        .build();
+            }
+            return affordances.toLink();
         } else {
             return Affordances.of(associationLink)
                     .afford(HttpMethod.POST)
