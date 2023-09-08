@@ -755,16 +755,14 @@ class InvoicingApplicationTests {
             class ManyToOne {
 
                 @Test
-                void deleteCounterparty_shouldReturn_http204() throws Exception {
+                void deleteOrderCustomer_shouldReturn_http204() throws Exception {
 
-                    // fictive example: dis-associate the customer from the invoice
-                    // note that this would be classified as fraud in reality :grimacing:
-                    mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
+                    mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
                                     .accept("application/json"))
                             .andExpect(status().isNoContent());
 
-                    assertThat(invoices.findById(INVOICE_1_ID))
-                            .hasValueSatisfying(invoice -> assertThat(invoice.getCounterparty()).isNull());
+                    assertThat(orders.findById(ORDER_1_ID))
+                            .hasValueSatisfying(order -> assertThat(order.getCustomer()).isNull());
                 }
             }
 
@@ -774,8 +772,6 @@ class InvoicingApplicationTests {
                 @Test
                 void deleteToManyAssoc_shouldReturn_http405_methodNotAllowed() throws Exception {
 
-                    // fictive example: dis-associate the customer from the invoice
-                    // note that this would be classified as fraud in reality :grimacing:
                     mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/orders")
                                     .accept("application/json"))
                             .andExpect(status().isMethodNotAllowed());

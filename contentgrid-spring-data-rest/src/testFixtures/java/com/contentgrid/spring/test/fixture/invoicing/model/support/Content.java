@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Pattern.Flag;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.content.commons.annotations.ContentId;
@@ -28,6 +30,7 @@ public class Content {
 
     @MimeType
     @CollectionFilterParam(value = "mimetype")
+    @Pattern(regexp = "^(application|audio|font|image|model|text|video)/[a-z0-9!#$&\\-^_.+]+$", flags = Flag.CASE_INSENSITIVE)
     private String mimetype;
 
     @OriginalFileName

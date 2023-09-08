@@ -4,6 +4,7 @@ import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -32,6 +33,7 @@ public class PromotionCampaign {
 
     @Column(updatable = false, nullable = false)
     @CollectionFilterParam(value = "promo_code")
+    @NotNull
     private String promoCode;
 
     String description;
