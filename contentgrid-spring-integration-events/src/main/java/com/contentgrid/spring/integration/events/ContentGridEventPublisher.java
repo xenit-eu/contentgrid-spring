@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.rest.webmvc.PersistentEntityResource;
+import lombok.Value;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.MessagingGateway;
@@ -66,15 +66,15 @@ public interface ContentGridEventPublisher {
         static class DataEntity {
 
             final Object old;
-            final Object entity;
+            final Object _new;
 
-            DataEntity(Object old, Object entity) {
+            DataEntity(Object old, Object _new) {
                 this.old = old;
-                this.entity = entity;
+                this._new = _new;
             }
 
-            public Object getEntity() {
-                return entity;
+            public Object getNew() {
+                return _new;
             }
 
             public Object getOld() {
@@ -83,23 +83,11 @@ public interface ContentGridEventPublisher {
         }
     }
 
+    @RequiredArgsConstructor
     class ContentGridMessagePayload {
 
         private final ContentGridMessageTrigger trigger;
         private final PersistentEntityResourceData data;
-        private final String entityName;
-
-        public ContentGridMessagePayload(ContentGridMessageTrigger type,
-                String entityName, PersistentEntityResourceData data) {
-            this.trigger = type;
-            this.data = data;
-            this.entityName = entityName;
-        }
-
-        @JsonProperty("entity")
-        public String getEntityName() {
-            return entityName;
-        }
 
         @JsonUnwrapped
         public PersistentEntityResourceData getData() {
@@ -110,20 +98,11 @@ public interface ContentGridEventPublisher {
             return trigger;
         }
 
-        @RequiredArgsConstructor
+        @Value
         static class PersistentEntityResourceData {
-
-            private final EntityModel<?> old;
-            private final EntityModel<?> entity;
-
+            EntityModel<?> old;
             @JsonProperty("new")
-            public Object getEntity() {
-                return entity;
-            }
-
-            public Object getOld() {
-                return old;
-            }
+            EntityModel<?> _new;
         }
     }
 }

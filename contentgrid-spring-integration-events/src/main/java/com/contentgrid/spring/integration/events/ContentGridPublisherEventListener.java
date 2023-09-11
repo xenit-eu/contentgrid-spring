@@ -18,11 +18,7 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.support.Repositories;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.util.StringUtils;
 
 public class ContentGridPublisherEventListener implements PostInsertEventListener,
         PostUpdateEventListener, PostDeleteEventListener, PostCollectionUpdateEventListener,
@@ -60,7 +56,7 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         contentGridEventPublisher.publish(
                 new ContentGridMessage(
                         ContentGridMessageTrigger.create, new DataEntity(null, event.getEntity()),
-                        guessEntityName(event.getEntity())));
+                        deriveEntityName(event.getEntity())));
     }
 
     @Override
@@ -72,7 +68,7 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
 
         contentGridEventPublisher.publish(new ContentGridMessage(
                 ContentGridMessageTrigger.update,
-                new DataEntity(oldEntity, entity), guessEntityName(event.getEntity())));
+                new DataEntity(oldEntity, entity), deriveEntityName(event.getEntity())));
     }
 
     @Override
@@ -80,7 +76,7 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         contentGridEventPublisher.publish(
                 new ContentGridMessage(
                         ContentGridMessageTrigger.delete, new DataEntity(event.getEntity(), null),
-                        guessEntityName(event.getEntity())));
+                        deriveEntityName(event.getEntity())));
     }
 
     @Override
@@ -88,18 +84,12 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         contentGridEventPublisher.publish(new ContentGridMessage(
                 ContentGridMessageTrigger.update,
                 new DataEntity(event.getAffectedOwnerOrNull(), event.getAffectedOwnerOrNull()),
-                guessEntityName(event.getAffectedOwnerOrNull())
+                deriveEntityName(event.getAffectedOwnerOrNull())
         ));
     }
 
-    private String guessEntityName(Object entity) {
-        return repositories.getRepositoryInformationFor(entity.getClass())
-                .map(RepositoryMetadata::getRepositoryInterface)
-                .map(repositoryType -> AnnotationUtils.findAnnotation(repositoryType,
-                        RepositoryRestResource.class))
-                .map(RepositoryRestResource::itemResourceRel)
-                .filter(StringUtils::hasText)
-                .orElseGet(() -> entity.getClass().getSimpleName().toLowerCase());
+    private String deriveEntityName(Object entity) {
+        return repositories.getPersistentEntity(entity.getClass()).getName();
     }
 
 }

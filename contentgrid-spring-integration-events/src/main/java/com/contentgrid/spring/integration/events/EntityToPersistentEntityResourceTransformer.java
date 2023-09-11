@@ -19,13 +19,13 @@ public class EntityToPersistentEntityResourceTransformer
     @Override
     protected ContentGridMessagePayload transformPayload(ContentGridMessage contentGridMessage) {
         DataEntity updatedEntity = contentGridMessage.getData();
-        EntityModel<?> newModel = updatedEntity.entity != null
-                ? contentGridHalAssembler.toModel(updatedEntity.entity)
+        EntityModel<?> newModel = updatedEntity._new != null
+                ? contentGridHalAssembler.toModel(updatedEntity._new)
                 : null;
         EntityModel<?> oldModel = updatedEntity.old != null
                 ? contentGridHalAssembler.toModel(updatedEntity.old)
                 : null;
 
-        return new ContentGridMessagePayload(contentGridMessage.getTrigger(), contentGridMessage.getEntityName(), new PersistentEntityResourceData(oldModel, newModel));
+        return new ContentGridMessagePayload(contentGridMessage.getTrigger(), new PersistentEntityResourceData(oldModel, newModel));
     }
 }
