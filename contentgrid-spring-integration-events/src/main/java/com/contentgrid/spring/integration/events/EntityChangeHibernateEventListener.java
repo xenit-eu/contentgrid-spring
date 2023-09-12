@@ -1,8 +1,7 @@
 package com.contentgrid.spring.integration.events;
 
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage;
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.ContentGridMessageTrigger;
-import com.contentgrid.spring.integration.events.ContentGridEventPublisher.ContentGridMessage.DataEntity;
+import com.contentgrid.spring.integration.events.EntityChangeEventPublisher.EntityChangeEvent;
+import com.contentgrid.spring.integration.events.EntityChangeEventPublisher.EntityChangeEvent.ChangeKind;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -20,17 +19,17 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.repository.support.Repositories;
 
-public class ContentGridPublisherEventListener implements PostInsertEventListener,
+public class EntityChangeHibernateEventListener implements PostInsertEventListener,
         PostUpdateEventListener, PostDeleteEventListener, PostCollectionUpdateEventListener,
         InitializingBean {
 
-    private final ContentGridEventPublisher contentGridEventPublisher;
+    private final EntityChangeEventPublisher entityChangeEventPublisher;
     private final EntityManagerFactory entityManagerFactory;
     private final Repositories repositories;
 
-    public ContentGridPublisherEventListener(ContentGridEventPublisher contentGridEventPublisher,
+    public EntityChangeHibernateEventListener(EntityChangeEventPublisher entityChangeEventPublisher,
             EntityManagerFactory entityManagerFactory, Repositories repositories) {
-        this.contentGridEventPublisher = contentGridEventPublisher;
+        this.entityChangeEventPublisher = entityChangeEventPublisher;
         this.entityManagerFactory = entityManagerFactory;
         this.repositories = repositories;
     }
@@ -53,10 +52,13 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
 
     @Override
     public void onPostInsert(PostInsertEvent event) {
-        contentGridEventPublisher.publish(
-                new ContentGridMessage(
-                        ContentGridMessageTrigger.create, new DataEntity(null, event.getEntity()),
-                        deriveEntityName(event.getEntity())));
+        entityChangeEventPublisher.publish(
+                EntityChangeEvent.builder()
+                        .trigger(ChangeKind.create)
+                        .domainType(deriveDomainType(event.getEntity()))
+                        .newEntity(event.getEntity())
+                        .build()
+        );
     }
 
     @Override
@@ -66,30 +68,41 @@ public class ContentGridPublisherEventListener implements PostInsertEventListene
         BeanUtils.copyProperties(entity, oldEntity);
         event.getPersister().setPropertyValues(oldEntity, event.getOldState());
 
-        contentGridEventPublisher.publish(new ContentGridMessage(
-                ContentGridMessageTrigger.update,
-                new DataEntity(oldEntity, entity), deriveEntityName(event.getEntity())));
+        entityChangeEventPublisher.publish(
+                EntityChangeEvent.builder()
+                        .trigger(ChangeKind.update)
+                        .domainType(deriveDomainType(entity))
+                        .oldEntity(oldEntity)
+                        .newEntity(entity)
+                        .build()
+        );
     }
 
     @Override
     public void onPostDelete(PostDeleteEvent event) {
-        contentGridEventPublisher.publish(
-                new ContentGridMessage(
-                        ContentGridMessageTrigger.delete, new DataEntity(event.getEntity(), null),
-                        deriveEntityName(event.getEntity())));
+        entityChangeEventPublisher.publish(
+                EntityChangeEvent.builder()
+                        .trigger(ChangeKind.delete)
+                        .domainType(deriveDomainType(event.getEntity()))
+                        .oldEntity(event.getEntity())
+                        .build()
+        );
     }
 
     @Override
     public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
-        contentGridEventPublisher.publish(new ContentGridMessage(
-                ContentGridMessageTrigger.update,
-                new DataEntity(event.getAffectedOwnerOrNull(), event.getAffectedOwnerOrNull()),
-                deriveEntityName(event.getAffectedOwnerOrNull())
-        ));
+        entityChangeEventPublisher.publish(
+                EntityChangeEvent.builder()
+                        .trigger(ChangeKind.update)
+                        .domainType(deriveDomainType(event.getAffectedOwnerOrNull()))
+                        .oldEntity(event.getAffectedOwnerOrNull())
+                        .newEntity(event.getAffectedOwnerOrNull())
+                        .build()
+        );
     }
 
-    private String deriveEntityName(Object entity) {
-        return repositories.getPersistentEntity(entity.getClass()).getName();
+    private Class<?> deriveDomainType(Object entity) {
+        return repositories.getPersistentEntity(entity.getClass()).getType();
     }
 
 }
