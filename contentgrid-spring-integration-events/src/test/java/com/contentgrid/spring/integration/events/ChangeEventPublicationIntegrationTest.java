@@ -2,69 +2,23 @@ package com.contentgrid.spring.integration.events;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.contentgrid.spring.integration.events.ChangeEventPublicationIntegrationTest.TestConfig;
+import com.contentgrid.spring.integration.events.TestConfig.TestMessageHandler;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
-import org.springframework.integration.handler.AbstractMessageHandler;
-import org.springframework.messaging.Message;
 
 @SpringBootTest(classes = {InvoicingApplication.class, TestConfig.class})
 public class ChangeEventPublicationIntegrationTest {
-
-    private static class TestMessageHandler extends AbstractMessageHandler {
-
-        private final Deque<Message<?>> messages = new LinkedList<>();
-
-        @Override
-        public void destroy() {
-            super.destroy();
-            messages.clear();
-        }
-
-        @Override
-        protected void handleMessageInternal(Message<?> message) {
-            messages.add(message);
-        }
-
-        public Stream<Message<?>> messages() {
-            return messages.stream();
-        }
-
-        public Optional<Message<?>> lastMessage() {
-            return Optional.ofNullable(messages.peekLast());
-        }
-    }
-
-    @TestConfiguration
-    public static class TestConfig {
-
-        @Bean
-        TestMessageHandler mockMessageHandler() {
-            return new TestMessageHandler();
-        }
-
-        @Bean
-        EntityChangeEventHandler testEventHandler(TestMessageHandler testMessageHandler) {
-            return () -> testMessageHandler;
-        }
-    }
 
     @Autowired
     private TestMessageHandler testMessageHandler;
