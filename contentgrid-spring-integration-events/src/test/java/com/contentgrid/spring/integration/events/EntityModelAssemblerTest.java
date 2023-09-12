@@ -14,14 +14,14 @@ import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest()
 @ContextConfiguration(classes = InvoicingApplication.class)
-class ContentGridHalAssemblerTest {
+class EntityModelAssemblerTest {
 
     @Autowired
     private ApplicationContext context;
 
     @Test
     void serializesEntityWithContentProperties() {
-        var assembler = new ContentGridHalAssembler(context);
+        var assembler = new EntityModelAssembler(context);
         var invoice = new Invoice();
 
         invoice.setId(UUID.randomUUID());

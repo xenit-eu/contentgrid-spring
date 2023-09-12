@@ -5,16 +5,14 @@ import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.core.support.SelfLinkProvider;
-import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
 import org.springframework.data.rest.webmvc.mapping.Associations;
 import org.springframework.data.rest.webmvc.support.PersistentEntityProjector;
 import org.springframework.data.util.Lazy;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.server.RepresentationModelProcessor;
 import org.springframework.hateoas.server.mvc.RepresentationModelProcessorInvoker;
 
-public class ContentGridHalAssembler {
+public class EntityModelAssembler {
 
     private final SpelAwareProxyProjectionFactory projectionFactory;
 
@@ -26,12 +24,13 @@ public class ContentGridHalAssembler {
 
     private PersistentEntityResourceAssembler assembler;
 
-    public ContentGridHalAssembler(ApplicationContext context) {
+    public EntityModelAssembler(ApplicationContext context) {
         this.projectionFactory = new SpelAwareProxyProjectionFactory();
         projectionFactory.setBeanFactory(context);
         projectionFactory.setBeanClassLoader(this.getClass().getClassLoader());
 
-        this.representationModelProcessorInvoker = Lazy.of(() -> context.getBean(RepresentationModelProcessorInvoker.class));
+        this.representationModelProcessorInvoker = Lazy.of(
+                () -> context.getBean(RepresentationModelProcessorInvoker.class));
         this.persistentEntities = Lazy.of(() -> context.getBean(PersistentEntities.class));
         this.associations = Lazy.of(() -> context.getBean(Associations.class));
         this.selfLinkProvider = Lazy.of(() -> context.getBean(SelfLinkProvider.class));
@@ -55,7 +54,8 @@ public class ContentGridHalAssembler {
     }
 
     public EntityModel<Object> toModel(Object entity) {
-        var representationModel = getAssembler().toModel(entity);
+        var representationModel = getAssembler().toFullResource(entity);
         return representationModelProcessorInvoker.get().invokeProcessorsFor(representationModel);
     }
+
 }

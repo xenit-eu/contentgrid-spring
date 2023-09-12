@@ -2,7 +2,7 @@ package com.contentgrid.spring.boot.autoconfigure.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.contentgrid.spring.integration.events.ContentGridPublisherEventListener;
+import com.contentgrid.spring.integration.events.EntityChangeHibernateEventListener;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -30,16 +30,16 @@ class EventsAutoConfigurationTest {
     void checkContentGridPublisher_beanExists() {
         contextRunner
                 .run(context -> {
-                    assertThat(context).hasSingleBean(ContentGridPublisherEventListener.class);
+                    assertThat(context).hasSingleBean(EntityChangeHibernateEventListener.class);
                 });
     }
 
     @Test
     void withoutContentGridPublisherEventListener_onClasspath() {
         contextRunner
-                .withClassLoader(new FilteredClassLoader(ContentGridPublisherEventListener.class))
+                .withClassLoader(new FilteredClassLoader(EntityChangeHibernateEventListener.class))
                 .run(context -> {
-                    assertThat(context).doesNotHaveBean(ContentGridPublisherEventListener.class);
+                    assertThat(context).doesNotHaveBean(EntityChangeHibernateEventListener.class);
                 });
     }
 }

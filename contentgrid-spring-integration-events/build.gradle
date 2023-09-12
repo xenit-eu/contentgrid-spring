@@ -24,7 +24,9 @@ dependencies {
     implementation 'org.hibernate.orm:hibernate-core'
     implementation 'org.springframework.data:spring-data-rest-webmvc'
 
+    testImplementation platform(project(':contentgrid-spring-boot-platform'))
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.integration:spring-integration-test'
     testImplementation testFixtures(project(':contentgrid-spring-data-rest'))
 }
 
