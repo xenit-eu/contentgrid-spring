@@ -54,7 +54,7 @@ public class EntityModelAssembler {
     }
 
     public EntityModel<Object> toModel(Object entity) {
-        var representationModel = getAssembler().toModel(entity);
+        var representationModel = getAssembler().toFullResource(entity);
         return representationModelProcessorInvoker.get().invokeProcessorsFor(representationModel);
     }
 
