@@ -2,6 +2,7 @@ package com.contentgrid.spring.data.rest.mapping;
 
 import com.contentgrid.spring.data.querydsl.mapping.ContentGridCollectionFilterMappingConfiguration;
 import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedContainer;
+import com.contentgrid.spring.data.rest.mapping.persistent.ThroughAssociationsContainer;
 import com.contentgrid.spring.data.rest.mapping.rest.DataRestBasedContainer;
 import com.contentgrid.spring.data.rest.webmvc.DefaultDomainTypeToHalFormsPayloadMetadataConverter;
 import com.contentgrid.spring.data.rest.webmvc.DomainTypeToHalFormsPayloadMetadataConverter;
@@ -18,6 +19,12 @@ public class ContentGridDomainTypeMappingConfiguration {
     @PlainMapping
     DomainTypeMapping plainDomainTypeMapping(Repositories repositories) {
         return new DomainTypeMapping(repositories);
+    }
+
+    @Bean
+    @PlainMapping(followingAssociations = true)
+    DomainTypeMapping plainDomainTypeMappingFollowingAssociations(@PlainMapping DomainTypeMapping domainTypeMapping, Repositories repositories) {
+        return domainTypeMapping.wrapWith(c -> new ThroughAssociationsContainer(c, repositories, Integer.MAX_VALUE));
     }
 
     @Bean
