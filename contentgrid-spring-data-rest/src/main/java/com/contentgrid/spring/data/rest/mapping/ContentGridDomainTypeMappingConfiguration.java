@@ -15,9 +15,15 @@ import org.springframework.data.repository.support.Repositories;
 @Import(ContentGridCollectionFilterMappingConfiguration.class)
 public class ContentGridDomainTypeMappingConfiguration {
     @Bean
+    @PlainMapping
+    DomainTypeMapping plainDomainTypeMapping(Repositories repositories) {
+        return new DomainTypeMapping(repositories);
+    }
+
+    @Bean
     @FormMapping
-    DomainTypeMapping halFormsFormMappingDomainTypeMapping(Repositories repositories) {
-        return new DomainTypeMapping(repositories, c -> new JacksonBasedContainer(new DataRestBasedContainer(c)));
+    DomainTypeMapping halFormsFormMappingDomainTypeMapping(@PlainMapping DomainTypeMapping plainMapping) {
+        return plainMapping.wrapWith(c -> new JacksonBasedContainer(new DataRestBasedContainer(c)));
     }
 
     @Bean
