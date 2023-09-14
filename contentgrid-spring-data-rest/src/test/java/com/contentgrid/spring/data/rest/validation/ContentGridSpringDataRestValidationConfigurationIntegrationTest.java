@@ -28,7 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = InvoicingApplication.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @DirtiesContext(classMode = ClassMode.AFTER_CLASS)
-class ContentGridSpringDataRestValidationConfigurationTest {
+class ContentGridSpringDataRestValidationConfigurationIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
@@ -250,42 +250,6 @@ class ContentGridSpringDataRestValidationConfigurationTest {
                             .content("/customers/" + customer2.getId())
                     )
                     .andExpect(status().is2xxSuccessful());
-        }
-
-        @Test
-        @Disabled("delete of item that is linked via a required relation is currently not checkable")
-        void rejectsInvalidCustomerDelete_linkedViaRequiredRelation() throws Exception {
-            var customer = new Customer();
-            customer.setVat("XYZ-8");
-            customer = customerRepository.save(customer);
-
-            var invoice = new Invoice();
-            invoice.setNumber("XYZ-8");
-            invoice.setCounterparty(customer);
-            invoiceRepository.save(invoice);
-
-            mockMvc.perform(delete("/customers/{id}", customer.getId()))
-                    .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        @Disabled("delete of item that is linked via a required relation is currently not checkable")
-        void rejectsInvalidInvoiceDelete_linkedViaRequiredRelation() throws Exception {
-            var customer = new Customer();
-            customer.setVat("XYZ-9");
-            customer = customerRepository.save(customer);
-
-            var invoice = new Invoice();
-            invoice.setNumber("XYZ-9");
-            invoice.setCounterparty(customer);
-            invoice = invoiceRepository.save(invoice);
-
-            var refund = new Refund();
-            refund.setInvoice(invoice);
-            refund = refundRepository.save(refund);
-
-            mockMvc.perform(delete("/invoices/{id}", invoice.getId()))
-                    .andExpect(status().isBadRequest());
         }
     }
 }
