@@ -2,10 +2,12 @@ package com.contentgrid.spring.data.rest.problem;
 
 import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties;
 import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties.FieldViolationProblemProperties;
+import com.contentgrid.spring.data.rest.validation.OnEntityDelete;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonMappingException.Reference;
+import jakarta.validation.ConstraintViolation;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -61,11 +63,25 @@ public class ContentGridExceptionHandler {
             });
 
             bindingResult.getFieldErrors().forEach(error -> {
+                if (error.contains(ConstraintViolation.class)) {
+                    var descriptor = error.unwrap(ConstraintViolation.class).getConstraintDescriptor();
+                    if (!descriptor.getGroups().contains(OnEntityDelete.class)) {
+                        // Only include the rejected value when the constraint is NOT an OnEntityDelete constraint.
+                        // The OnEntityDelete constraints process data that come from the database.
+                        // Values that come from the database are sensitive and they should not be exposed
+                        propertiesBuilder.field(
+                                Problem.create()
+                                        .withDetail(messageSourceAccessor.getMessage(error)),
+                                jsonPropertyPathConverter.fromJavaPropertyPath(domainType, error.getField()),
+                                error.getRejectedValue()
+                        );
+                        return;
+                    }
+                }
                 propertiesBuilder.field(
                         Problem.create()
                                 .withDetail(messageSourceAccessor.getMessage(error)),
-                        jsonPropertyPathConverter.fromJavaPropertyPath(domainType, error.getField()),
-                        error.getRejectedValue()
+                        jsonPropertyPathConverter.fromJavaPropertyPath(domainType, error.getField())
                 );
             });
 
@@ -94,8 +110,8 @@ public class ContentGridExceptionHandler {
     ResponseEntity<Problem> handleJsonParseException(JsonParseException exception) {
         return responseEntityFactory.createResponse(
                 problemFactory.createProblem(ProblemType.INVALID_REQUEST_BODY_JSON)
-                .withStatus(HttpStatus.BAD_REQUEST)
-                .withDetail(formatJacksonError(exception))
+                        .withStatus(HttpStatus.BAD_REQUEST)
+                        .withDetail(formatJacksonError(exception))
         );
     }
 

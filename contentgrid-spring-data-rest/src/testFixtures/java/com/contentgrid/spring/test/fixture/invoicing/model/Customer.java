@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.contentgrid.spring.data.rest.validation.OnEntityDelete;
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
+import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -67,6 +69,8 @@ public class Customer {
     @CollectionFilterParam
     @CollectionFilterParam(value = "invoices.$$id", predicate = EntityId.class, documented = false)
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:invoices")
+    // Invoice#counterparty is required, this constraint ensures that there are no more invoices linked when deleting the customer
+    @Size(max = 0, groups = OnEntityDelete.class)
     private Set<Invoice> invoices = new HashSet<>();
 
 }

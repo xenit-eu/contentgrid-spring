@@ -393,9 +393,8 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             var invoice = createInvoice();
             // This customer is linked to the invoice
             mockMvc.perform(delete("/customers/{id}", invoice.getCounterparty().getId()))
-                    .andExpect(problemDetails()
-                            .withStatusCode(HttpStatus.BAD_REQUEST)
-                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation")
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("invoices"))
                     );
         }
 
@@ -411,9 +410,8 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             // Now there is a refund that references our invoice
 
             mockMvc.perform(delete("/invoices/{id}", invoice.getId()))
-                    .andExpect(problemDetails()
-                            .withStatusCode(HttpStatus.BAD_REQUEST)
-                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation")
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("refund"))
                     );
         }
 

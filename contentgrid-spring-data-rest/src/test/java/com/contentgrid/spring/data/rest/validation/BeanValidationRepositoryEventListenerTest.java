@@ -106,5 +106,69 @@ class BeanValidationRepositoryEventListenerTest {
             assertThatCode(() -> eventListener.onBeforeLinkSave(invoice,
                     invoice.getCounterparty())).doesNotThrowAnyException();
         }
+
+        @Test
+        void delete_targetOfRequiredRelation_manyToOne_notLinked() {
+            var customer = new Customer();
+            customer.setVat("XYZ-8");
+
+            assertThatCode(() -> eventListener.onBeforeDelete(customer)).doesNotThrowAnyException();
+        }
+
+        @Test
+        void delete_targetOfRequiredRelation_manyToOne_linked() {
+            var customer = new Customer();
+            customer.setVat("XYZ-8");
+
+            var invoice = new Invoice();
+            invoice.setNumber("XYZ-8");
+            invoice.setCounterparty(customer);
+
+            customer.getInvoices().add(invoice);
+
+            assertThatThrownBy(() -> eventListener.onBeforeDelete(customer))
+                    .isInstanceOfSatisfying(RepositoryConstraintViolationException.class, ex -> {
+                        assertThat(ex.getErrors().getGlobalErrors()).isEmpty();
+                        assertThat(ex.getErrors().getFieldErrors()).satisfiesExactly(fieldError -> {
+                            assertThat(fieldError.getField()).isEqualTo("invoices");
+                        });
+                    });
+        }
+
+        @Test
+        void delete_targetOfRequiredRelation_oneToOne_unlinked() {
+            var customer = new Customer();
+            customer.setVat("XYZ-9");
+
+            var invoice = new Invoice();
+            invoice.setNumber("XYZ-9");
+            invoice.setCounterparty(customer);
+            customer.getInvoices().add(invoice);
+
+            assertThatCode(() -> eventListener.onBeforeDelete(invoice)).doesNotThrowAnyException();
+        }
+
+        @Test
+        void delete_targetOfRequiredRelation_oneToOne_linked() {
+            var customer = new Customer();
+            customer.setVat("XYZ-9");
+
+            var invoice = new Invoice();
+            invoice.setNumber("XYZ-9");
+            invoice.setCounterparty(customer);
+            customer.getInvoices().add(invoice);
+
+            var refund = new Refund();
+            refund.setInvoice(invoice);
+            invoice.setRefund(refund);
+
+            assertThatThrownBy(() -> eventListener.onBeforeDelete(invoice))
+                    .isInstanceOfSatisfying(RepositoryConstraintViolationException.class, ex -> {
+                        assertThat(ex.getErrors().getGlobalErrors()).isEmpty();
+                        assertThat(ex.getErrors().getFieldErrors()).satisfiesExactly(fieldError -> {
+                            assertThat(fieldError.getField()).isEqualTo("refund");
+                        });
+                    });
+        }
     }
 }
