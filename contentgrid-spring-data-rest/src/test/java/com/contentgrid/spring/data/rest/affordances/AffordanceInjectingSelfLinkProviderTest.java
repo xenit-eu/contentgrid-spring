@@ -34,7 +34,7 @@ class AffordanceInjectingSelfLinkProviderTest {
 
     @BeforeEach
     void setup() {
-        customer = customerRepository.save(new Customer(UUID.randomUUID(), "Abc", "ABC", null, Set.of(), Set.of()));
+        customer = customerRepository.save(new Customer(UUID.randomUUID(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
     }
 
     @AfterEach
@@ -74,6 +74,14 @@ class AffordanceInjectingSelfLinkProviderTest {
                                         {
                                             name: "content.filename",
                                             type: "text"
+                                        },
+                                        {
+                                            name: "birthday"
+                                            #, type: "datetime"
+                                        },
+                                        {
+                                            name: "total_spend",
+                                            type: "number"
                                         }
                                         # Note: no relations present, those are only for the create form
                                     ]
@@ -121,6 +129,14 @@ class AffordanceInjectingSelfLinkProviderTest {
                                                     {
                                                         name: "content.filename",
                                                         type: "text"
+                                                    },
+                                                    {
+                                                        name: "birthday"
+                                                        #, type: "datetime"
+                                                    },
+                                                    {
+                                                        name: "total_spend",
+                                                        type: "number"
                                                     }
                                                     # Note: no relations present, those are only for the create form
                                                 ]
