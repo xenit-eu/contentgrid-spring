@@ -1,5 +1,7 @@
 package com.contentgrid.spring.data.rest.problem;
 
+import static com.contentgrid.spring.data.rest.problem.ProblemDetailsMockMvcMatchers.problemDetails;
+import static com.contentgrid.spring.data.rest.problem.ProblemDetailsMockMvcMatchers.validationConstraintViolation;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,6 +31,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -46,11 +49,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @DirtiesContext(classMode = ClassMode.AFTER_CLASS)
 class ContentGridProblemDetailsConfigurationIntegrationTest {
 
+    private static final String CUSTOMER_ID_CREATE = "bd5ef028-52fb-11ee-a531-b3ff1a44e992";
+    private static final String INVOICE_ID_CREATE = "bd5ef028-52fb-11ee-a531-b3ff1a44e993";
+
+    private static final String PROBLEM_TYPE_PREFIX = "https://contentgrid.com/rels/problem/";
+
     @Autowired
     MockMvc mockMvc;
-
-    public static final String CUSTOMER_ID_CREATE = "bd5ef028-52fb-11ee-a531-b3ff1a44e992";
-    public static final String INVOICE_ID_CREATE = "bd5ef028-52fb-11ee-a531-b3ff1a44e993";
 
     @Autowired
     CustomerRepository customerRepository;
@@ -119,7 +124,10 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     { "my-invalid-json }
                                     """)
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(problemDetails()
+                            .withStatusCode(HttpStatus.BAD_REQUEST)
+                            .withType(PROBLEM_TYPE_PREFIX + "invalid-request-body/json")
+                    );
         }
 
         @ParameterizedTest
@@ -134,7 +142,11 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """)
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("total_spend")
+                                    .withType(PROBLEM_TYPE_PREFIX + "invalid-request-body/type")
+                            )
+                    );
 
         }
 
@@ -150,7 +162,11 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """)
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("content")
+                                    .withType(PROBLEM_TYPE_PREFIX + "invalid-request-body/type")
+                            )
+                    );
         }
 
         @ParameterizedTest
@@ -165,7 +181,11 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """)
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("birthday")
+                                    .withType(PROBLEM_TYPE_PREFIX + "invalid-request-body/type")
+                            )
+                    );
         }
 
         @ParameterizedTest
@@ -175,12 +195,16 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
-                                        "vat": "1123",
+                                        "number": "123",
                                         "counterparty": "ZZEY"
                                     }
                                     """)
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("counterparty")
+                            )
+                    )
+            ;
         }
 
         @ParameterizedTest
@@ -190,12 +214,16 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
-                                        "vat": "1124",
+                                        "number": "123",
                                         "counterparty": "/invoices/%s"
                                     }
                                     """.formatted(INVOICE_ID_UPDATE))
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("counterparty")
+                            )
+                    )
+            ;
         }
 
         static Stream<Arguments> basicUrls() {
@@ -211,7 +239,8 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             return Stream.of(
                     Arguments.of(HttpMethod.POST, "/invoices"),
                     Arguments.of(HttpMethod.PUT, "/invoices/" + INVOICE_ID_CREATE),
-                    Arguments.of(HttpMethod.PUT, "/invoices/" + INVOICE_ID_UPDATE),
+                    // When updating, the relation is ignored
+                    // Arguments.of(HttpMethod.PUT, "/invoices/" + INVOICE_ID_UPDATE),
                     Arguments.of(HttpMethod.PATCH, "/invoices/" + INVOICE_ID_UPDATE)
             );
         }
@@ -243,7 +272,9 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """.formatted(customer.getId()))
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("number"))
+                    );
         }
 
         @Test
@@ -256,7 +287,9 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """.formatted(UUID.randomUUID()))
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("counterparty"))
+                    );
         }
 
         @Test
@@ -271,7 +304,9 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """.formatted(customer.getId()))
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("number"))
+                    );
 
             mockMvc.perform(patch("/invoices/{id}", invoice.getId())
                             .contentType(MediaType.APPLICATION_JSON)
@@ -281,7 +316,9 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """)
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("number"))
+                    );
         }
 
         @Test
@@ -308,14 +345,18 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """)
                     )
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("counterparty"))
+                    );
         }
 
         @Test
         void removeRequiredEntityRelation_thisSide() throws Exception {
             var invoice = createInvoice();
             mockMvc.perform(delete("/invoices/{id}/counterparty", invoice.getId()))
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("counterparty"))
+                    );
         }
 
         @Test
@@ -328,7 +369,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             // Now there is a refund that references our invoice
 
             mockMvc.perform(delete("/invoices/{id}/refund", invoice.getId()))
-                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(validationConstraintViolation());
         }
     }
 
@@ -347,7 +388,10 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             var invoice = createInvoice();
             // This customer is linked to the invoice
             mockMvc.perform(delete("/customers/{id}", invoice.getCounterparty().getId()))
-                    .andExpect(MockMvcResultMatchers.status().isConflict());
+                    .andExpect(problemDetails()
+                            .withStatusCode(HttpStatus.CONFLICT)
+                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation")
+                    );
         }
 
         @Test
@@ -362,7 +406,10 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             // Now there is a refund that references our invoice
 
             mockMvc.perform(delete("/invoices/{id}", invoice.getId()))
-                    .andExpect(MockMvcResultMatchers.status().isConflict());
+                    .andExpect(problemDetails()
+                            .withStatusCode(HttpStatus.CONFLICT)
+                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation")
+                    );
         }
 
     }
@@ -401,7 +448,10 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """.formatted(customerVat))
                     )
-                    .andExpect(MockMvcResultMatchers.status().isConflict());
+                    .andExpect(problemDetails()
+                            .withStatusCode(HttpStatus.CONFLICT)
+                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation/unique")
+                    );
         }
 
         @Test
@@ -429,7 +479,10 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """.formatted(customerVat))
                     )
-                    .andExpect(MockMvcResultMatchers.status().isConflict());
+                    .andExpect(problemDetails()
+                            .withStatusCode(HttpStatus.CONFLICT)
+                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation/unique")
+                    );
         }
 
         @Test
