@@ -30,7 +30,7 @@ import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest(classes = {InvoicingApplication.class, TestConfig.class})
-@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
 class EntityChangeHibernateEventListenerTest {
     @Autowired
     CustomerRepository customerRepository;
@@ -107,7 +107,7 @@ class EntityChangeHibernateEventListenerTest {
     void whenCustomerIsUpdatedOnce_postUpdateShouldBeCalledOnce_ok() {
 
         Customer customer1 = new Customer();
-        customer1.setVat("BE123");
+        customer1.setVat("BE124");
         customer1.setName("old name");
 
         Customer saved = customerRepository.save(customer1);
@@ -122,7 +122,7 @@ class EntityChangeHibernateEventListenerTest {
 
     @Test
     void whenCustomerIsUpdatedTwice_postUpdateShouldBeCalledTwice_ok() {
-        Customer saved = customerRepository.save(customer(c -> c.setVat("BE123")));
+        Customer saved = customerRepository.save(customer(c -> c.setVat("BE125")));
         saved.setName("description for update");
         customerRepository.save(saved);
 
@@ -138,7 +138,7 @@ class EntityChangeHibernateEventListenerTest {
 
     @Test
     void whenCustomerIsDeleted_postUpdateShouldBeCalledOnce_ok() {
-        Customer saved = customerRepository.save(customer(c -> c.setVat("BE123")));
+        Customer saved = customerRepository.save(customer(c -> c.setVat("BE126")));
 
         saved.setName("description for update");
         customerRepository.save(saved);
@@ -179,7 +179,7 @@ class EntityChangeHibernateEventListenerTest {
     @Test
     void whenCustomerIsAddedToOrderCustomer_manyToOne_postUpdateShouldBeCalledOnce_ok() {
         Order order = orderRepository.save(new Order());
-        Customer customer = customerRepository.save(customer(c -> c.setVat("BE123")));
+        Customer customer = customerRepository.save(customer(c -> c.setVat("BE127")));
 
         order.setCustomer(customer);
         orderRepository.save(order);
@@ -197,7 +197,7 @@ class EntityChangeHibernateEventListenerTest {
         // events are sent after committing the tx. If we don't run it in a transaction, hibernate complains about
         // a lack of an open session when we try to do anything with case.hasEvidence.
         transactionTemplate.executeWithoutResult((status) -> {
-            var customer = customerRepository.save(customer(c -> c.setVat("BE123")));
+            var customer = customerRepository.save(customer(c -> c.setVat("BE128")));
             UUID invoiceId = invoiceRepository.save(invoice(i -> {
                 i.setCounterparty(customer);
                 i.setNumber("X888");
