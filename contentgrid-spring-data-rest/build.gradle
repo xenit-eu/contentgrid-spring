@@ -46,13 +46,16 @@ dependencies {
 
     testFixturesImplementation platform(project(':contentgrid-spring-boot-platform'))
     testFixturesImplementation project(':contentgrid-spring-boot-starter')
+    testFixturesImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     testFixturesApi 'org.springframework.data:spring-data-jpa'
 
     testFixturesCompileOnly 'org.projectlombok:lombok'
+    testFixturesImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testFixturesImplementation 'org.testcontainers:postgresql:1.19.0'
+
 
     testFixturesRuntimeOnly 'org.postgresql:postgresql'
-    testFixturesRuntimeOnly 'org.testcontainers:postgresql:1.19.0'
 }
 
 tasks.named('test') {
