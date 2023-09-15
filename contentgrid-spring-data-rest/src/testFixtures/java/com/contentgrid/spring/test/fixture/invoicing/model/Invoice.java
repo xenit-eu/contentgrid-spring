@@ -92,7 +92,7 @@ public class Invoice {
     private Customer counterparty;
 
     @OneToMany
-    @JoinColumn(name = "__invoice_id__orders", foreignKey = @ForeignKey(foreignKeyDefinition = "foreign key (\"invoice\") references \"invoice\" ON DELETE set NULL"))
+    @JoinColumn(name = "__invoice_id__orders", foreignKey = @ForeignKey(foreignKeyDefinition = "foreign key (\"__invoice_id__orders\") references \"invoice\" ON DELETE set NULL"))
     @CollectionFilterParam
     @CollectionFilterParam(value = "orders.id", predicate = EntityId.class)
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:orders")
