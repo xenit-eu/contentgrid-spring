@@ -28,7 +28,7 @@ public class ContentGridProblemDetailsConfiguration {
 
     @Bean
     ProblemTypeUrlFactory contentGridProblemTypeUrlFactory() {
-        return new ProblemTypeUrlFactory(UriTemplate.of("https://contentgrid.com/rels/problem{/item*}"));
+        return new ProblemTypeUrlFactory(UriTemplate.of("https://contentgrid.cloud/problems{/item*}"));
     }
 
     @Bean

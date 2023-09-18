@@ -52,7 +52,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
     private static final String CUSTOMER_ID_CREATE = "bd5ef028-52fb-11ee-a531-b3ff1a44e992";
     private static final String INVOICE_ID_CREATE = "bd5ef028-52fb-11ee-a531-b3ff1a44e993";
 
-    private static final String PROBLEM_TYPE_PREFIX = "https://contentgrid.com/rels/problem/";
+    private static final String PROBLEM_TYPE_PREFIX = "https://contentgrid.cloud/problems/";
 
     @Autowired
     MockMvc mockMvc;
