@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -120,6 +121,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
         void doesNotParseAsJson(HttpMethod method, String url) throws Exception {
             mockMvc.perform(request(method, url)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     { "my-invalid-json }
                                     """)
@@ -135,6 +137,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
         void typeMismatchStringToNumber(HttpMethod method, String url) throws Exception {
             mockMvc.perform(request(method, url)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "vat": "123",
@@ -153,6 +156,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
         void typeMismatchStringToObject(HttpMethod method, String url) throws Exception {
             mockMvc.perform(request(method, url)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "vat": "456",
@@ -170,6 +174,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
         void typeMismatchStringDoesNotParseToDate(HttpMethod method, String url) throws Exception {
             mockMvc.perform(request(method, url)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "vat": "789",
@@ -187,6 +192,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
         void toOneRelationInvalidUrl(HttpMethod method, String url) throws Exception {
             mockMvc.perform(request(method, url)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "number": "123",
@@ -205,6 +211,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
         void toOneRelationDifferentEntityUrl(HttpMethod method, String url) throws Exception {
             mockMvc.perform(request(method, url)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "number": "123",
@@ -259,6 +266,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             var customer = createCustomer();
             mockMvc.perform(post("/invoices")
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "counterparty": "/customers/%s"
@@ -274,6 +282,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
         void createEntityWithoutRequiredRelation() throws Exception {
             mockMvc.perform(post("/invoices")
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "number": "%s"
@@ -291,6 +300,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             var customer = createCustomer();
             mockMvc.perform(put("/invoices/{id}", invoice.getId())
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "counterparty": "/customers/%s"
@@ -303,6 +313,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
 
             mockMvc.perform(patch("/invoices/{id}", invoice.getId())
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "number": null
@@ -332,6 +343,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             var invoice = createInvoice();
             mockMvc.perform(patch("/invoices/{id}", invoice.getId())
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "counterparty": null
@@ -424,6 +436,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             // First time goes through
             mockMvc.perform(post("/customers")
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "vat": "%s"
@@ -435,6 +448,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             // Second time results in a unique constraint error
             mockMvc.perform(post("/customers")
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "vat": "%s"
@@ -455,6 +469,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             // Create goes through
             mockMvc.perform(post("/customers")
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "vat": "%s"
@@ -466,6 +481,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             // Update to same id fails
             mockMvc.perform(patch("/customers/{id}", customer.getId())
                             .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
                             .content("""
                                     {
                                         "vat": "%s"

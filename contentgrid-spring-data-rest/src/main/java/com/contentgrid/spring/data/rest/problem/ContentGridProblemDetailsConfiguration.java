@@ -37,7 +37,12 @@ public class ContentGridProblemDetailsConfiguration {
     }
 
     @Bean
-    ProblemFactory problemFactory(ProblemTypeUrlFactory problemTypeUrlFactory) {
+    ResponseEntityFactory contentGridProblemResponseEntityFactory() {
+        return new ResponseEntityFactory();
+    }
+
+    @Bean
+    ProblemFactory contentGridProblemFactory(ProblemTypeUrlFactory problemTypeUrlFactory) {
         return new ProblemFactory(ProblemTypeMessageSource.getAccessor(), problemTypeUrlFactory);
     }
 
@@ -45,24 +50,27 @@ public class ContentGridProblemDetailsConfiguration {
     @Order(-1)
     ContentGridExceptionHandler contentGridExceptionHandler(
             ProblemFactory problemFactory,
-            JsonPropertyPathConverter jsonPropertyPathConverter) {
+            JsonPropertyPathConverter jsonPropertyPathConverter,
+            ResponseEntityFactory responseEntityFactory
+    ) {
         return new ContentGridExceptionHandler(
                 problemFactory,
                 new MessageSourceAccessor(applicationContext),
-                jsonPropertyPathConverter
+                jsonPropertyPathConverter,
+                responseEntityFactory
         );
     }
 
     @Bean
     @Order(0)
-    SpringDataRestRepositoryExceptionHandler contentGridSpringDataRestRepositoryExceptionHandler() {
-        return new SpringDataRestRepositoryExceptionHandler();
+    SpringDataRestRepositoryExceptionHandler contentGridSpringDataRestRepositoryExceptionHandler(ResponseEntityFactory responseEntityFactory) {
+        return new SpringDataRestRepositoryExceptionHandler(responseEntityFactory);
     }
 
     @Bean
     @Order(0)
-    SpringContentRestExceptionHandler contentGridSpringContentRestRepositoryExceptionHandler() {
-        return new SpringContentRestExceptionHandler();
+    SpringContentRestExceptionHandler contentGridSpringContentRestRepositoryExceptionHandler(ResponseEntityFactory responseEntityFactory) {
+        return new SpringContentRestExceptionHandler(responseEntityFactory);
     }
 
     @RequiredArgsConstructor

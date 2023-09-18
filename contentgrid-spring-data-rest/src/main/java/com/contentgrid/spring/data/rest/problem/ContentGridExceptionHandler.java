@@ -15,14 +15,12 @@ import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.rest.core.RepositoryConstraintViolationException;
 import org.springframework.hateoas.mediatype.problem.Problem;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ControllerAdvice
-@ResponseBody
 @RequiredArgsConstructor
 public class ContentGridExceptionHandler {
 
@@ -35,20 +33,23 @@ public class ContentGridExceptionHandler {
     @NonNull
     private final JsonPropertyPathConverter jsonPropertyPathConverter;
 
+    @NonNull
+    private final ResponseEntityFactory responseEntityFactory;
+
     @ExceptionHandler(ConstraintViolationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    Problem handleConstraintViolation(ConstraintViolationException exception) {
+    ResponseEntity<Problem> handleConstraintViolation(ConstraintViolationException exception) {
         var type = switch (exception.getSQLState()) {
             case "23505" -> ProblemType.UNIQUE_CONSTRAINT_VIOLATION;
             default -> ProblemType.CONSTRAINT_VIOLATION;
         };
-        return problemFactory.createProblem(type, exception.getConstraintName())
-                .withStatus(HttpStatus.CONFLICT);
+        return responseEntityFactory.createResponse(
+                problemFactory.createProblem(type, exception.getConstraintName())
+                        .withStatus(HttpStatus.CONFLICT)
+        );
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    Problem handleRepositoryConstraintViolationException(RepositoryConstraintViolationException ex) {
+    ResponseEntity<Problem> handleRepositoryConstraintViolationException(RepositoryConstraintViolationException ex) {
         var problem = problemFactory.createProblem(ProblemType.VALIDATION_CONSTRAINT_VIOLATION, ex.getErrors().getErrorCount())
                 .withStatus(HttpStatus.BAD_REQUEST);
 
@@ -69,32 +70,34 @@ public class ContentGridExceptionHandler {
                 );
             });
 
-            return problem.withProperties(propertiesBuilder.build());
+            return responseEntityFactory.createResponse(problem.withProperties(propertiesBuilder.build()));
         }
 
-        return problem;
+        return responseEntityFactory.createResponse(problem);
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    Problem handleMappingException(JsonMappingException exception) {
+    ResponseEntity<Problem> handleMappingException(JsonMappingException exception) {
         var problem = problemFactory.createProblem(ProblemType.INVALID_REQUEST_BODY_TYPE)
                 .withStatus(HttpStatus.BAD_REQUEST);
 
         if (exception.getPath().isEmpty()) {
-            return problem;
+            return responseEntityFactory.createResponse(problem);
         } else {
             var jsonPath = exception.getPath().stream().map(Reference::getFieldName).collect(Collectors.joining("."));
-            return problem.withProperties(new FieldViolationProblemProperties(jsonPath));
+            return responseEntityFactory.createResponse(
+                    problem.withProperties(new FieldViolationProblemProperties(jsonPath))
+            );
         }
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    Problem handleJsonParseException(JsonParseException exception) {
-        return problemFactory.createProblem(ProblemType.INVALID_REQUEST_BODY_JSON)
+    ResponseEntity<Problem> handleJsonParseException(JsonParseException exception) {
+        return responseEntityFactory.createResponse(
+                problemFactory.createProblem(ProblemType.INVALID_REQUEST_BODY_JSON)
                 .withStatus(HttpStatus.BAD_REQUEST)
-                .withDetail(formatJacksonError(exception));
+                .withDetail(formatJacksonError(exception))
+        );
     }
 
 
