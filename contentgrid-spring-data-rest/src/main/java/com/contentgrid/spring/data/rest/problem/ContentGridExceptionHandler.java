@@ -1,6 +1,7 @@
 package com.contentgrid.spring.data.rest.problem;
 
 import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties;
+import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties.FieldViolationProblemProperties;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 public class ContentGridExceptionHandler {
 
     @NonNull
-    private final ProblemTypeUrlFactory problemTypeUrlFactory;
+    private final ProblemFactory problemFactory;
 
     @NonNull
     private final MessageSourceAccessor messageSourceAccessor;
@@ -41,33 +42,28 @@ public class ContentGridExceptionHandler {
             case "23505" -> ProblemType.UNIQUE_CONSTRAINT_VIOLATION;
             default -> ProblemType.CONSTRAINT_VIOLATION;
         };
-        return Problem.create()
-                .withStatus(HttpStatus.CONFLICT)
-                .withType(problemTypeUrlFactory.resolve(type))
-                .withTitle(messageSourceAccessor.getMessage(type.withArguments(exception.getConstraintName())))
-                .withDetail(exception.getMessage());
+        return problemFactory.createProblem(type, exception.getConstraintName())
+                .withStatus(HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     Problem handleRepositoryConstraintViolationException(RepositoryConstraintViolationException ex) {
-        var problem = Problem.create()
-                .withType(problemTypeUrlFactory.resolve(ProblemType.VALIDATION_CONSTRAINT_VIOLATION))
-                .withStatus(HttpStatus.BAD_REQUEST)
-                .withTitle(messageSourceAccessor.getMessage(ProblemType.VALIDATION_CONSTRAINT_VIOLATION));
+        var problem = problemFactory.createProblem(ProblemType.VALIDATION_CONSTRAINT_VIOLATION, ex.getErrors().getErrorCount())
+                .withStatus(HttpStatus.BAD_REQUEST);
 
         if (ex.getErrors() instanceof BindingResult bindingResult) {
             var domainType = bindingResult.getTarget().getClass();
             var propertiesBuilder = ConstraintViolationProblemProperties.builder();
 
             bindingResult.getGlobalErrors().forEach(error -> {
-                propertiesBuilder.global(null, messageSourceAccessor.getMessage(error));
+                propertiesBuilder.global(Problem.create().withDetail(messageSourceAccessor.getMessage(error)));
             });
 
             bindingResult.getFieldErrors().forEach(error -> {
                 propertiesBuilder.field(
-                        null,
-                        messageSourceAccessor.getMessage(error),
+                        Problem.create()
+                                .withDetail(messageSourceAccessor.getMessage(error)),
                         jsonPropertyPathConverter.fromJavaPropertyPath(domainType, error.getField()),
                         error.getRejectedValue()
                 );
@@ -82,36 +78,22 @@ public class ContentGridExceptionHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     Problem handleMappingException(JsonMappingException exception) {
-        var propertiesBuilder = ConstraintViolationProblemProperties.builder();
+        var problem = problemFactory.createProblem(ProblemType.INVALID_REQUEST_BODY_TYPE)
+                .withStatus(HttpStatus.BAD_REQUEST);
 
         if (exception.getPath().isEmpty()) {
-            propertiesBuilder.global(
-                    problemTypeUrlFactory.resolve(ProblemType.INVALID_REQUEST_BODY_TYPE),
-                    messageSourceAccessor.getMessage(ProblemType.INVALID_REQUEST_BODY_TYPE)
-            );
+            return problem;
         } else {
             var jsonPath = exception.getPath().stream().map(Reference::getFieldName).collect(Collectors.joining("."));
-            propertiesBuilder.field(
-                    problemTypeUrlFactory.resolve(ProblemType.INVALID_REQUEST_BODY_TYPE),
-                    messageSourceAccessor.getMessage(ProblemType.INVALID_REQUEST_BODY_TYPE),
-                    jsonPath
-            );
+            return problem.withProperties(new FieldViolationProblemProperties(jsonPath));
         }
-
-        return Problem.create()
-                .withStatus(HttpStatus.BAD_REQUEST)
-                .withType(problemTypeUrlFactory.resolve(ProblemType.VALIDATION_CONSTRAINT_VIOLATION))
-                .withTitle(messageSourceAccessor.getMessage(ProblemType.VALIDATION_CONSTRAINT_VIOLATION))
-                .withProperties(propertiesBuilder.build());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     Problem handleJsonParseException(JsonParseException exception) {
-        return Problem.create()
+        return problemFactory.createProblem(ProblemType.INVALID_REQUEST_BODY_JSON)
                 .withStatus(HttpStatus.BAD_REQUEST)
-                .withType(problemTypeUrlFactory.resolve(ProblemType.INVALID_REQUEST_BODY_JSON))
-                .withTitle(messageSourceAccessor.getMessage(ProblemType.INVALID_REQUEST_BODY_JSON))
                 .withDetail(formatJacksonError(exception));
     }
 

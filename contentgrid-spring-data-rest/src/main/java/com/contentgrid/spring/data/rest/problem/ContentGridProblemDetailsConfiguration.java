@@ -37,18 +37,18 @@ public class ContentGridProblemDetailsConfiguration {
     }
 
     @Bean
-    @Order(-1)
-    ContentGridExceptionHandler contentGridExceptionHandler(ProblemTypeUrlFactory problemTypeUrlFactory,
-            JsonPropertyPathConverter jsonPropertyPathConverter) {
-        var problemTypeMessageSource = new ResourceBundleMessageSource();
-        problemTypeMessageSource.setBasename("com.contentgrid.spring.data.rest.problem.messages");
+    ProblemFactory problemFactory(ProblemTypeUrlFactory problemTypeUrlFactory) {
+        return new ProblemFactory(ProblemTypeMessageSource.getAccessor(), problemTypeUrlFactory);
+    }
 
+    @Bean
+    @Order(-1)
+    ContentGridExceptionHandler contentGridExceptionHandler(
+            ProblemFactory problemFactory,
+            JsonPropertyPathConverter jsonPropertyPathConverter) {
         return new ContentGridExceptionHandler(
-                problemTypeUrlFactory,
-                new MessageSourceAccessor(new DelegatingMessageSource(
-                        applicationContext,
-                        problemTypeMessageSource
-                )),
+                problemFactory,
+                new MessageSourceAccessor(applicationContext),
                 jsonPropertyPathConverter
         );
     }

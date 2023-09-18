@@ -5,7 +5,7 @@ import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSourceResolvable;
 
-public enum ProblemType implements MessageSourceResolvable, ProblemTypeResolvable {
+public enum ProblemType implements ProblemTypeResolvable {
     VALIDATION_CONSTRAINT_VIOLATION("integrity", "validation-constraint-violation"),
     CONSTRAINT_VIOLATION("integrity", "constraint-violation"),
     UNIQUE_CONSTRAINT_VIOLATION("integrity", "constraint-violation", "unique"),
@@ -21,46 +21,48 @@ public enum ProblemType implements MessageSourceResolvable, ProblemTypeResolvabl
     private final static String CLASSNAME = ProblemType.class.getName();
 
     final String[] params;
-    private String[] codes = null;
 
     @Override
     public String[] getProblemHierarchy() {
         return params;
     }
 
-    @Override
-    public String[] getCodes() {
-        if (this.codes == null) {
-            var paramsList = Arrays.asList(params);
-            var codes = new String[this.params.length];
+    public MessageSourceResolvable forTitle() {
+        return new ProblemDetailsMessageSourceResolvable(CLASSNAME+".title", this, new Object[0]);
 
-            for (int i = codes.length; i > 0; i--) {
-                codes[codes.length - i] = CLASSNAME + "." + String.join(".", paramsList.subList(0, i));
-            }
-            this.codes = codes;
-            return codes;
-        }
-        return this.codes;
     }
 
-    public MessageSourceResolvable withArguments(Object... arguments) {
-        return new DelegatingMessageSourceResolvableWithArguments(this, arguments);
+    public MessageSourceResolvable forDetails(Object... arguments) {
+        return new ProblemDetailsMessageSourceResolvable(CLASSNAME+".detail", this, arguments);
     }
 
     @RequiredArgsConstructor
-    private static class DelegatingMessageSourceResolvableWithArguments implements MessageSourceResolvable {
+    private static class ProblemDetailsMessageSourceResolvable implements MessageSourceResolvable {
+        private final String prefix;
 
-        private final MessageSourceResolvable resolvable;
+        private final ProblemType problemType;
+
         private final Object[] arguments;
 
         @Override
         public String[] getCodes() {
-            return resolvable.getCodes();
+            var paramsList = Arrays.asList(problemType.params);
+            var codes = new String[problemType.params.length];
+
+            for (int i = codes.length; i > 0; i--) {
+                codes[codes.length - i] = prefix + "." + String.join(".", paramsList.subList(0, i));
+            }
+            return codes;
         }
 
         @Override
         public Object[] getArguments() {
             return arguments;
+        }
+
+        @Override
+        public String getDefaultMessage() {
+            return ProblemTypeMessageSource.getAccessor().getMessage(this);
         }
     }
 }

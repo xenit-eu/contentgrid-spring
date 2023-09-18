@@ -142,10 +142,8 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """)
                     )
-                    .andExpect(validationConstraintViolation()
-                            .withError(error -> error.withProperty("total_spend")
-                                    .withType(PROBLEM_TYPE_PREFIX + "invalid-request-body/type")
-                            )
+                    .andExpect(problemDetails()
+                            .withType(PROBLEM_TYPE_PREFIX+"invalid-request-body/type")
                     );
 
         }
@@ -162,10 +160,8 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """)
                     )
-                    .andExpect(validationConstraintViolation()
-                            .withError(error -> error.withProperty("content")
-                                    .withType(PROBLEM_TYPE_PREFIX + "invalid-request-body/type")
-                            )
+                    .andExpect(problemDetails()
+                            .withType(PROBLEM_TYPE_PREFIX+"invalid-request-body/type")
                     );
         }
 
@@ -181,10 +177,8 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """)
                     )
-                    .andExpect(validationConstraintViolation()
-                            .withError(error -> error.withProperty("birthday")
-                                    .withType(PROBLEM_TYPE_PREFIX + "invalid-request-body/type")
-                            )
+                    .andExpect(problemDetails()
+                            .withType(PROBLEM_TYPE_PREFIX+"invalid-request-body/type")
                     );
         }
 
@@ -200,10 +194,9 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                     }
                                     """)
                     )
-                    .andExpect(validationConstraintViolation()
-                            .withError(error -> error.withProperty("counterparty")
-                            )
-                    )
+                    .andExpect(problemDetails()
+                            .withType(PROBLEM_TYPE_PREFIX+"invalid-request-body/type")
+                    );
             ;
         }
 
