@@ -49,6 +49,16 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                     assertThat(contentFilename.isReadOnly()).isFalse();
                     assertThat(contentFilename.isRequired()).isFalse();
                 },
+                birthday -> {
+                    assertThat(birthday.getName()).isEqualTo("birthday");
+                    assertThat(birthday.isReadOnly()).isFalse();
+                    assertThat(birthday.isRequired()).isFalse();
+                },
+                totalSpend -> {
+                    assertThat(totalSpend.getName()).isEqualTo("total_spend");
+                    assertThat(totalSpend.isReadOnly()).isFalse();
+                    assertThat(totalSpend.isRequired()).isFalse();
+                },
                 orders -> {
                     assertThat(orders.getName()).isEqualTo("orders");
                 },

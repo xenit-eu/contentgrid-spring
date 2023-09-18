@@ -6,6 +6,8 @@ import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
 import com.contentgrid.spring.test.fixture.invoicing.model.support.Content;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -39,6 +41,7 @@ public class Customer {
 
     @Column(unique=true, nullable = false)
     @CollectionFilterParam(predicate = EqualsIgnoreCase.class)
+    @NotNull
     private String vat;
 
     @Embedded
@@ -49,6 +52,11 @@ public class Customer {
     @RestResource(linkRel = "d:content", path = "content")
     @CollectionFilterParam
     private Content content;
+
+    private Instant birthday;
+
+    @JsonProperty("total_spend")
+    private Integer totalSpend;
 
     @OneToMany(mappedBy = "customer")
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:orders")

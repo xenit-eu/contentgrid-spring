@@ -4,6 +4,7 @@ import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,10 +25,11 @@ public class Refund {
     @JsonProperty(access = Access.READ_ONLY)
     private UUID id;
 
-    @OneToOne
+    @OneToOne(optional = false)
     @CollectionFilterParam
     @CollectionFilterParam(predicate = EntityId.class, documented = false)
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:invoice")
+    @NotNull
     private Invoice invoice;
 
 }

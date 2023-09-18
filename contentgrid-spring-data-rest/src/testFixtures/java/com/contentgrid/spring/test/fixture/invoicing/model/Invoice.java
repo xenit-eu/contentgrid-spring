@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.OneToOne;
+import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -41,6 +42,7 @@ public class Invoice {
 
     @Column(nullable = false)
     @CollectionFilterParam(predicate = EqualsIgnoreCase.class)
+    @NotNull
     private String number;
 
     private boolean draft;
@@ -89,6 +91,7 @@ public class Invoice {
     @JoinColumn(name = "counterparty", nullable = false)
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:counterparty")
     @CollectionFilterParam(predicate = EntityId.class, documented = false)
+    @NotNull
     private Customer counterparty;
 
     @OneToMany

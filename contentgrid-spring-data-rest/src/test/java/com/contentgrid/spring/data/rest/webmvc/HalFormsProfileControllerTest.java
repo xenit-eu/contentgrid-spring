@@ -65,6 +65,14 @@ class HalFormsProfileControllerTest {
                                             type: "text"
                                         },
                                         {
+                                            name: "birthday"
+                                            #, type: "datetime"
+                                        },
+                                        {
+                                            name: "total_spend",
+                                            type: "number"
+                                        },
+                                        {
                                             name: "orders",
                                             type: "url",
                                             options: {
