@@ -9,6 +9,7 @@ import com.querydsl.core.types.dsl.BooleanPath;
 import com.querydsl.core.types.dsl.ComparablePath;
 import com.querydsl.core.types.dsl.EntityPathBase;
 import com.querydsl.core.types.dsl.ListPath;
+import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.core.types.dsl.PathInits;
 import com.querydsl.core.types.dsl.SetPath;
 import com.querydsl.core.types.dsl.StringPath;
@@ -43,6 +44,7 @@ public class QTestObject extends EntityPathBase<TestObject> {
 
     public final StringPath stringValue = createString("stringValue");
     public final TimePath<Instant> timeValue = createTime("timeValue", Instant.class);
+    public final NumberPath<Integer> intValue = createNumber("intValue", Integer.class);
     public final BooleanPath booleanValue = createBoolean("booleanValue");
     public final ComparablePath<UUID> uuidValue = createComparable("uuidValue", UUID.class);
 
