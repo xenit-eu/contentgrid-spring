@@ -38,14 +38,13 @@ public class ContentGridExceptionHandler {
 
     @ExceptionHandler(ConstraintViolationException.class)
     ResponseEntity<Problem> handleConstraintViolation(ConstraintViolationException exception) {
-        var type = switch (exception.getSQLState()) {
-            case "23505" -> ProblemType.UNIQUE_CONSTRAINT_VIOLATION;
-            default -> ProblemType.CONSTRAINT_VIOLATION;
+        var problem = switch (exception.getSQLState()) {
+            case "23505", "23P01" -> problemFactory.createProblem(ProblemType.DUPLICATE_VALUE, exception.getConstraintName())
+                    .withStatus(HttpStatus.CONFLICT);
+            default -> problemFactory.createProblem(ProblemType.CONSTRAINT_VIOLATION, exception.getConstraintName())
+                    .withStatus(HttpStatus.BAD_REQUEST);
         };
-        return responseEntityFactory.createResponse(
-                problemFactory.createProblem(type, exception.getConstraintName())
-                        .withStatus(HttpStatus.CONFLICT)
-        );
+        return responseEntityFactory.createResponse(problem);
     }
 
     @ExceptionHandler

@@ -8,7 +8,7 @@ import org.springframework.context.MessageSourceResolvable;
 public enum ProblemType implements ProblemTypeResolvable {
     VALIDATION_CONSTRAINT_VIOLATION("integrity", "validation-constraint-violation"),
     CONSTRAINT_VIOLATION("integrity", "constraint-violation"),
-    UNIQUE_CONSTRAINT_VIOLATION("integrity", "constraint-violation", "unique"),
+    DUPLICATE_VALUE("integrity", "constraint-violation", "duplicate-value"),
 
     INVALID_REQUEST_BODY("invalid-request-body"),
     INVALID_REQUEST_BODY_TYPE("invalid-request-body", "type"),

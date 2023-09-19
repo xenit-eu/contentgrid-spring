@@ -394,7 +394,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
             // This customer is linked to the invoice
             mockMvc.perform(delete("/customers/{id}", invoice.getCounterparty().getId()))
                     .andExpect(problemDetails()
-                            .withStatusCode(HttpStatus.CONFLICT)
+                            .withStatusCode(HttpStatus.BAD_REQUEST)
                             .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation")
                     );
         }
@@ -412,7 +412,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
 
             mockMvc.perform(delete("/invoices/{id}", invoice.getId()))
                     .andExpect(problemDetails()
-                            .withStatusCode(HttpStatus.CONFLICT)
+                            .withStatusCode(HttpStatus.BAD_REQUEST)
                             .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation")
                     );
         }
@@ -457,7 +457,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     )
                     .andExpect(problemDetails()
                             .withStatusCode(HttpStatus.CONFLICT)
-                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation/unique")
+                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation/duplicate-value")
                     );
         }
 
@@ -490,7 +490,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     )
                     .andExpect(problemDetails()
                             .withStatusCode(HttpStatus.CONFLICT)
-                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation/unique")
+                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation/duplicate-value")
                     );
         }
 
