@@ -5,6 +5,7 @@ import com.contentgrid.spring.data.rest.hal.ContentGridCurieConfiguration;
 import com.contentgrid.spring.data.rest.hal.CurieProviderCustomizer;
 import com.contentgrid.spring.data.rest.links.ContentGridSpringContentRestLinksConfiguration;
 import com.contentgrid.spring.data.rest.links.ContentGridSpringDataLinksConfiguration;
+import com.contentgrid.spring.data.rest.problem.ContentGridProblemDetailsConfiguration;
 import com.contentgrid.spring.data.rest.validation.ContentGridSpringDataRestValidationConfiguration;
 import com.contentgrid.spring.data.rest.webmvc.ContentGridSpringDataRestProfileConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -28,7 +29,8 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguratio
         ContentGridSpringDataRestConfiguration.class,
         ContentGridSpringDataRestProfileConfiguration.class,
         ContentGridSpringDataRestAffordancesConfiguration.class,
-        ContentGridSpringDataRestValidationConfiguration.class
+        ContentGridSpringDataRestValidationConfiguration.class,
+        ContentGridProblemDetailsConfiguration.class
 })
 @AutoConfigureAfter(
         name = {

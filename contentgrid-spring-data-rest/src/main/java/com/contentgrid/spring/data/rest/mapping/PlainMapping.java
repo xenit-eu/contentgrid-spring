@@ -9,13 +9,13 @@ import java.lang.annotation.Target;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
- * Qualifier annotation for {@link DomainTypeMapping} that relates to search query parameters
+ * Qualifier annotation for {@link DomainTypeMapping} that relates to a plain mapping that does not change property names
  */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
 @Qualifier
-public @interface SearchMapping {
-
+public @interface PlainMapping {
+    boolean followingAssociations() default false;
 }
