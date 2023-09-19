@@ -17,7 +17,7 @@ public class InvoicingApplication {
 
     @Bean
     CurieProviderCustomizer datamodelCurieProviderCustomizer() {
-        return CurieProviderCustomizer.register("d", "https://contentgrid.com/rels/datamodel/{rel}");
+        return CurieProviderCustomizer.register("d", "https://contentgrid.cloud/rels/datamodel/{rel}");
     }
 
     @TestConfiguration(proxyBeanMethods = false)
