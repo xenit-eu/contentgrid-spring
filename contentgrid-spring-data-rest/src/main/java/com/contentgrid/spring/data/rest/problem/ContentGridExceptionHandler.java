@@ -41,7 +41,7 @@ public class ContentGridExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     ResponseEntity<Problem> handleConstraintViolation(ConstraintViolationException exception) {
         var problem = switch (exception.getSQLState()) {
-            case "23505", "23P01" -> problemFactory.createProblem(ProblemType.DUPLICATE_VALUE, exception.getConstraintName())
+            case "23505", "23P01" -> problemFactory.createProblem(ProblemType.INPUT_DUPLICATE_VALUE, exception.getConstraintName())
                     .withStatus(HttpStatus.CONFLICT);
             default -> problemFactory.createProblem(ProblemType.CONSTRAINT_VIOLATION, exception.getConstraintName())
                     .withStatus(HttpStatus.BAD_REQUEST);
@@ -51,7 +51,7 @@ public class ContentGridExceptionHandler {
 
     @ExceptionHandler
     ResponseEntity<Problem> handleRepositoryConstraintViolationException(RepositoryConstraintViolationException ex) {
-        var problem = problemFactory.createProblem(ProblemType.VALIDATION_CONSTRAINT_VIOLATION, ex.getErrors().getErrorCount())
+        var problem = problemFactory.createProblem(ProblemType.INPUT_VALIDATION, ex.getErrors().getErrorCount())
                 .withStatus(HttpStatus.BAD_REQUEST);
 
         if (ex.getErrors() instanceof BindingResult bindingResult) {
