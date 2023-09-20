@@ -99,7 +99,7 @@ public final class ProblemDetailsMockMvcMatchers {
 
         private final static ProblemDetailsMatcher PROBLEM_DETAILS_MATCHER = new ProblemDetailsMatcher()
                 .withStatusCode(HttpStatus.BAD_REQUEST)
-                .withType("https://contentgrid.cloud/problems/integrity/validation-constraint-violation");
+                .withType("https://contentgrid.cloud/problems/input/validation");
 
         @With(AccessLevel.PRIVATE)
         private final List<ErrorDescription> errors;

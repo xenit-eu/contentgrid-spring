@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSourceResolvable;
 
 public enum ProblemType implements ProblemTypeResolvable {
-    VALIDATION_CONSTRAINT_VIOLATION("integrity", "validation-constraint-violation"),
+    INPUT_VALIDATION( "input", "validation"),
+    INPUT_DUPLICATE_VALUE("input", "duplicate-value"),
     CONSTRAINT_VIOLATION("integrity", "constraint-violation"),
-    DUPLICATE_VALUE("integrity", "constraint-violation", "duplicate-value"),
 
     INVALID_REQUEST_BODY("invalid-request-body"),
     INVALID_REQUEST_BODY_TYPE("invalid-request-body", "type"),
