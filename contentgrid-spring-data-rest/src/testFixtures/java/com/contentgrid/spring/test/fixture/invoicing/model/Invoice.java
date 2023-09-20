@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.contentgrid.spring.data.rest.validation.OnEntityDelete;
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -103,6 +105,8 @@ public class Invoice {
 
     @OneToOne(mappedBy = "invoice")
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:refund")
+    @Null(groups = OnEntityDelete.class)
+    // Refund#invoice is required, this constraint ensures that there is no refund linked when deleting the invoice
     private Refund refund;
 
     public Invoice(String number, boolean draft, boolean paid, Customer counterparty, Set<Order> orders) {

@@ -56,4 +56,25 @@ public class BeanValidationRepositoryEventListener extends AbstractRepositoryEve
         validate(parent);
     }
 
+    @Override
+    protected void onBeforeDelete(Object entity) {
+        ensureDirectAssociationsInitialized(entity);
+        validate(entity, OnEntityDelete.class);
+    }
+
+    /**
+     * When validating an object before deletion, we need to ensure that its associations are fully initialized.
+     * Hibernate Validator ignores constraints on fields that are not loaded by the ORM, but we need the validations on
+     * those fields to ensure that the entity that we're deleting is not the target of a required association.
+     */
+    private void ensureDirectAssociationsInitialized(Object entity) {
+        persistentEntities.getRequiredPersistentEntity(entity.getClass())
+                .doWithAssociations((SimpleAssociationHandler) association -> {
+                    // fixme: we don't really need to initialize all associations, just the ones that have validation constraints.
+                    //  However, which ones those are is a bit hard to determine, so right now all associations are initialized.
+                    Hibernate.initialize(association.getInverse()
+                            .getAccessorForOwner(entity)
+                            .getProperty(association.getInverse()));
+                });
+    }
 }
