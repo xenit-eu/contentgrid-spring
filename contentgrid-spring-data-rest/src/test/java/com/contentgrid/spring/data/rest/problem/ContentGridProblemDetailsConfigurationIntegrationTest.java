@@ -455,7 +455,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     )
                     .andExpect(problemDetails()
                             .withStatusCode(HttpStatus.CONFLICT)
-                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation/duplicate-value")
+                            .withType(PROBLEM_TYPE_PREFIX + "input/duplicate-value")
                     );
         }
 
@@ -488,7 +488,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     )
                     .andExpect(problemDetails()
                             .withStatusCode(HttpStatus.CONFLICT)
-                            .withType(PROBLEM_TYPE_PREFIX + "integrity/constraint-violation/duplicate-value")
+                            .withType(PROBLEM_TYPE_PREFIX + "input/duplicate-value")
                     );
         }
 
