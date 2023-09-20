@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 
@@ -34,7 +35,9 @@ public class PredicateFactoryTester<Q extends EntityPathBase<?>> {
     }
 
     @RequiredArgsConstructor
+    @ToString
     public static class CuriedPredicateFactory<P extends Path<?>, T> {
+        @Getter
         private final P path;
         private final QuerydslPredicateFactory<P, T> factory;
 
@@ -52,7 +55,6 @@ public class PredicateFactoryTester<Q extends EntityPathBase<?>> {
         public Stream<Path<?>> boundPaths() {
             return factory.boundPaths(path);
         }
-
     }
 
 }
