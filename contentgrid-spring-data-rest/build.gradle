@@ -54,7 +54,7 @@ dependencies {
 
     testFixturesCompileOnly 'org.projectlombok:lombok'
     testFixturesImplementation 'org.springframework.boot:spring-boot-testcontainers'
-    testFixturesImplementation 'org.testcontainers:postgresql:1.19.0'
+    testFixturesImplementation 'org.testcontainers:postgresql:1.19.1'
 
 
     testFixturesRuntimeOnly 'org.postgresql:postgresql'
