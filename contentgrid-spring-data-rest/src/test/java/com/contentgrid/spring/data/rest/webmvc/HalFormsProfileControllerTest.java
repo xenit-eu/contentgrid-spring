@@ -65,8 +65,8 @@ class HalFormsProfileControllerTest {
                                             type: "text"
                                         },
                                         {
-                                            name: "birthday"
-                                            #, type: "datetime"
+                                            name: "birthday",
+                                            type: "datetime-local"
                                         },
                                         {
                                             name: "total_spend",
@@ -121,8 +121,8 @@ class HalFormsProfileControllerTest {
                                             type: "text"
                                         },
                                         {
-                                            name: "invoices.paid"
-                                        # ,type: "checkbox"
+                                            name: "invoices.paid",
+                                            type: "checkbox"
                                         },
                                         # invoices.content.length does not run against the max depth limit because
                                         # they are static parameters on a field at depth 1
