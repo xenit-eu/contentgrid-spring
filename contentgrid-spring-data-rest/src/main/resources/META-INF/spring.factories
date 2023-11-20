@@ -1,0 +1,2 @@
+org.springframework.hateoas.mediatype.InputTypeFactory=\
+ com.contentgrid.spring.data.rest.mediatype.html.ContentGridHtmlInputTypeFactory
