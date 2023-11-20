@@ -11,7 +11,8 @@ import org.springframework.lang.Nullable;
  * An extended {@link InputTypeFactory} based on {@link HtmlInputType}, with additional support
  * for a set of unmapped types:
  * <ul>
- *     <li></li>
+ *     <li>{@link Boolean} maps to {@code checkbox}</li>
+ *     <li>{@link Instant} maps to {@code datetime-local}</li>
  * </ul>
  */
 @Slf4j
