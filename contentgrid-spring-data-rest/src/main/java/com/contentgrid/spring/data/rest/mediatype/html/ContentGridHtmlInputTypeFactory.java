@@ -12,7 +12,7 @@ import org.springframework.lang.Nullable;
  * for a set of unmapped types:
  * <ul>
  *     <li>{@link Boolean} maps to {@code checkbox}</li>
- *     <li>{@link Instant} maps to {@code datetime-local}</li>
+ *     <li>{@link Instant} maps to {@code datetime}</li>
  * </ul>
  */
 @Slf4j
@@ -29,7 +29,7 @@ class ContentGridHtmlInputTypeFactory implements InputTypeFactory {
 		}
 
 		if (Instant.class.equals(type)) {
-			inputType = HtmlInputType.DATETIME_LOCAL;
+			return "datetime";
 		}
 
 		if (inputType == null) {
