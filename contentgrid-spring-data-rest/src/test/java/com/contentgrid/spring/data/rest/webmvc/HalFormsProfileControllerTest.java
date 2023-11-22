@@ -66,7 +66,7 @@ class HalFormsProfileControllerTest {
                                         },
                                         {
                                             name: "birthday",
-                                            type: "datetime-local"
+                                            type: "datetime"
                                         },
                                         {
                                             name: "total_spend",
