@@ -9,7 +9,7 @@ javaPlatform {
 
 
 dependencies {
-    api platform('org.springframework.boot:spring-boot-dependencies:3.1.5')
+    api platform('org.springframework.boot:spring-boot-dependencies:3.1.6')
     api platform('com.contentgrid.thunx:thunx-bom:0.9.0')
     api platform('com.github.paulcwarren:spring-content-bom:3.0.6')
 
