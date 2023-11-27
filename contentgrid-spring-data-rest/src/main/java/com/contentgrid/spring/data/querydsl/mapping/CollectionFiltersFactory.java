@@ -10,6 +10,7 @@ import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
 import com.contentgrid.spring.querydsl.mapping.CollectionFilters;
 import com.querydsl.core.types.Path;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -33,13 +34,9 @@ class CollectionFiltersFactory {
     private final PathNavigator pathNavigator;
 
     public CollectionFilters createFilters() {
-        return new CollectionFiltersImpl(filters().collect(Collectors.toUnmodifiableMap(
-                CollectionFilter::getFilterName,
-                Function.identity(),
-                (a, b) -> {
-                    throw new IllegalStateException("Duplicate filter name '%s' mapping to paths '%s' and '%s'".formatted(a.getFilterName(), a.getPath(), b.getPath()));
-                }
-        )));
+        LinkedHashMap<String, CollectionFilter<?>> orderedMap = new LinkedHashMap<>();
+        filters().forEachOrdered(filter -> orderedMap.put(filter.getFilterName(), filter));
+        return new CollectionFiltersImpl(orderedMap);
     }
 
     private Stream<CollectionFilter<?>> filters() {
