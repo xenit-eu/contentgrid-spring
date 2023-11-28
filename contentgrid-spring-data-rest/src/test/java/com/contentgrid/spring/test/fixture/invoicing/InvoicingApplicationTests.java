@@ -370,6 +370,14 @@ class InvoicingApplicationTests {
                 assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isEmpty();
             }
 
+            @Test
+            void deleteInvoice_withContent_shouldReturn_http204_ok() throws Exception {
+                mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
+                        .andExpect(status().isNoContent());
+
+                assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isEmpty();
+            }
+
         }
     }
 
