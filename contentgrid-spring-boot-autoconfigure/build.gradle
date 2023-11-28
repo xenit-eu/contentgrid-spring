@@ -1,24 +1,15 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'eclipse'
 }
 
 configurations {
-    eclipseExtraClasspath.extendsFrom compileOnly
-    
     compileOnly {
         extendsFrom(annotationProcessor)
     }
 
     testAnnotationProcessor {
         extendsFrom(annotationProcessor)
-    }
-}
-
-eclipse {
-    classpath {
-        plusConfigurations += [ configurations.eclipseExtraClasspath ]
     }
 }
 
