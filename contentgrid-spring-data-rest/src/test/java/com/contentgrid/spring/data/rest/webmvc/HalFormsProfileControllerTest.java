@@ -1,6 +1,7 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -269,4 +270,18 @@ class HalFormsProfileControllerTest {
                     """));
     }
 
+    @Test
+    void profileController_orderedSearchParams() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/customers")
+                        .accept(MediaTypes.HAL_FORMS_JSON)
+                ).andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[0].name", Matchers.is("vat")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[1].name", Matchers.is("content.size")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[2].name", Matchers.is("content.mimetype")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[3].name", Matchers.is("content.filename")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[4].name", Matchers.is("invoices.number")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[5].name", Matchers.is("invoices.paid")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[6].name", Matchers.is("invoices.content.length")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[7].name", Matchers.is("invoices.orders.id")));
+    }
 }
