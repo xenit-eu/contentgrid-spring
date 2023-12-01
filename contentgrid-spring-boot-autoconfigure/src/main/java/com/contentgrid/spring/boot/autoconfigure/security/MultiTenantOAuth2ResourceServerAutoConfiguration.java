@@ -33,7 +33,7 @@ class MultiTenantOAuth2ResourceServerAutoConfiguration {
     @Bean
     @ConditionalOnBean(JwtIssuerAuthenticationManagerResolver.class)
     SecurityFilterChain jwtIssuerSecurityFilterChain(HttpSecurity http,
-            AuthenticationManagerResolver<HttpServletRequest> authManagerResolver) throws Exception {
+            JwtIssuerAuthenticationManagerResolver authManagerResolver) throws Exception {
         http.authorizeHttpRequests((requests) -> requests.anyRequest().authenticated());
 
         // contentgrid multi-jwt issuer-uris
