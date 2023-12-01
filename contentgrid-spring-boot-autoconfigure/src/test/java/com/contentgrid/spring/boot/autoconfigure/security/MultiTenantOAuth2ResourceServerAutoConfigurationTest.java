@@ -28,7 +28,6 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcAutoConfiguration;
 import org.springframework.boot.test.context.assertj.AssertableWebApplicationContext;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.http.HttpHeaders;
@@ -61,9 +60,7 @@ class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
                     SecurityAutoConfiguration.class,
                     OAuth2ResourceServerAutoConfiguration.class,
                     MultiTenantOAuth2ResourceServerAutoConfiguration.class
-            ))
-//            .withUserConfiguration(TestConfig.class)
-            ;
+            ));
     final static OidcTestServer OIDC_SERVER = new OidcTestServer();
 
     @BeforeAll
