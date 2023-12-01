@@ -23,7 +23,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @ConditionalOnWebApplication(type = Type.SERVLET)
 class MultiTenantOAuth2ResourceServerAutoConfiguration {
 
-
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty("contentgrid.security.oauth2.trusted-jwt-issuers[0]")
@@ -42,38 +41,4 @@ class MultiTenantOAuth2ResourceServerAutoConfiguration {
 
         return http.build();
     }
-//
-//    @ConditionalOnBean(AuthenticationManagerResolver.class)
-//    @Conditional(OAuth2ResourceServerJwtConfigurationAvailable.class)
-//    @Configuration
-//    static class Guard {
-//
-//        @PostConstruct
-//        void verifyDuplicate() {
-//            throw new RuntimeException("Configuration properties 'contentgrid.security.oauth2' and 'spring.security.oauth2.resourceserver.jwt' cannot be used at the same time");
-//        }
-//    }
-
-//    static class OAuth2ResourceServerJwtConfigurationAvailable extends AnyNestedCondition {
-//
-//        OAuth2ResourceServerJwtConfigurationAvailable() {
-//            super(ConfigurationPhase.REGISTER_BEAN);
-//        }
-//
-//        @ConditionalOnProperty(name = "spring.security.oauth2.resourceserver.jwt.jwk-set-uri")
-//        static class JwkKeySetUriPropertiesAvailable {
-//
-//        }
-//
-//        @Conditional(KeyValueCondition.class)
-//        static class JwtPublicKeyValuePropertiesAvailable {
-//
-//        }
-//
-//        @Conditional(IssuerUriCondition.class)
-//        static class IssuerUriPropertiesAvailable {
-//
-//        }
-//
-//    }
 }

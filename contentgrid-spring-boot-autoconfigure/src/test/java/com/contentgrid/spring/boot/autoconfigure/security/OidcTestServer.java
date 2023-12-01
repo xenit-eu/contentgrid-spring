@@ -23,7 +23,6 @@ import org.springframework.http.MediaType;
 @RequiredArgsConstructor
 class OidcTestServer {
 
-
     final static WireMockServer WIREMOCK;
 
     static {
