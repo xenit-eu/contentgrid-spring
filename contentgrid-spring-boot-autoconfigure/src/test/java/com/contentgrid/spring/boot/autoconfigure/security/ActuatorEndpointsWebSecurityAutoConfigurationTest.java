@@ -83,6 +83,7 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
     WebApplicationContextRunner runner = new WebApplicationContextRunner(
             AnnotationConfigServletWebServerApplicationContext::new)
             .withPropertyValues(
+                    "server.port=0",
                     "management.endpoints.web.exposure.include=*"
             )
             .withInitializer(new ServerPortInfoApplicationContextInitializer())
@@ -201,8 +202,8 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
 
         @Override
         @Nullable
-        public RequestPostProcessor beforeMockMvcCreated(ConfigurableMockMvcBuilder<?> builder,
-                WebApplicationContext cxt) {
+        public RequestPostProcessor beforeMockMvcCreated(@NonNull ConfigurableMockMvcBuilder<?> builder,
+                @NonNull WebApplicationContext cxt) {
             return request -> {
                 request.setRemoteAddr(remoteAddress.getHostAddress());
                 request.setRemoteHost(remoteAddress.getHostName());
