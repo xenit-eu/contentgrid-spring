@@ -60,7 +60,9 @@ public class ActuatorEndpointsWebSecurityAutoConfiguration {
     SecurityFilterChain actuatorEndpointsSecurityFilterChain(HttpSecurity http, Environment environment)
             throws Exception {
 
-        http.authorizeHttpRequests((requests) -> requests.requestMatchers(
+        http
+                .securityMatcher(EndpointRequest.toAnyEndpoint())
+                .authorizeHttpRequests((requests) -> requests.requestMatchers(
                         PUBLIC_ENDPOINTS,
                         new AndRequestMatcher(
                                 METRICS_ENDPOINTS,
