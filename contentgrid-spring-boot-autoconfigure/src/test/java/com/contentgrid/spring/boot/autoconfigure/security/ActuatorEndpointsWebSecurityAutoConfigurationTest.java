@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 import com.contentgrid.spring.boot.autoconfigure.security.ManagementContextSupplierConfiguration.ManagementContextSupplier;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -35,9 +37,11 @@ import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebSe
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.reactive.server.StatusAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.ConfigurableMockMvcBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcConfigurer;
@@ -83,6 +87,7 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
     WebApplicationContextRunner runner = new WebApplicationContextRunner(
             AnnotationConfigServletWebServerApplicationContext::new)
             .withPropertyValues(
+                    "server.port=0",
                     "management.endpoints.web.exposure.include=*"
             )
             .withInitializer(new ServerPortInfoApplicationContextInitializer())
@@ -116,6 +121,18 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
                 // root forbidden
                 assertHttp.get(ACTUATOR_ROOT).isForbidden();
             });
+
+            // security matcher on /actuator/** and only /actuator/** endpoints
+            assertThat(context.getBean("actuatorEndpointsSecurityFilterChain", SecurityFilterChain.class))
+                    .isNotNull()
+                    .satisfies(filterChain -> {
+                        var servletContext = context.getServletContext();
+                        assertThat(context.getServletContext()).isNotNull();
+
+                        assertThat(filterChain.matches(get("/actuator", servletContext))).isTrue();
+                        assertThat(filterChain.matches(get("/actuator/health", servletContext))).isTrue();
+                        assertThat(filterChain.matches(get("/api", servletContext))).isFalse();
+                    });
         });
     }
 
@@ -123,9 +140,7 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
     void whenManagementOnDifferentPort() {
 
         runner.withPropertyValues("management.server.port=0")
-
                 .run(context -> {
-
                     assertThat(context)
                             .hasNotFailed()
                             .hasBean("actuatorEndpointsSecurityFilterChain");
@@ -144,6 +159,25 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
                         // root forbidden
                         assertHttp.get(ACTUATOR_ROOT).isForbidden();
                     });
+
+                    // security matcher on /actuator/** on management port only
+                    assertThat(context.getBean("actuatorEndpointsSecurityFilterChain", SecurityFilterChain.class))
+                            .isNotNull()
+                            .satisfies(filterChain -> {
+                                var servletContext = context.getServletContext();
+                                assertThat(context.getServletContext()).isNotNull();
+
+                                assertThat(filterChain.matches(get("/actuator", servletContext))).isFalse();
+                                assertThat(filterChain.matches(get("/actuator/health", servletContext))).isFalse();
+                                assertThat(filterChain.matches(get("/api", servletContext))).isFalse();
+
+                                // management context runs on a different port
+                                var mgmtServletContext = context.getBean(ManagementContextSupplier.class).get().getServletContext();
+                                assertThat(filterChain.matches(get("/actuator", mgmtServletContext))).isTrue();
+                                assertThat(filterChain.matches(get("/actuator/health", mgmtServletContext))).isTrue();
+                                assertThat(filterChain.matches(get("/api", mgmtServletContext))).isFalse();
+
+                            });
                 });
     }
 
@@ -156,7 +190,7 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
                     .hasBean("actuatorEndpointsSecurityFilterChain");
 
             withWebTestClient(context, remoteAddress("localhost"), assertHttp -> {
-                // all /actuator endpoitns allowed when from a loopback address
+                // all /actuator endpoints allowed when from a loopback address
                 assertHttp.get(ACTUATOR_HEALTH).isOk();
                 assertHttp.get(ACTUATOR_INFO).isOk();
                 assertHttp.get(ACTUATOR_METRICS).isOk();
@@ -164,6 +198,18 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
 
                 assertHttp.get(ACTUATOR_ROOT).isOk();
             });
+
+            // should match /actuator/** and only /actuator/** endpoints
+            assertThat(context.getBean("actuatorEndpointsSecurityFilterChain", SecurityFilterChain.class))
+                    .isNotNull()
+                    .satisfies(filterChain -> {
+                        var servletContext = context.getServletContext();
+                        assertThat(context.getServletContext()).isNotNull();
+
+                        assertThat(filterChain.matches(get("/actuator", servletContext))).isTrue();
+                        assertThat(filterChain.matches(get("/actuator/health", servletContext))).isTrue();
+                        assertThat(filterChain.matches(get("/api", servletContext))).isFalse();
+                    });
         });
     }
 
@@ -179,6 +225,10 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
 
         callback.accept((@NonNull String endpoint) ->
                 client.get().uri(endpoint).accept(MediaType.APPLICATION_JSON).exchange().expectStatus());
+    }
+
+    private static HttpServletRequest get(String endpoint, ServletContext servletContext) {
+        return MockMvcRequestBuilders.get(endpoint).buildRequest(servletContext);
     }
 
     @FunctionalInterface
@@ -201,8 +251,8 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
 
         @Override
         @Nullable
-        public RequestPostProcessor beforeMockMvcCreated(ConfigurableMockMvcBuilder<?> builder,
-                WebApplicationContext cxt) {
+        public RequestPostProcessor beforeMockMvcCreated(@NonNull ConfigurableMockMvcBuilder<?> builder,
+                @NonNull WebApplicationContext cxt) {
             return request -> {
                 request.setRemoteAddr(remoteAddress.getHostAddress());
                 request.setRemoteHost(remoteAddress.getHostName());
