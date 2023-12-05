@@ -33,7 +33,7 @@ class ContentGridHtmlInputTypeFactory implements InputTypeFactory {
 		}
 
 		if (inputType == null) {
-			log.warn("Type {} not mapped", type.getSimpleName());
+			log.trace("Type {} not mapped", type.getSimpleName());
 			return null;
 		}
 
