@@ -5,6 +5,7 @@ import com.contentgrid.spring.integration.events.EntityChangeEventTransformer.Ch
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Locale;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class EntityChangeEventTransformer extends AbstractPayloadTransformer<Ent
     @Override
     protected ChangeEventPayload transformPayload(EntityChangeEvent changeEvent) {
         return new ChangeEventPayload(
-                changeEvent.getTrigger(),
+                changeEvent.getTrigger().toString().toLowerCase(Locale.ROOT),
                 changeEvent.getOldEntity()
                         .map(entityModelAssembler::toModel)
                         .<JsonNode>map(halObjectMapper::valueToTree)
@@ -36,7 +37,7 @@ public class EntityChangeEventTransformer extends AbstractPayloadTransformer<Ent
 
         @Getter
         @NonNull
-        private final EntityChangeEventPublisher.EntityChangeEvent.ChangeKind trigger;
+        private final String trigger;
 
         @Getter
         private final JsonNode old;
