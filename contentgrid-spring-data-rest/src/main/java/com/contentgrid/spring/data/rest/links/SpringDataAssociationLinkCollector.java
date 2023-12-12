@@ -72,7 +72,7 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
         if(association.getTypeInformation().isMap()) {
             // Map types are not really supported yet, so they don't get any affordances
             return associationLink;
-        } if (association.getTypeInformation().isCollectionLike()) {
+        } else if (association.getTypeInformation().isCollectionLike()) {
             return Affordances.of(associationLink)
                     .afford(HttpMethod.POST)
                     .withName("add-" + associationLink.getName())
