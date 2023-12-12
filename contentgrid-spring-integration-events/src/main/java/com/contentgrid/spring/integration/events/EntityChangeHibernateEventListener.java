@@ -54,7 +54,7 @@ public class EntityChangeHibernateEventListener implements PostInsertEventListen
     public void onPostInsert(PostInsertEvent event) {
         entityChangeEventPublisher.publish(
                 EntityChangeEvent.builder()
-                        .trigger(ChangeKind.create)
+                        .trigger(ChangeKind.CREATE)
                         .domainType(deriveDomainType(event.getEntity()))
                         .newEntity(event.getEntity())
                         .build()
@@ -70,7 +70,7 @@ public class EntityChangeHibernateEventListener implements PostInsertEventListen
 
         entityChangeEventPublisher.publish(
                 EntityChangeEvent.builder()
-                        .trigger(ChangeKind.update)
+                        .trigger(ChangeKind.UPDATE)
                         .domainType(deriveDomainType(entity))
                         .oldEntity(oldEntity)
                         .newEntity(entity)
@@ -82,7 +82,7 @@ public class EntityChangeHibernateEventListener implements PostInsertEventListen
     public void onPostDelete(PostDeleteEvent event) {
         entityChangeEventPublisher.publish(
                 EntityChangeEvent.builder()
-                        .trigger(ChangeKind.delete)
+                        .trigger(ChangeKind.DELETE)
                         .domainType(deriveDomainType(event.getEntity()))
                         .oldEntity(event.getEntity())
                         .build()
@@ -93,7 +93,7 @@ public class EntityChangeHibernateEventListener implements PostInsertEventListen
     public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
         entityChangeEventPublisher.publish(
                 EntityChangeEvent.builder()
-                        .trigger(ChangeKind.update)
+                        .trigger(ChangeKind.UPDATE)
                         .domainType(deriveDomainType(event.getAffectedOwnerOrNull()))
                         .oldEntity(event.getAffectedOwnerOrNull())
                         .newEntity(event.getAffectedOwnerOrNull())

@@ -48,7 +48,7 @@ public interface EntityChangeEventPublisher {
         }
 
         public enum ChangeKind {
-            create, update, delete
+            CREATE, UPDATE, DELETE
         }
     }
 
