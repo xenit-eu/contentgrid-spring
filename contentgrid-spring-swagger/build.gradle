@@ -1,0 +1,32 @@
+plugins {
+    id 'java-library'
+    id 'java-test-fixtures'
+    id 'maven-publish'
+}
+configurations {
+    compileOnly {
+        extendsFrom(annotationProcessor)
+    }
+    testCompileOnly {
+        extendsFrom(testAnnotationProcessor)
+    }
+    testFixturesCompileOnly {
+        extendsFrom(testFixturesAnnotationProcessor)
+    }
+}
+
+dependencies {
+    implementation platform(project(':contentgrid-spring-boot-platform'))
+
+    implementation 'org.springframework:spring-webmvc'
+    implementation 'org.webjars:swagger-ui:4.11.1'
+    implementation 'org.webjars:webjars-locator-core'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    testRuntimeOnly 'jakarta.servlet:jakarta.servlet-api'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
