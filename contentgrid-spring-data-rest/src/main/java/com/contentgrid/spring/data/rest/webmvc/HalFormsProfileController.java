@@ -15,8 +15,10 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Random;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.BasePathAwareController;
@@ -81,13 +83,8 @@ public class HalFormsProfileController implements InitializingBean {
                 .withRel(IanaLinkRelations.DESCRIBES)
                 .withName(IanaLinkRelations.COLLECTION_VALUE);
 
-        var placeholder = new StringBuilder("---");
-        var random = new Random();
-        while(placeholder.length() < 10) {
-            placeholder.append(random.nextInt('a', 'z'));
-        }
-        placeholder.append("---");
-        var itemLinkTemplate = entityLinks.linkToItemResource(information.getDomainType(), placeholder.toString())
+        var placeholder = "---" + UUID.randomUUID() + "---";
+        var itemLinkTemplate = entityLinks.linkToItemResource(information.getDomainType(), placeholder)
                 .getTemplate()
                 .with("id", VariableType.SIMPLE);
 
