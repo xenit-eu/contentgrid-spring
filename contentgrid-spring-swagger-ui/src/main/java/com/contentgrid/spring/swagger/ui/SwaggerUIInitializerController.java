@@ -1,4 +1,4 @@
-package com.contentgrid.spring.swaggerui;
+package com.contentgrid.spring.swagger.ui;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;

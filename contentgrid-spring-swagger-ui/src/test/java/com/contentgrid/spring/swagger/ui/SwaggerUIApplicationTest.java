@@ -1,4 +1,4 @@
-package com.contentgrid.spring.swaggerui;
+package com.contentgrid.spring.swagger.ui;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
