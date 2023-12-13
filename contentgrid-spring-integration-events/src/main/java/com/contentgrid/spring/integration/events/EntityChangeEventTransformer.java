@@ -20,7 +20,7 @@ public class EntityChangeEventTransformer extends AbstractPayloadTransformer<Ent
     @Override
     protected ChangeEventPayload transformPayload(EntityChangeEvent changeEvent) {
         return new ChangeEventPayload(
-                changeEvent.getTrigger().toString().toLowerCase(Locale.ROOT),
+                changeEvent.getTrigger().name().toLowerCase(Locale.ROOT),
                 changeEvent.getOldEntity()
                         .map(entityModelAssembler::toModel)
                         .<JsonNode>map(halObjectMapper::valueToTree)
