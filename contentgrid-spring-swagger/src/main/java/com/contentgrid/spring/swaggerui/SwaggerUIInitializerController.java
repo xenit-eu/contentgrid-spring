@@ -9,23 +9,30 @@ import org.springframework.web.servlet.resource.ResourceResolver;
 import org.webjars.WebJarAssetLocator;
 
 /**
- * This controller serves the (static) Swagger UI configuration file 'swagger-initializer.js'. This static file
- * should NOT be served with standard {@link ResourceResolver} methods, because that breaks the automatic
- * version detection of {@link WebJarAssetLocator}.
+ * This controller serves the (static) Swagger UI configuration file 'swagger-initializer.js'.
  *
+ * <p>
+ * This static file should NOT be served with standard {@link ResourceResolver} methods:
+ * <ul>
+ *     <li>If served via {@code /META-INF/resources/webjars/swagger-ui/}, the automatic version detection of
+ *     {@link WebJarAssetLocator} breaks.</li>
+ *     <li>If served via {@code /META-INF/resources/webjars/swagger-ui/<version-number>/}, (automated) dependency
+ *     updates would break the configuration.</li>
+ * </ul>
+ * </p>
  */
 @RestController
 public class SwaggerUIInitializerController {
 
-    private static final Resource initilizerResource = new ClassPathResource("swagger-initializer.js");
+    private static final Resource initializerResource = new ClassPathResource("swagger-initializer.js");
 
     @GetMapping(value = "/webjars/swagger-ui/swagger-initializer.js", produces = "text/javascript")
     ResponseEntity<Resource> getInitializer() {
-        if (!initilizerResource.exists()) {
+        if (!initializerResource.exists()) {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(initilizerResource);
+        return ResponseEntity.ok(initializerResource);
     }
 
 }
