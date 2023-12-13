@@ -12,6 +12,8 @@ dependencies {
     api project(':contentgrid-spring-data-rest')
     api project(':contentgrid-spring-querydsl')
 
+    implementation project(':contentgrid-spring-swagger-ui')
+
     api 'org.springframework.boot:spring-boot-starter-integration'
     api 'org.springframework.boot:spring-boot-starter-validation'
 
