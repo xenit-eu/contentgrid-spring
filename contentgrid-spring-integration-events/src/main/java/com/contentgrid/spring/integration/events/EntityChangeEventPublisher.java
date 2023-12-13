@@ -1,6 +1,7 @@
 package com.contentgrid.spring.integration.events;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Optional;
 import lombok.Builder;
 import lombok.NonNull;
@@ -21,7 +22,7 @@ public interface EntityChangeEventPublisher {
     default void publish(@NonNull EntityChangeEventPublisher.EntityChangeEvent entityChangeEvent) {
         HashMap<String, Object> headers = new HashMap<>();
 
-        headers.put("trigger", entityChangeEvent.getTrigger().name());
+        headers.put("trigger", entityChangeEvent.getTrigger().name().toLowerCase(Locale.ROOT));
         headers.put("entity", entityChangeEvent.getDomainType().getName());
 
         publish(new GenericMessage<>(entityChangeEvent, headers));
@@ -48,7 +49,7 @@ public interface EntityChangeEventPublisher {
         }
 
         public enum ChangeKind {
-            create, update, delete
+            CREATE, UPDATE, DELETE
         }
     }
 

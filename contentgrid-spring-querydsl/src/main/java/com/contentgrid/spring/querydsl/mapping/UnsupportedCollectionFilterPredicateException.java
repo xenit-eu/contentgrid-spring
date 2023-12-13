@@ -6,12 +6,10 @@ import lombok.Getter;
 
 @Getter
 public class UnsupportedCollectionFilterPredicateException extends UnsupportedOperationException{
-    private final QuerydslPredicateFactory<?, ?> predicateFactory;
     private final Path<?> path;
 
     public UnsupportedCollectionFilterPredicateException(QuerydslPredicateFactory<?, ?> predicateFactory, Path<?> path, String message) {
         super(createMessage(predicateFactory, path, message));
-        this.predicateFactory = predicateFactory;
         this.path = path;
     }
 

@@ -40,7 +40,7 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
         // Logic based on the DefaultLinkCollector from spring-data-rest
         var selfLink = selfLinkProvider.createSelfLinkFor(object);
 
-        if(selfLink == null) {
+        if (selfLink == null) {
             return existing;
         }
 
@@ -69,10 +69,10 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
     }
 
     private Link addAssociationAffordance(Link associationLink, Class<?> owner, Property association) {
-        if(association.getTypeInformation().isMap()) {
+        if (association.getTypeInformation().isMap()) {
             // Map types are not really supported yet, so they don't get any affordances
             return associationLink;
-        } if (association.getTypeInformation().isCollectionLike()) {
+        } else if (association.getTypeInformation().isCollectionLike()) {
             return Affordances.of(associationLink)
                     .afford(HttpMethod.POST)
                     .withName("add-" + associationLink.getName())
@@ -86,7 +86,7 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
                     .withInput(createPayloadMetadataForRelation(owner, association))
                     .withInputMediaType(RestMediaTypes.TEXT_URI_LIST)
                     .build();
-            if(!association.isRequired()) {
+            if (!association.isRequired()) {
                 // An association that is required can't be cleared, that would cause a constraint violation error
                 affordances = affordances.afford(HttpMethod.DELETE)
                         .withName("clear-" + associationLink.getName())
