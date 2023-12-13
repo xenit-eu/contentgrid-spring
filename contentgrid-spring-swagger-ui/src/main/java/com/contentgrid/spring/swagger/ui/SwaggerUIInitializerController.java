@@ -19,7 +19,6 @@ import org.webjars.WebJarAssetLocator;
  *     <li>If served via {@code /META-INF/resources/webjars/swagger-ui/<version-number>/}, (automated) dependency
  *     updates would break the configuration.</li>
  * </ul>
- * </p>
  */
 @RestController
 public class SwaggerUIInitializerController {
