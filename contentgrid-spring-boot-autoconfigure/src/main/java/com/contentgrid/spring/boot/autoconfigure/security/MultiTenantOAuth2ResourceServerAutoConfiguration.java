@@ -26,7 +26,7 @@ class MultiTenantOAuth2ResourceServerAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty("contentgrid.security.oauth2.trusted-jwt-issuers[0]")
     JwtIssuerAuthenticationManagerResolver authenticationManagerResolver(MultiTenantOAuth2Properties oauth2Properties) {
-        return new JwtIssuerAuthenticationManagerResolver(oauth2Properties.getTrustedJwtIssuers());
+        return JwtIssuerAuthenticationManagerResolver.fromTrustedIssuers(oauth2Properties.getTrustedJwtIssuers());
     }
 
     @Bean
