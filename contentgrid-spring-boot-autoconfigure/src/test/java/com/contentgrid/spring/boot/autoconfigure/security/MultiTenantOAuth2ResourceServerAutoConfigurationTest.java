@@ -3,7 +3,6 @@ package com.contentgrid.spring.boot.autoconfigure.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
@@ -30,9 +29,12 @@ import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactor
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.test.context.assertj.AssertableWebApplicationContext;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.BeanIds;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
@@ -44,7 +46,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.WebApplicationContext;
 
-@WireMockTest
 class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
 
     AutoConfigurations WEB = AutoConfigurations.of(
@@ -87,7 +88,7 @@ class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
 
         this.contextRunner
                 .withPropertyValues(
-                        "contentgrid.security.oauth2.trusted-jwt-issuers[0]=%s" .formatted(issuer))
+                        "contentgrid.security.oauth2.trusted-jwt-issuers[0]=%s".formatted(issuer))
                 .withUserConfiguration(TestController.class)
                 .run((context) -> {
                     assertThat(context)
@@ -100,7 +101,7 @@ class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
 
                     // happy path, valid JWT
                     client.get().uri("/")
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s" .formatted(jwt(rsaKey, issuer)))
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(jwt(rsaKey, issuer)))
                             .exchange()
                             .expectStatus().isOk();
 
@@ -111,7 +112,7 @@ class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
 
                     // JWT signed by unknown key
                     client.get().uri("/")
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s" .formatted(jwt(genRsaKey(), issuer)))
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(jwt(genRsaKey(), issuer)))
                             .exchange()
                             .expectStatus().isUnauthorized();
 
@@ -129,14 +130,15 @@ class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
 
         this.contextRunner
                 .withPropertyValues(
-                        "contentgrid.security.oauth2.trusted-jwt-issuers[0]=%s" .formatted(issuer1),
-                        "contentgrid.security.oauth2.trusted-jwt-issuers[1]=%s" .formatted(issuer2)
+                        "contentgrid.security.oauth2.trusted-jwt-issuers[0]=%s".formatted(issuer1),
+                        "contentgrid.security.oauth2.trusted-jwt-issuers[1]=%s".formatted(issuer2)
                 )
                 .withUserConfiguration(TestController.class)
                 .run((context) -> {
                     assertThat(context)
                             .hasNotFailed()
-                            .hasSingleBean(JwtIssuerAuthenticationManagerResolver.class);
+                            .hasSingleBean(JwtIssuerAuthenticationManagerResolver.class)
+                            .hasSingleBean(SecurityFilterChain.class);
 
                     assertThat(getBearerTokenFilter(context)).isNotNull();
 
@@ -144,32 +146,48 @@ class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
 
                     // happy path, valid JWT from issuer1
                     client.get().uri("/")
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s" .formatted(jwt(rsaKey1, issuer1)))
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(jwt(rsaKey1, issuer1)))
                             .exchange()
                             .expectStatus().isOk();
 
                     // happy path, valid JWT from issuer2
                     client.get().uri("/")
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s" .formatted(jwt(rsaKey2, issuer2)))
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(jwt(rsaKey2, issuer2)))
                             .exchange()
                             .expectStatus().isOk();
 
                     // expect HTTP 401 when mixing and matching
                     client.get().uri("/")
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s" .formatted(jwt(rsaKey1, issuer2)))
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(jwt(rsaKey1, issuer2)))
                             .exchange()
                             .expectStatus().isUnauthorized();
                     client.get().uri("/")
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s" .formatted(jwt(rsaKey2, issuer1)))
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(jwt(rsaKey2, issuer1)))
                             .exchange()
                             .expectStatus().isUnauthorized();
 
                     // JWT signed by unknown key
                     client.get().uri("/")
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s" .formatted(jwt(genRsaKey(), issuer1)))
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(jwt(genRsaKey(), issuer1)))
                             .exchange()
                             .expectStatus().isUnauthorized();
 
+                });
+    }
+
+    @Test
+    void jwtSecurityFilterChainBacksOffWithUserDefinedSecurityFilterChain() {
+        this.contextRunner
+                .withPropertyValues(
+                        "contentgrid.security.oauth2.trusted-jwt-issuers[0]=https://jwk-oidc-issuer-location.com")
+                .withUserConfiguration(UserDefinedSecurityFilterChain.class)
+                .run((context) -> {
+                    assertThat(context)
+                            .hasNotFailed()
+                            .hasSingleBean(JwtIssuerAuthenticationManagerResolver.class)
+                            .hasSingleBean(SecurityFilterChain.class)
+                            .hasBean("userDefinedSecurityFilterChain")
+                            .doesNotHaveBean("jwtIssuerSecurityFilterChain");
                 });
     }
 
@@ -199,8 +217,10 @@ class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
                             .hasSingleBean(MultiTenantOAuth2ResourceServerAutoConfiguration.class)
                             .doesNotHaveBean(JwtIssuerAuthenticationManagerResolver.class);
 
-                    // the spring-issuer-uri still loads fine
-                    assertThat(context).hasSingleBean(JwtDecoder.class);
+                    // the spring oauth2 resource server autoconfiguration gets activated
+                    assertThat(context)
+                            .hasSingleBean(JwtDecoder.class)
+                            .hasSingleBean(SecurityFilterChain.class);
                     assertThat(getBearerTokenFilter(context)).isNotNull();
                 });
     }
@@ -224,6 +244,16 @@ class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
         @GetMapping("/")
         ResponseEntity<?> root() {
             return ResponseEntity.ok(Map.of("test", "ok"));
+        }
+    }
+
+    @Configuration
+    static class UserDefinedSecurityFilterChain {
+
+        @Bean
+        SecurityFilterChain userDefinedSecurityFilterChain(HttpSecurity http) throws Exception {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().authenticated());
+            return http.build();
         }
     }
 
