@@ -1,6 +1,5 @@
 plugins {
     id 'java-library'
-    id 'java-test-fixtures'
     id 'maven-publish'
 }
 configurations {
@@ -9,9 +8,6 @@ configurations {
     }
     testCompileOnly {
         extendsFrom(testAnnotationProcessor)
-    }
-    testFixturesCompileOnly {
-        extendsFrom(testFixturesAnnotationProcessor)
     }
 }
 
