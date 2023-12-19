@@ -116,6 +116,13 @@ class MultiTenantOAuth2ResourceServerAutoConfigurationTest {
                             .exchange()
                             .expectStatus().isUnauthorized();
 
+                    // JWT signature from known/trusted issuer, but issuer claim is fake
+                    var fakeIssuer = URI.create("https://evilissuer.com/fake-issuer");
+                    client.get().uri("/")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(jwt(genRsaKey(), fakeIssuer)))
+                            .exchange()
+                            .expectStatus().isUnauthorized();
+
                 });
     }
 
