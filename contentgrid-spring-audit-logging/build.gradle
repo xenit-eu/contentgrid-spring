@@ -1,0 +1,16 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'io.freefair.lombok'
+}
+
+dependencies {
+    annotationProcessor platform(project(':contentgrid-spring-boot-platform'))
+
+    implementation platform(project(':contentgrid-spring-boot-platform'))
+    implementation 'io.micrometer:micrometer-observation'
+    implementation 'org.springframework:spring-webmvc'
+    implementation 'org.springframework.data:spring-data-rest-webmvc'
+    implementation 'jakarta.servlet:jakarta.servlet-api'
+    implementation 'org.slf4j:slf4j-api'
+}
