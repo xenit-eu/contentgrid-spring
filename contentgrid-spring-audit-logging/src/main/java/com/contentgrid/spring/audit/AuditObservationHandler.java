@@ -2,18 +2,18 @@ package com.contentgrid.spring.audit;
 
 import com.contentgrid.spring.audit.event.AuditEvent;
 import com.contentgrid.spring.audit.extractor.AuditEventExtractor;
+import com.contentgrid.spring.audit.handler.AuditEventHandler;
 import io.micrometer.observation.Observation.Context;
 import io.micrometer.observation.ObservationHandler;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.observation.ServerRequestObservationContext;
 
-@Slf4j
 @RequiredArgsConstructor
 public class AuditObservationHandler implements ObservationHandler<ServerRequestObservationContext> {
 
     private final List<AuditEventExtractor> auditEventExtractors;
+    private final List<AuditEventHandler> auditEventHandlers;
 
     @Override
     public boolean supportsContext(Context context) {
@@ -23,8 +23,10 @@ public class AuditObservationHandler implements ObservationHandler<ServerRequest
     @Override
     public void onStop(ServerRequestObservationContext context) {
         var event = createAuditEvent(context);
-        if(event != null) {
-            log.info("AUDIT: {}", event);
+        if (event != null) {
+            for (AuditEventHandler auditEventHandler : auditEventHandlers) {
+                auditEventHandler.handle(event);
+            }
         }
     }
 

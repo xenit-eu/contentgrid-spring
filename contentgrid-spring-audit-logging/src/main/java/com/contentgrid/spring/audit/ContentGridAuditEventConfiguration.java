@@ -6,6 +6,7 @@ import com.contentgrid.spring.audit.extractor.EntityItemCreateIdExtractor;
 import com.contentgrid.spring.audit.extractor.EntityItemEventExtractor;
 import com.contentgrid.spring.audit.extractor.EntityRelationEventExtractor;
 import com.contentgrid.spring.audit.extractor.EntitySearchEventExtractor;
+import com.contentgrid.spring.audit.handler.AuditEventHandler;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,8 +17,9 @@ import org.springframework.data.rest.core.mapping.RepositoryResourceMappings;
 public class ContentGridAuditEventConfiguration {
 
     @Bean
-    AuditObservationHandler auditObservabilityHandler(List<AuditEventExtractor> auditEventExtractors) {
-        return new AuditObservationHandler(auditEventExtractors);
+    AuditObservationHandler auditObservabilityHandler(List<AuditEventExtractor> auditEventExtractors,
+            List<AuditEventHandler> auditEventHandlers) {
+        return new AuditObservationHandler(auditEventExtractors, auditEventHandlers);
     }
 
     @Bean
