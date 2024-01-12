@@ -1,9 +1,10 @@
 package com.contentgrid.spring.audit.extractor;
 
+import com.contentgrid.spring.audit.event.AbstractEntityRelationAuditEvent.AbstractEntityRelationAuditEventBuilder;
 import com.contentgrid.spring.audit.event.AuditEvent.AuditEventBuilder;
 import com.contentgrid.spring.audit.event.EntityRelationAuditEvent;
-import com.contentgrid.spring.audit.event.EntityRelationAuditEvent.EntityRelationAuditEventBuilder;
 import com.contentgrid.spring.audit.event.EntityRelationAuditEvent.Operation;
+import com.contentgrid.spring.audit.event.EntityRelationItemAuditEvent;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class EntityRelationEventExtractor implements AuditEventExtractor {
                         .className(relationController)
                         .methodName("deletePropertyReference")
                         .methodName("deletePropertyReferenceId")
-                        .build(), Operation.CLEAR
+                        .build(), Operation.DELETE
         );
     }
 
@@ -57,15 +58,29 @@ public class EntityRelationEventExtractor implements AuditEventExtractor {
                 .filter(entry -> entry.getKey().matches(handlerMethod))
                 .findFirst()
                 .map(Entry::getValue)
-                .map(operation -> EntityRelationAuditEvent.builder()
-                        .operation(operation)
+                .map(operation -> {
+                            var templateVariables = (Map<String, String>) context.getCarrier()
+                                    .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+                            var propertyId = templateVariables.get("propertyId");
+                            if (propertyId != null) {
+                                return EntityRelationItemAuditEvent.builder()
+                                        .relationId(propertyId)
+                                        .operation(switch (operation) {
+                                            case READ -> EntityRelationItemAuditEvent.Operation.READ;
+                                            case DELETE -> EntityRelationItemAuditEvent.Operation.DELETE;
+                                            default -> throw new IllegalArgumentException();
+                                        });
+                            }
+                            return EntityRelationAuditEvent.builder()
+                                    .operation(operation);
+                        }
                 );
     }
 
     @Override
     public AuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
             AuditEventBuilder<?, ?> eventBuilder) {
-        if(eventBuilder instanceof EntityRelationAuditEventBuilder<?,?> entityRelationAuditEvent) {
+        if(eventBuilder instanceof AbstractEntityRelationAuditEventBuilder<?,?> entityRelationAuditEvent) {
             var templateVariables = (Map<String, String>)context.getCarrier().getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
             return entityRelationAuditEvent.relationName(templateVariables.get("property"));
         }

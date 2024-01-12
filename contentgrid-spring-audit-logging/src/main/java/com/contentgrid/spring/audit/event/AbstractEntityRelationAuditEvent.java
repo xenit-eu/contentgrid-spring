@@ -12,14 +12,8 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class EntityRelationAuditEvent extends AbstractEntityRelationAuditEvent {
+public abstract class AbstractEntityRelationAuditEvent extends
+        AbstractEntityItemAuditEvent {
 
-    Operation operation;
-
-    public enum Operation {
-        READ,
-        UPDATE,
-        DELETE
-    }
-
+    String relationName;
 }

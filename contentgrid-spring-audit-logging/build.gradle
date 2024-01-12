@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'java-test-fixtures'
     id 'maven-publish'
     id 'io.freefair.lombok'
 }
@@ -13,4 +14,13 @@ dependencies {
     implementation 'org.springframework.data:spring-data-rest-webmvc'
     implementation 'jakarta.servlet:jakarta.servlet-api'
     implementation 'org.slf4j:slf4j-api'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-web'
+
+    testImplementation testFixtures(project(':contentgrid-spring-data-rest'))
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
