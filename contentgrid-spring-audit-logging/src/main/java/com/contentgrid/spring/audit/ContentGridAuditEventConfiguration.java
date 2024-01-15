@@ -1,6 +1,7 @@
 package com.contentgrid.spring.audit;
 
 import com.contentgrid.spring.audit.extractor.AuditEventExtractor;
+import com.contentgrid.spring.audit.extractor.EntityContentEventExtractor;
 import com.contentgrid.spring.audit.extractor.EntityEventExtractor;
 import com.contentgrid.spring.audit.extractor.EntityItemCreateIdExtractor;
 import com.contentgrid.spring.audit.extractor.EntityItemEventExtractor;
@@ -45,5 +46,10 @@ public class ContentGridAuditEventConfiguration {
     @Bean
     EntityRelationEventExtractor entityRelationEventExtractor() {
         return new EntityRelationEventExtractor();
+    }
+
+    @Bean
+    EntityContentEventExtractor entityContentEventExtractor(PersistentEntities persistentEntities) {
+        return new EntityContentEventExtractor(persistentEntities);
     }
 }

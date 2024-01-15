@@ -19,10 +19,10 @@ public class EntityContentAuditEvent extends AbstractEntityItemAuditEvent {
 
     Operation operation;
 
-    enum Operation {
+    public enum Operation {
         READ,
         UPDATE,
-        CLEAR
+        DELETE
     }
 
 }

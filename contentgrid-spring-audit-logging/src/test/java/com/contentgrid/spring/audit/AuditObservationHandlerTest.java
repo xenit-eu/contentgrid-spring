@@ -3,6 +3,7 @@ package com.contentgrid.spring.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.contentgrid.spring.audit.event.EntityContentAuditEvent;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent.Operation;
 import com.contentgrid.spring.audit.event.EntityRelationAuditEvent;
@@ -16,21 +17,28 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
+import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.rest.webmvc.RestMediaTypes;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -59,6 +67,9 @@ class AuditObservationHandlerTest {
 
     @Autowired
     CustomerRepository customerRepository;
+
+    @Autowired
+    CustomerContentStore customerContentStore;
 
     @Autowired
     InvoiceRepository invoiceRepository;
@@ -94,6 +105,14 @@ class AuditObservationHandlerTest {
                     invoice.setCounterparty(customerRepository.findByVat("abc").orElseThrow());
                     INVOICE_ID = invoiceRepository.save(invoice).getId();
                 });
+
+        var customer = customerRepository.findByVat("abc").orElseThrow();
+        customerContentStore.setContent(
+                customer,
+                PropertyPath.from("content"),
+                new ByteArrayInputStream("test".getBytes(StandardCharsets.UTF_8))
+        );
+        customerRepository.save(customer);
     }
 
     @BeforeEach
@@ -322,6 +341,78 @@ class AuditObservationHandlerTest {
                     assertThat(event.getId()).isEqualTo(INVOICE_ID.toString());
                     assertThat(event.getRelationName()).isEqualTo("orders");
                     assertThat(event.getRelationId()).isEqualTo(orderId.toString());
+                });
+    }
+
+    @Test
+    void contentGet() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/customers/{id}/content", CUSTOMER_ID))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        assertThat(auditHandler.getEvents()).singleElement()
+                .isInstanceOfSatisfying(EntityContentAuditEvent.class, event -> {
+                    assertThat(event.getDomainType()).isEqualTo(Customer.class);
+                    assertThat(event.getId()).isEqualTo(CUSTOMER_ID.toString());
+                    assertThat(event.getContentName()).isEqualTo("content");
+                    assertThat(event.getOperation()).isEqualTo(EntityContentAuditEvent.Operation.READ);
+                });
+    }
+
+    @ParameterizedTest
+    @CsvSource({"PUT", "POST"})
+    void contentSetDirect(HttpMethod method) throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.request(method, "/customers/{id}/content", CUSTOMER_ID)
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .content("test123")
+                )
+                .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+
+        assertThat(auditHandler.getEvents()).singleElement()
+                .isInstanceOfSatisfying(EntityContentAuditEvent.class, event -> {
+                    // TODO: extract domain type, id and content name
+                    // assertThat(event.getDomainType()).isEqualTo(Customer.class);
+                    // assertThat(event.getId()).isEqualTo(CUSTOMER_ID.toString());
+                    // assertThat(event.getContentName()).isEqualTo("content");
+                    assertThat(event.getOperation()).isEqualTo(EntityContentAuditEvent.Operation.UPDATE);
+                });
+
+    }
+
+    @ParameterizedTest
+    @CsvSource({"PUT", "POST"})
+    void contentSetMultipart(HttpMethod method) throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.multipart(method, "/customers/{id}/content", CUSTOMER_ID)
+                        .file(new MockMultipartFile(
+                                "file",
+                                "test.txt",
+                                "text/plain",
+                                "abcdef".getBytes(StandardCharsets.UTF_8)
+                        ))
+                )
+                .andExpect(MockMvcResultMatchers.status().is2xxSuccessful());
+
+        assertThat(auditHandler.getEvents()).singleElement()
+                .isInstanceOfSatisfying(EntityContentAuditEvent.class, event -> {
+                    // TODO: extract domain type, id and content name
+                    // assertThat(event.getDomainType()).isEqualTo(Customer.class);
+                    // assertThat(event.getId()).isEqualTo(CUSTOMER_ID.toString());
+                    // assertThat(event.getContentName()).isEqualTo("content");
+                    assertThat(event.getOperation()).isEqualTo(EntityContentAuditEvent.Operation.UPDATE);
+                });
+    }
+
+    @Test
+    void contentDelete() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/customers/{id}/content", CUSTOMER_ID))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        assertThat(auditHandler.getEvents()).singleElement()
+                .isInstanceOfSatisfying(EntityContentAuditEvent.class, event -> {
+                    // TODO: extract domain type, id and content name
+                    // assertThat(event.getDomainType()).isEqualTo(Customer.class);
+                    // assertThat(event.getId()).isEqualTo(CUSTOMER_ID.toString());
+                    // assertThat(event.getContentName()).isEqualTo("content");
+                    assertThat(event.getOperation()).isEqualTo(EntityContentAuditEvent.Operation.DELETE);
                 });
     }
 }
