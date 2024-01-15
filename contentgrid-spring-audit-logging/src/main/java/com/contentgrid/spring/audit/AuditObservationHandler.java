@@ -1,6 +1,6 @@
 package com.contentgrid.spring.audit;
 
-import com.contentgrid.spring.audit.event.AuditEvent;
+import com.contentgrid.spring.audit.event.AbstractAuditEvent;
 import com.contentgrid.spring.audit.extractor.AuditEventExtractor;
 import com.contentgrid.spring.audit.handler.AuditEventHandler;
 import io.micrometer.observation.Observation.Context;
@@ -30,7 +30,7 @@ public class AuditObservationHandler implements ObservationHandler<ServerRequest
         }
     }
 
-    private AuditEvent createAuditEvent(ServerRequestObservationContext context) {
+    private AbstractAuditEvent createAuditEvent(ServerRequestObservationContext context) {
         var maybeEventBuilder = auditEventExtractors.stream()
                 .flatMap(e -> e.createEventBuilder(context).stream())
                 .findFirst();

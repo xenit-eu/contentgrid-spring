@@ -7,17 +7,17 @@ import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
-@SuperBuilder(toBuilder = true)
+@SuperBuilder
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @EqualsAndHashCode
 @ToString
-public abstract class AuditEvent {
+public abstract class AbstractAuditEvent {
 
-    public abstract static class AuditEventBuilder<C extends AuditEvent, B extends AuditEvent.AuditEventBuilder<C, B>> {
+    String requestMethod;
+    String requestUri;
 
-    }
-
-
+    int responseStatus;
+    String responseLocation;
 
 }

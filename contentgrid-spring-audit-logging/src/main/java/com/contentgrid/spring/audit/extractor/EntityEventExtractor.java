@@ -1,7 +1,7 @@
 package com.contentgrid.spring.audit.extractor;
 
+import com.contentgrid.spring.audit.event.AbstractAuditEvent.AbstractAuditEventBuilder;
 import com.contentgrid.spring.audit.event.AbstractEntityAuditEvent.AbstractEntityAuditEventBuilder;
-import com.contentgrid.spring.audit.event.AuditEvent.AuditEventBuilder;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -16,14 +16,14 @@ public class EntityEventExtractor implements AuditEventExtractor {
     private final RepositoryResourceMappings resourceMappings;
 
     @Override
-    public Optional<AuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
+    public Optional<AbstractAuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
         return Optional.empty();
     }
 
     @Override
-    public AuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
-            AuditEventBuilder<?, ?> eventBuilder) {
-        if(eventBuilder instanceof AbstractEntityAuditEventBuilder<?, ?> entityAuditEventBuilder) {
+    public AbstractAuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
+            AbstractAuditEventBuilder<?, ?> eventBuilder) {
+        if (eventBuilder instanceof AbstractEntityAuditEventBuilder<?, ?> entityAuditEventBuilder) {
             Map<String, String> templateVariables = (Map<String, String>) context.getCarrier()
                     .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
             if (templateVariables != null) {

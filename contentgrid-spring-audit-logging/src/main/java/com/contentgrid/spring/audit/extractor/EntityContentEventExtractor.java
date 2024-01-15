@@ -1,11 +1,10 @@
 package com.contentgrid.spring.audit.extractor;
 
-import com.contentgrid.spring.audit.event.AuditEvent.AuditEventBuilder;
+import com.contentgrid.spring.audit.event.AbstractAuditEvent.AbstractAuditEventBuilder;
 import com.contentgrid.spring.audit.event.EntityContentAuditEvent;
 import com.contentgrid.spring.audit.event.EntityContentAuditEvent.EntityContentAuditEventBuilder;
 import com.contentgrid.spring.audit.event.EntityContentAuditEvent.Operation;
 import internal.org.springframework.content.rest.io.AssociatedStoreResource;
-import internal.org.springframework.content.rest.io.StoreResource;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -40,7 +39,7 @@ public class EntityContentEventExtractor implements AuditEventExtractor {
     );
 
     @Override
-    public Optional<AuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
+    public Optional<AbstractAuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
         var handlerMethod = context.getCarrier().getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
         return METHODS.entrySet().stream()
                 .filter(e -> e.getKey().matches(handlerMethod))
@@ -52,9 +51,9 @@ public class EntityContentEventExtractor implements AuditEventExtractor {
     }
 
     @Override
-    public AuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
-            AuditEventBuilder<?, ?> eventBuilder) {
-        if(eventBuilder instanceof EntityContentAuditEventBuilder<?,?> contentAuditEventBuilder) {
+    public AbstractAuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
+            AbstractAuditEventBuilder<?, ?> eventBuilder) {
+        if (eventBuilder instanceof EntityContentAuditEventBuilder<?, ?> contentAuditEventBuilder) {
             var springContentResource = context.getCarrier().getAttribute("SPRING_CONTENT_RESOURCE");
             if (springContentResource instanceof AssociatedStoreResource storeResource) {
                 var domainType = storeResource.getStoreInfo().getDomainObjectClass();

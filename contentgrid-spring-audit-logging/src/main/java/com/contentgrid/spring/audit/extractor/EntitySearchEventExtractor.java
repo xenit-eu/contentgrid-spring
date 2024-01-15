@@ -1,6 +1,6 @@
 package com.contentgrid.spring.audit.extractor;
 
-import com.contentgrid.spring.audit.event.AuditEvent.AuditEventBuilder;
+import com.contentgrid.spring.audit.event.AbstractAuditEvent.AbstractAuditEventBuilder;
 import com.contentgrid.spring.audit.event.EntitySearchAuditEvent;
 import com.contentgrid.spring.audit.event.EntitySearchAuditEvent.EntitySearchAuditEventBuilder;
 import java.util.Arrays;
@@ -22,7 +22,7 @@ public class EntitySearchEventExtractor implements AuditEventExtractor {
             .build();
 
     @Override
-    public Optional<AuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
+    public Optional<AbstractAuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
         var handler = context.getCarrier().getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
 
         if (SEARCH_METHODS.matches(handler)) {
@@ -33,8 +33,8 @@ public class EntitySearchEventExtractor implements AuditEventExtractor {
     }
 
     @Override
-    public AuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
-            AuditEventBuilder<?, ?> eventBuilder) {
+    public AbstractAuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
+            AbstractAuditEventBuilder<?, ?> eventBuilder) {
 
         if (eventBuilder instanceof EntitySearchAuditEventBuilder<?, ?> searchAuditEventBuilder) {
             var parameters = context.getCarrier().getParameterMap()

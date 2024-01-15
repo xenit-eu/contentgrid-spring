@@ -3,6 +3,7 @@ package com.contentgrid.spring.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.contentgrid.spring.audit.event.AbstractAuditEvent;
 import com.contentgrid.spring.audit.event.EntityContentAuditEvent;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent.Operation;
@@ -414,5 +415,48 @@ class AuditObservationHandlerTest {
                     // assertThat(event.getContentName()).isEqualTo("content");
                     assertThat(event.getOperation()).isEqualTo(EntityContentAuditEvent.Operation.DELETE);
                 });
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "GET,/",
+            "get,/",
+            "GET,/profile/customers",
+            "GET,/explorer",
+            "GET,/customers",
+            "GET,/customers/abc",
+            "GET,/customers/abc/content",
+            "POST,/customers",
+            "DELETE,/customers",
+            "PUT,/customers",
+            "PATCH,/customers",
+            "XYZ,/customers",
+            "xyz,/customers",
+            "PUT,/customers/abc",
+            "DELETE,/customers/abc",
+            "PATCH,/customers/abc",
+            "GET,/customers/abc/orders",
+            "PUT,/customers/abc/orders",
+            "PATCH,/customers/abc/orders",
+            "DELETE,/customers/abc/orders",
+            "POST,/xyz"
+    })
+    void basicAuditEvents(HttpMethod method, String uri) throws Exception {
+        var result = mockMvc.perform(MockMvcRequestBuilders.request(method, uri))
+                .andReturn();
+
+        assertThat(auditHandler.getEvents()).singleElement()
+                .isInstanceOfSatisfying(AbstractAuditEvent.class, event -> {
+                    assertThat(event.getRequestMethod()).isEqualTo(method.toString());
+                    assertThat(event.getRequestUri()).isEqualTo(uri);
+                    assertThat(event.getResponseStatus()).isEqualTo(result.getResponse().getStatus());
+                    if(result.getResponse().getRedirectedUrl() != null) {
+                        assertThat(event.getResponseLocation()).isEqualTo(
+                                result.getResponse().getRedirectedUrl().replace("http://localhost", ""));
+                    } else {
+                        assertThat(event.getResponseLocation()).isNull();
+                    }
+                });
+
     }
 }

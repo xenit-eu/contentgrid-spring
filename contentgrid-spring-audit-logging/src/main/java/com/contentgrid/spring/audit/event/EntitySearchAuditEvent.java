@@ -9,7 +9,7 @@ import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
-@SuperBuilder(toBuilder = true)
+@SuperBuilder
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @ToString(callSuper = true)

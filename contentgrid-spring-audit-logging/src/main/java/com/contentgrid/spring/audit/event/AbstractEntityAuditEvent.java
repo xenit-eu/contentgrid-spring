@@ -7,12 +7,13 @@ import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
-@SuperBuilder(toBuilder = true)
+@SuperBuilder
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class AbstractEntityAuditEvent extends AuditEvent {
+public abstract class AbstractEntityAuditEvent extends AbstractAuditEvent {
+
     private final Class<?> domainType;
 
     protected AbstractEntityAuditEvent(AbstractEntityAuditEventBuilder<?, ?> b) {

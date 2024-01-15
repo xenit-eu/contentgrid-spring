@@ -1,7 +1,7 @@
 package com.contentgrid.spring.audit.extractor;
 
+import com.contentgrid.spring.audit.event.AbstractAuditEvent.AbstractAuditEventBuilder;
 import com.contentgrid.spring.audit.event.AbstractEntityItemAuditEvent;
-import com.contentgrid.spring.audit.event.AuditEvent.AuditEventBuilder;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mapping.context.PersistentEntities;
@@ -18,14 +18,14 @@ public class EntityItemCreateIdExtractor extends AbstractRepositoryEventListener
     private final PersistentEntities entities;
 
     @Override
-    public Optional<AuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
+    public Optional<AbstractAuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
         return Optional.empty();
     }
 
     @Override
-    public AuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
-            AuditEventBuilder<?, ?> eventBuilder) {
-        if(eventBuilder instanceof AbstractEntityItemAuditEvent.AbstractEntityItemAuditEventBuilder<?, ?> itemAuditEventBuilder) {
+    public AbstractAuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
+            AbstractAuditEventBuilder<?, ?> eventBuilder) {
+        if (eventBuilder instanceof AbstractEntityItemAuditEvent.AbstractEntityItemAuditEventBuilder<?, ?> itemAuditEventBuilder) {
             Optional.ofNullable(context.get(EntityItemCreateIdExtractor.class))
                     .ifPresent(itemAuditEventBuilder::id);
         }

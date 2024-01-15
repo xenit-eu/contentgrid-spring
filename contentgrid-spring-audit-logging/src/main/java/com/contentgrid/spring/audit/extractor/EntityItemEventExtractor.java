@@ -1,7 +1,7 @@
 package com.contentgrid.spring.audit.extractor;
 
+import com.contentgrid.spring.audit.event.AbstractAuditEvent.AbstractAuditEventBuilder;
 import com.contentgrid.spring.audit.event.AbstractEntityItemAuditEvent.AbstractEntityItemAuditEventBuilder;
-import com.contentgrid.spring.audit.event.AuditEvent.AuditEventBuilder;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent.Operation;
 import java.util.Map;
@@ -36,7 +36,7 @@ public class EntityItemEventExtractor implements AuditEventExtractor {
     );
 
     @Override
-    public Optional<AuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
+    public Optional<AbstractAuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
 
         var handlerMethod = context.getCarrier().getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
 
@@ -50,10 +50,11 @@ public class EntityItemEventExtractor implements AuditEventExtractor {
     }
 
     @Override
-    public AuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
-            AuditEventBuilder<?, ?> eventBuilder) {
-        if(eventBuilder instanceof AbstractEntityItemAuditEventBuilder<?,?> entityItemAuditEventBuilder) {
-            var templateVariables = (Map<String, String>)context.getCarrier().getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+    public AbstractAuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
+            AbstractAuditEventBuilder<?, ?> eventBuilder) {
+        if (eventBuilder instanceof AbstractEntityItemAuditEventBuilder<?, ?> entityItemAuditEventBuilder) {
+            var templateVariables = (Map<String, String>) context.getCarrier()
+                    .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
             Optional.ofNullable(templateVariables.get("id"))
                     .ifPresent(entityItemAuditEventBuilder::id);
         }
