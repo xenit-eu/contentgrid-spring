@@ -53,7 +53,6 @@ class TemplatePromptTest {
                             _templates: {
                                 search: {
                                     method: "GET",
-                                    contentType: "application/json",
                                     properties: [
                                         {
                                             prompt: "VAT number",
@@ -66,7 +65,6 @@ class TemplatePromptTest {
                                 },
                                 create-form: {
                                     method: "POST",
-                                    contentType: "application/json",
                                     properties: [
                                         {
                                             prompt: "Customer name",

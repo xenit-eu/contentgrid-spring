@@ -7,6 +7,7 @@ import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -194,7 +195,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         private final Class<?> domainType;
         private final Collection<PropertyMetadata> properties;
         @With
-        private List<MediaType> mediaTypes = List.of(MediaType.APPLICATION_JSON);
+        private List<MediaType> mediaTypes = Collections.emptyList();
 
         @Override
         public <T extends Named> T customize(T target, Function<PropertyMetadata, T> customizer) {
