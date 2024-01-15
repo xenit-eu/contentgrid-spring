@@ -25,7 +25,7 @@ public class HandlerMethodMatcher {
         this.methodNames = Set.copyOf(methodNames);
         var methodNameValidation = new HashSet<>(methodNames);
 
-        for (Method method : type.getMethods()) {
+        for (Method method : type.getDeclaredMethods()) {
             methodNameValidation.remove(method.getName());
         }
 
@@ -57,6 +57,14 @@ public class HandlerMethodMatcher {
         @SneakyThrows
         public HandlerMethodMatcherBuilder className(String className) {
             return type(Class.forName(className));
+        }
+
+        @SneakyThrows
+        public HandlerMethodMatcherBuilder allMethods() {
+            for (Method method : type.getDeclaredMethods()) {
+                methodName(method.getName());
+            }
+            return this;
         }
     }
 

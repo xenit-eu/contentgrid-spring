@@ -5,12 +5,37 @@ import com.contentgrid.spring.audit.event.BasicAuditEvent;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.http.server.observation.ServerRequestObservationContext;
+import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 public class BasicAuditEventExtractor implements AuditEventExtractor {
 
+    private static final Set<HandlerMethodMatcher> IGNORED_HANDLERS = Set.of(
+            HandlerMethodMatcher.builder()
+                    .className("org.springframework.data.rest.webmvc.halexplorer.HalExplorer")
+                    .allMethods()
+                    .build(),
+            HandlerMethodMatcher.builder()
+                    .className("com.contentgrid.spring.swagger.ui.SwaggerUIInitializerController")
+                    .allMethods()
+                    .build()
+    );
+
     @Override
     public Optional<AbstractAuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
+        var handler = context.getCarrier().getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
+
+        if (handler instanceof ResourceHttpRequestHandler) {
+            // Don't log static resources
+            return Optional.empty();
+        }
+
+        if (IGNORED_HANDLERS.stream().anyMatch(h -> h.matches(handler))) {
+            return Optional.empty();
+        }
+
         return Optional.of(BasicAuditEvent.builder());
     }
 

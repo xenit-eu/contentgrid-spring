@@ -422,16 +422,10 @@ class AuditObservationHandlerTest {
             "GET,/",
             "get,/",
             "GET,/profile/customers",
-            "GET,/explorer",
             "GET,/customers",
             "GET,/customers/abc",
             "GET,/customers/abc/content",
             "POST,/customers",
-            "DELETE,/customers",
-            "PUT,/customers",
-            "PATCH,/customers",
-            "XYZ,/customers",
-            "xyz,/customers",
             "PUT,/customers/abc",
             "DELETE,/customers/abc",
             "PATCH,/customers/abc",
@@ -439,7 +433,6 @@ class AuditObservationHandlerTest {
             "PUT,/customers/abc/orders",
             "PATCH,/customers/abc/orders",
             "DELETE,/customers/abc/orders",
-            "POST,/xyz"
     })
     void basicAuditEvents(HttpMethod method, String uri) throws Exception {
         var result = mockMvc.perform(MockMvcRequestBuilders.request(method, uri))
@@ -458,5 +451,27 @@ class AuditObservationHandlerTest {
                     }
                 });
 
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            // Static URLs
+            "GET,/explorer",
+            "GET,/explorer/index.html",
+            "GET,/webjars/swagger-ui/index.html",
+            "GET,/openapi.yml",
+            // Unmapped URLs
+            "DELETE,/customers",
+            "PUT,/customers",
+            "PATCH,/customers",
+            "XYZ,/customers",
+            "xyz,/customers",
+            "POST,/xyz"
+    })
+    void noAuditEvents(HttpMethod method, String uri) throws Exception {
+        var result = mockMvc.perform(MockMvcRequestBuilders.request(method, uri))
+                .andReturn();
+
+        assertThat(auditHandler.getEvents()).isEmpty();
     }
 }
