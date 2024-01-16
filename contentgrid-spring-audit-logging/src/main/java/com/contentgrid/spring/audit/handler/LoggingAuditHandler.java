@@ -41,9 +41,14 @@ public class LoggingAuditHandler implements AuditEventHandler {
                     .addKeyValue("responseLocation", auditEvent.getResponseLocation());
         }
 
-        if(auditEvent instanceof AbstractEntityAuditEvent entityAuditEvent)  {
-            auditLogBuilder = auditLogBuilder.addArgument(entityAuditEvent.getDomainType().getSimpleName())
-                    .addKeyValue("domainType", entityAuditEvent.getDomainType().getSimpleName());
+        if (auditEvent instanceof AbstractEntityAuditEvent entityAuditEvent) {
+            if (entityAuditEvent.getDomainType() != null) {
+                auditLogBuilder = auditLogBuilder.addArgument(entityAuditEvent.getDomainType().getSimpleName())
+                        .addKeyValue("domainType", entityAuditEvent.getDomainType().getSimpleName());
+            } else {
+                auditLogBuilder = auditLogBuilder.addArgument((Object) null)
+                        .addKeyValue("domainType", (Object) null);
+            }
             logMessage.append(" - {}");
         }
         if (auditEvent instanceof AbstractEntityItemAuditEvent entityItemAuditEvent) {
