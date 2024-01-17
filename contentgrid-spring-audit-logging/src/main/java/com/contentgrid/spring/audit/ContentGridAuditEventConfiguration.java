@@ -12,8 +12,6 @@ import com.contentgrid.spring.audit.handler.AuditEventHandler;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.rest.core.mapping.RepositoryResourceMappings;
 
@@ -27,44 +25,36 @@ public class ContentGridAuditEventConfiguration {
     }
 
     @Bean
-    @Order(Ordered.LOWEST_PRECEDENCE)
-        // must be after all others
     BasicAuditEventExtractor basicAuditEventExtractor() {
         return new BasicAuditEventExtractor();
     }
 
     @Bean
-    @Order(0)
     EntityEventExtractor entityEventExtractor(RepositoryResourceMappings resourceMappings) {
         return new EntityEventExtractor(resourceMappings);
     }
 
     @Bean
-    @Order(0)
     EntitySearchEventExtractor entitySearchEventExtractor() {
         return new EntitySearchEventExtractor();
     }
 
     @Bean
-    @Order(0)
     EntityItemEventExtractor entityItemEventExtractor() {
         return new EntityItemEventExtractor();
     }
 
     @Bean
-    @Order(0)
     EntityItemCreateIdExtractor entityItemCreateEventExtractor(PersistentEntities persistentEntities) {
         return new EntityItemCreateIdExtractor(persistentEntities);
     }
 
     @Bean
-    @Order(0)
     EntityRelationEventExtractor entityRelationEventExtractor() {
         return new EntityRelationEventExtractor();
     }
 
     @Bean
-    @Order(0)
     EntityContentEventExtractor entityContentEventExtractor(PersistentEntities persistentEntities) {
         return new EntityContentEventExtractor(persistentEntities);
     }

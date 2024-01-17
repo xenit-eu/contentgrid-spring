@@ -2,6 +2,7 @@ package com.contentgrid.spring.audit.extractor;
 
 import com.contentgrid.spring.audit.event.AbstractAuditEvent.AbstractAuditEventBuilder;
 import java.util.Optional;
+import org.springframework.core.Ordered;
 import org.springframework.http.server.observation.ServerRequestObservationContext;
 
 /**
@@ -14,7 +15,7 @@ import org.springframework.http.server.observation.ServerRequestObservationConte
  * Multiple {@link AuditEventExtractor}s can contribute additional information to an audit event when they have
  * additional information to attach.
  */
-public interface AuditEventExtractor {
+public interface AuditEventExtractor extends Ordered {
 
     /**
      * Creates a builder for the audit event
@@ -43,4 +44,9 @@ public interface AuditEventExtractor {
      */
     AbstractAuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
             AbstractAuditEventBuilder<?, ?> eventBuilder);
+
+    @Override
+    default int getOrder() {
+        return 0;
+    }
 }

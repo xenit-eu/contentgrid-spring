@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.core.Ordered;
 import org.springframework.http.server.observation.ServerRequestObservationContext;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
@@ -62,5 +63,11 @@ public class BasicAuditEventExtractor implements AuditEventExtractor {
                 .requestUri(context.getCarrier().getRequestURI())
                 .responseStatus(context.getResponse().getStatus())
                 .responseLocation(location.orElse(null));
+    }
+
+    @Override
+    public int getOrder() {
+        // needs to run after all other handlers, so it can pick up the leftovers
+        return Ordered.LOWEST_PRECEDENCE;
     }
 }
