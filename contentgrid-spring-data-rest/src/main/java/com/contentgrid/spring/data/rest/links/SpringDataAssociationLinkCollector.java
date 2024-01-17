@@ -22,6 +22,7 @@ import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Links;
 import org.springframework.hateoas.mediatype.Affordances;
+import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.hateoas.mediatype.hal.HalLinkRelation;
 import org.springframework.hateoas.mediatype.html.HtmlInputType;
 import org.springframework.http.HttpMethod;
@@ -34,8 +35,10 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
     private final PersistentEntities entities;
     private final Associations associationLinks;
     private final SelfLinkProvider selfLinkProvider;
+    private final MessageResolver resolver;
 
     @Override
+    @SuppressWarnings("ConstantConditions")
     public Links getLinksFor(Object object, Links existing) {
         // Logic based on the DefaultLinkCollector from spring-data-rest
         var selfLink = selfLinkProvider.createSelfLinkFor(object);
@@ -47,18 +50,21 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
         Path selfPath = new Path(selfLink.expand().getHref());
 
         var links = new ArrayList<Link>();
-
-        entities.getRequiredPersistentEntity(object.getClass()).doWithAssociations(
-                (SimpleAssociationHandler) association -> {
-                    // We create a property here, so the name matches the one generated for the HAL-FORMS configuration
-                    // That will automatically create the HAL-FORMS options for the property
-                    var property = new JacksonBasedProperty(new DataRestBasedProperty(new PersistentPropertyProperty(association.getInverse())));
-                    for (Link link : associationLinks.getLinksFor(association, selfPath)) {
-                        var linkName = HalLinkRelation.of(link.getRel()).getLocalPart();
-                        var cgRelLink = link.withRel(ContentGridLinkRelations.RELATION).withName(linkName);
-                        links.add(addAssociationAffordance(cgRelLink, object.getClass(), property));
-                    }
-                });
+        var entity = entities.getRequiredPersistentEntity(object.getClass());
+        entity.doWithAssociations((SimpleAssociationHandler) association -> {
+            // We create a property here, so the name matches the one generated for the HAL-FORMS configuration
+            // That will automatically create the HAL-FORMS options for the property
+            var property = new JacksonBasedProperty(new DataRestBasedProperty(new PersistentPropertyProperty(association.getInverse())));
+            for (Link link : associationLinks.getLinksFor(association, selfPath)) {
+                var linkName = HalLinkRelation.of(link.getRel()).getLocalPart();
+                var cgRelLink = link
+                        .withRel(ContentGridLinkRelations.RELATION)
+                        .withName(linkName)
+                        .withTitle(resolver.resolve(LinkTitles
+                                .forProperty(entity.getType(), association.getInverse().getName())));
+                links.add(addAssociationAffordance(cgRelLink, object.getClass(), property));
+            }
+        });
 
         return existing.and(links);
     }

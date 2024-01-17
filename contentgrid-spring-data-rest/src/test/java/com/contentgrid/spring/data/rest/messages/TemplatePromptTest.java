@@ -2,7 +2,9 @@ package com.contentgrid.spring.data.rest.messages;
 
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
+import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
+import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import java.util.Set;
 import java.util.UUID;
 import org.hamcrest.Matchers;
@@ -15,6 +17,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultHandler;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -29,24 +33,31 @@ class TemplatePromptTest {
 
     @Autowired
     CustomerRepository customerRepository;
+    @Autowired
+    InvoiceRepository invoiceRepository;
 
     Customer customer;
+    Invoice invoice;
 
     @BeforeEach
     void setup() {
         customer = customerRepository.save(new Customer(UUID.randomUUID(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
+        invoice = invoiceRepository.save(new Invoice("12345678", true, true, customer, Set.of()));
     }
 
     @AfterEach
     void cleanup() {
-        customerRepository.delete(customer);
+        invoiceRepository.delete(invoice);
+        // We delete by id because the object is no longer valid after the invoice it references has been deleted
+        customerRepository.deleteById(customer.getId());
+        invoice = null;
         customer = null;
     }
 
     @Test
-    void promptOnVatAndNameInHalForms() throws Exception {
+    void promptOnCreateFormPropertiesInHalForms() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/profile/customers")
-                .accept(MediaTypes.HAL_FORMS_JSON))
+                        .accept(MediaTypes.HAL_FORMS_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().json("""
                         {
@@ -81,6 +92,7 @@ class TemplatePromptTest {
                                             type : "datetime"
                                         },
                                         {
+                                            prompt: "Spending Total",
                                             name : "total_spend",
                                             type : "number"
                                         },
@@ -91,17 +103,78 @@ class TemplatePromptTest {
                             }
                         }
                         """))
+        ;
+    }
+
+    @Test
+    void titleOnCgEntityInHalForms() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _links: {
+                                "cg:entity": [
+                                    {
+                                        name: "customers",
+                                        title: "Client"
+                                    },
+                                    { name: "invoices" }, { name: "refunds" }, { name: "promotions" },
+                                    { name: "shipping-addresses" }, { name: "orders" }
+                                ]
+                            }
+                        }
+                        """))
+        ;
+    }
+
+    @Test
+    void titleOnCgRelationInHalForms() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/invoices/" + invoice.getId()).accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _links: {
+                                "cg:relation": [
+                                    {
+                                        name: "counterparty",
+                                        title: "Sent by"
+                                    },
+                                    { name: "orders" }, { name: "refund" }
+                                ]
+                            }
+                        }
+                        """))
                 ;
     }
 
     @Test
-    void titleOnVatAndNameInJsonSchema() throws Exception {
+    void titleOnCgContentInHalForms() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/invoices/" + invoice.getId()).accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _links: {
+                                "cg:content": [
+                                    {
+                                        name: "attachment",
+                                        title: "Attached File"
+                                    },
+                                    { name: "content" }
+                                ]
+                            }
+                        }
+                        """))
+        ;
+    }
+
+    @Test
+    void titleOnEntityAndPropertiesInJsonSchema() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/profile/customers")
                         .accept("application/schema+json"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().json("""
                         {
-                            title : "Customer",
+                            title : "Client",
                             properties : {
                                 name : {
                                     title : "Customer name",
@@ -120,7 +193,7 @@ class TemplatePromptTest {
                                     format : "date-time"
                                 },
                                 total_spend : {
-                                    title : "Total spend",
+                                    title : "Total Amount Spent",
                                     readOnly : false,
                                     type : "integer"
                                 }

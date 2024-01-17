@@ -15,6 +15,7 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.data.rest.webmvc.mapping.Associations;
 import org.springframework.data.rest.webmvc.mapping.LinkCollector;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.hateoas.server.EntityLinks;
 import org.springframework.hateoas.server.LinkRelationProvider;
@@ -35,8 +36,8 @@ public class ContentGridSpringDataLinksConfiguration {
     }
 
     @Bean
-    ContentGridLinkCollector contentGridRelationLinkCollector(PersistentEntities entities, Associations associations, SelfLinkProvider selfLinkProvider) {
-        return new SpringDataAssociationLinkCollector(entities, associations, selfLinkProvider);
+    ContentGridLinkCollector contentGridRelationLinkCollector(PersistentEntities entities, Associations associations, SelfLinkProvider selfLinkProvider, MessageResolver resolver) {
+        return new SpringDataAssociationLinkCollector(entities, associations, selfLinkProvider, resolver);
     }
 
     @Bean
@@ -45,13 +46,13 @@ public class ContentGridSpringDataLinksConfiguration {
     }
 
     @Bean
-    RepresentationModelProcessor<RepositoryLinksResource> contentGridRepositoryLinksResourceProcessor(Repositories repositories, ResourceMappings resourceMappings, EntityLinks entityLinks) {
-        return new SpringDataRepositoryLinksResourceProcessor(repositories, resourceMappings, entityLinks);
+    RepresentationModelProcessor<RepositoryLinksResource> contentGridRepositoryLinksResourceProcessor(Repositories repositories, ResourceMappings resourceMappings, EntityLinks entityLinks, MessageResolver resolver) {
+        return new SpringDataRepositoryLinksResourceProcessor(repositories, resourceMappings, entityLinks, resolver);
     }
 
     @Bean
-    RepresentationModelProcessor<ProfileLinksResource> contentGridProfileLinksResourceProcessor(Repositories repositories, ResourceMappings resourceMappings, RepositoryRestConfiguration configuration) {
-        return new SpringDataProfileLinksResourceProcessor(repositories, resourceMappings, configuration);
+    RepresentationModelProcessor<ProfileLinksResource> contentGridProfileLinksResourceProcessor(Repositories repositories, ResourceMappings resourceMappings, RepositoryRestConfiguration configuration, MessageResolver resolver) {
+        return new SpringDataProfileLinksResourceProcessor(repositories, resourceMappings, configuration, resolver);
     }
 
     @Bean
