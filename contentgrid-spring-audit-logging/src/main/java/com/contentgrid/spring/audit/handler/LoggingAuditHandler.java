@@ -20,6 +20,8 @@ public class LoggingAuditHandler implements AuditEventHandler {
     public void handle(AbstractAuditEvent auditEvent) {
         var auditLogBuilder = log.atLevel(Level.INFO);
 
+        // Note: The log message should only be hardcoded text and placeholders.
+        // It is not safe to allow user input into the log message template
         StringBuilder logMessage = new StringBuilder("{} {} -> {}");
 
         auditLogBuilder = auditLogBuilder.addArgument(auditEvent.getRequestMethod())
