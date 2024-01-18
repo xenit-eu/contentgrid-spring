@@ -13,6 +13,7 @@ dependencies {
     api project(':contentgrid-spring-querydsl')
 
     implementation project(':contentgrid-spring-swagger-ui')
+    implementation project(':contentgrid-spring-audit-logging')
 
     api 'org.springframework.boot:spring-boot-starter-integration'
     api 'org.springframework.boot:spring-boot-starter-validation'
