@@ -7,3 +7,4 @@ com.contentgrid.spring.boot.autoconfigure.security.ActuatorEndpointsWebSecurityA
 com.contentgrid.spring.boot.autoconfigure.security.MultiTenantOAuth2ResourceServerAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.swagger.ui.SwaggerUIRestAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.audit.ContentGridAuditLoggingAutoConfiguration
+com.contentgrid.spring.boot.autoconfigure.cloudevents.CloudEventsAmqpAutoConfiguration

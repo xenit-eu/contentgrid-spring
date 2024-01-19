@@ -17,5 +17,6 @@ dependencies {
         api project(':contentgrid-spring-boot-starter')
         api project(':contentgrid-spring-boot-starter-annotations')
         api project(':contentgrid-spring-boot-actuators')
+        api 'io.cloudevents:cloudevents-spring:2.5.0'
     }
 }

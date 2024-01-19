@@ -29,6 +29,7 @@ dependencies {
     compileOnly project(':contentgrid-spring-data-rest')
     compileOnly project(':contentgrid-spring-swagger-ui')
     compileOnly project(':contentgrid-spring-audit-logging')
+    compileOnly project(':contentgrid-spring-amqp-cloudevents')
 
     compileOnly 'org.springframework.security:spring-security-web'
     compileOnly 'org.springframework.security:spring-security-config'
