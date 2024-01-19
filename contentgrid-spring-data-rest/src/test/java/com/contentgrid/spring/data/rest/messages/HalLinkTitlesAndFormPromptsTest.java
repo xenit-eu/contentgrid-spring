@@ -7,7 +7,6 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerReposito
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import java.util.Set;
 import java.util.UUID;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,8 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultHandler;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -27,7 +24,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
         InvoicingApplication.class,
 })
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
-class TemplatePromptTest {
+class HalLinkTitlesAndFormPromptsTest {
     @Autowired
     MockMvc mockMvc;
 
@@ -96,7 +93,16 @@ class TemplatePromptTest {
                                             name : "total_spend",
                                             type : "number"
                                         },
-                                        { name: "content.mimetype", type: "text" }, { name: "content.filename", type: "text" },
+                                        {
+                                            prompt: "Customer Document Mimetype",
+                                            name: "content.mimetype",
+                                            type: "text"
+                                        },
+                                        {
+                                            prompt: "Customer Document Filename",
+                                            name: "content.filename",
+                                            type: "text"
+                                        },
                                         { name : "orders", type : "url" }, { name : "invoices", type : "url" }
                                     ]
                                 }
@@ -161,6 +167,35 @@ class TemplatePromptTest {
                                     },
                                     { name: "content" }
                                 ]
+                            }
+                        }
+                        """))
+        ;
+    }
+
+    @Test
+    void promptOnCgContentPropertiesInHalForms() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/invoices").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(res -> System.out.println(res.getResponse().getContentAsString()))
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _templates: {
+                                "create-form": {
+                                    properties: [
+                                        {
+                                            prompt: "Attached File Filename",
+                                            name: "attachment_filename",
+                                            type: "text"
+                                        },
+                                        {
+                                            prompt: "Attached File Mimetype",
+                                            name: "attachment_mimetype",
+                                            type: "text"
+                                        },
+                                        {},{},{},{},{},{},{},{}
+                                    ]
+                                }
                             }
                         }
                         """))
