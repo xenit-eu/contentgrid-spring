@@ -21,6 +21,9 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'org.springframework.amqp:spring-amqp'
+    testImplementation project(':contentgrid-spring-amqp-cloudevents')
+    testImplementation 'io.cloudevents:cloudevents-core'
 
     testImplementation testFixtures(project(':contentgrid-spring-data-rest'))
 }
