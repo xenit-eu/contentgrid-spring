@@ -1,5 +1,6 @@
 package com.contentgrid.spring.audit.event;
 
+import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,12 +15,5 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class EntityRelationAuditEvent extends AbstractEntityRelationAuditEvent {
 
-    Operation operation;
-
-    public enum Operation {
-        READ,
-        UPDATE,
-        DELETE
-    }
 
 }

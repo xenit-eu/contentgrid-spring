@@ -12,11 +12,11 @@ dependencies {
     api platform('org.springframework.boot:spring-boot-dependencies:3.2.2')
     api platform('com.contentgrid.thunx:thunx-bom:0.10.0')
     api platform('com.github.paulcwarren:spring-content-bom:3.0.7')
+    api platform('io.cloudevents:cloudevents-bom:2.5.0')
 
     constraints {
         api project(':contentgrid-spring-boot-starter')
         api project(':contentgrid-spring-boot-starter-annotations')
         api project(':contentgrid-spring-boot-actuators')
-        api 'io.cloudevents:cloudevents-spring:2.5.0'
     }
 }

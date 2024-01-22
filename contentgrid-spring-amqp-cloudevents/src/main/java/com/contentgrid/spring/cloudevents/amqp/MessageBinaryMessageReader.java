@@ -15,13 +15,13 @@
  */
 package com.contentgrid.spring.cloudevents.amqp;
 
-import static io.cloudevents.spring.messaging.CloudEventsHeaders.CE_PREFIX;
-import static org.springframework.amqp.support.AmqpHeaders.CONTENT_TYPE;
+import static com.contentgrid.spring.cloudevents.amqp.CloudEventsHeaders.CE_PREFIX;
 
 import io.cloudevents.SpecVersion;
 import io.cloudevents.core.data.BytesCloudEventData;
 import io.cloudevents.core.impl.StringUtils;
 import io.cloudevents.core.message.impl.BaseGenericBinaryMessageReaderImpl;
+import io.cloudevents.spring.messaging.CloudEventsHeaders;
 import java.util.function.BiConsumer;
 import org.springframework.amqp.core.MessageProperties;
 
@@ -46,7 +46,7 @@ class MessageBinaryMessageReader extends BaseGenericBinaryMessageReaderImpl<Stri
 
     @Override
     protected boolean isContentTypeHeader(String key) {
-        return CONTENT_TYPE.equalsIgnoreCase(key);
+        return CloudEventsHeaders.CONTENT_TYPE.equalsIgnoreCase(key);
     }
 
     @Override

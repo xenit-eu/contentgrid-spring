@@ -30,7 +30,7 @@ public class EntityEventExtractor implements AuditEventExtractor {
                 for (ResourceMetadata resourceMapping : resourceMappings) {
                     if (resourceMapping.isExported() && resourceMapping.getPath()
                             .matches(templateVariables.get("repository"))) {
-                        return entityAuditEventBuilder
+                        entityAuditEventBuilder
                                 .domainType(resourceMapping.getDomainType());
                     }
                 }

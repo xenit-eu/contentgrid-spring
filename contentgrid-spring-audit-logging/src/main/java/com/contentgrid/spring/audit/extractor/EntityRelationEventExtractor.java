@@ -2,8 +2,8 @@ package com.contentgrid.spring.audit.extractor;
 
 import com.contentgrid.spring.audit.event.AbstractAuditEvent.AbstractAuditEventBuilder;
 import com.contentgrid.spring.audit.event.AbstractEntityRelationAuditEvent.AbstractEntityRelationAuditEventBuilder;
+import com.contentgrid.spring.audit.event.AbstractEntityRelationAuditEvent.Operation;
 import com.contentgrid.spring.audit.event.EntityRelationAuditEvent;
-import com.contentgrid.spring.audit.event.EntityRelationAuditEvent.Operation;
 import com.contentgrid.spring.audit.event.EntityRelationItemAuditEvent;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,11 +65,7 @@ public class EntityRelationEventExtractor implements AuditEventExtractor {
                             if (propertyId != null) {
                                 return EntityRelationItemAuditEvent.builder()
                                         .relationId(propertyId)
-                                        .operation(switch (operation) {
-                                            case READ -> EntityRelationItemAuditEvent.Operation.READ;
-                                            case DELETE -> EntityRelationItemAuditEvent.Operation.DELETE;
-                                            default -> throw new IllegalArgumentException();
-                                        });
+                                        .operation(operation);
                             }
                             return EntityRelationAuditEvent.builder()
                                     .operation(operation);
