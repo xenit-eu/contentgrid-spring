@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnClass({AmqpTemplate.class, AmqpAuditHandler.class})
 @ConditionalOnBean(AmqpTemplate.class)
 @EnableConfigurationProperties(ContentGridAuditAmqpProperties.class)
+@ConditionalOnProperty(value = "contentgrid.audit.amqp.enabled", matchIfMissing = true)
 public class ContentGridAmqpAuditAutoConfiguration {
 
     @Bean

@@ -50,13 +50,16 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
                 AuditObservationHandlerTest.TestConfig.class
         },
         properties = {
-                "server.servlet.encoding.enabled=false" // disables mock-mvc enforcing charset in request
+                "server.servlet.encoding.enabled=false", // disables mock-mvc enforcing charset in request
+                "contentgrid.audit.amqp.enabled=false"
         }
 )
 @AutoConfigureMockMvc
 class AuditObservationHandlerTest {
+
     @TestConfiguration
     static class TestConfig {
+
         @Bean
         AggregatingAuditHandler aggregatingAuditHandler() {
             return new AggregatingAuditHandler();
