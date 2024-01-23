@@ -57,6 +57,8 @@ dependencies {
     testImplementation 'org.springframework.cloud:spring-cloud-contract-wiremock'
     testImplementation 'com.github.paulcwarren:spring-content-s3-boot-starter'
     testImplementation 'com.github.paulcwarren:spring-content-rest-boot-starter'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:rabbitmq'
 
     testCompileOnly 'org.projectlombok:lombok'
 
