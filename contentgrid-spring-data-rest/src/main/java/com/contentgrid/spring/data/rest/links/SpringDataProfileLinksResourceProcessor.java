@@ -28,7 +28,7 @@ public class SpringDataProfileLinksResourceProcessor implements RepresentationMo
                         Link.of(ProfileController.getPath(configuration, metadata))
                                 .withRel(ContentGridLinkRelations.ENTITY)
                                 .withName(HalLinkRelation.of(metadata.getRel()).getLocalPart())
-                                .withTitle(resolver.resolve(LinkTitles.forEntity(domainType)))
+                                .withTitle(resolver.resolve(LinkTitle.forEntity(domainType)))
                 );
 
             }

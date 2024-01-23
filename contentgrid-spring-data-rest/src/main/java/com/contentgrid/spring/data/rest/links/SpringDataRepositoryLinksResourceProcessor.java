@@ -28,7 +28,7 @@ public class SpringDataRepositoryLinksResourceProcessor implements Representatio
                         collectionLink
                                 .withRel(ContentGridLinkRelations.ENTITY)
                                 .withName(HalLinkRelation.of(collectionLink.getRel()).getLocalPart())
-                                .withTitle(resolver.resolve(LinkTitles.forEntity(domainType)))
+                                .withTitle(resolver.resolve(LinkTitle.forEntity(domainType)))
                 );
 
             }

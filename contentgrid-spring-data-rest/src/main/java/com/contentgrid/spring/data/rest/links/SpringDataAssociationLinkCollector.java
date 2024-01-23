@@ -61,7 +61,7 @@ class SpringDataAssociationLinkCollector implements ContentGridLinkCollector {
                         .withRel(ContentGridLinkRelations.RELATION)
                         .withName(linkName)
                         .withTitle(resolver.resolve(
-                                LinkTitles.forProperty(entity.getType(), association.getInverse().getName())
+                                LinkTitle.forProperty(entity.getType(), association.getInverse().getName())
                         ));
                 links.add(addAssociationAffordance(cgRelLink, object.getClass(), property));
             }

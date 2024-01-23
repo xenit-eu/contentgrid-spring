@@ -81,7 +81,7 @@ class SpringContentLinkCollector implements ContentGridLinkCollector {
             var link = linkBuilder
                     .withRel(ContentGridLinkRelations.CONTENT)
                     .withName(linkName)
-                    .withTitle(resolver.resolve(LinkTitles.forProperty(persistentEntity.getType(), contentProperty.getKey())));
+                    .withTitle(resolver.resolve(LinkTitle.forProperty(persistentEntity.getType(), contentProperty.getKey())));
 
 //            var mimeType = contentProperty.getValue().getMimeType(object);
 //            if(mimeType != null) {
