@@ -17,6 +17,7 @@ import org.springframework.data.rest.webmvc.BaseUri;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.LinkRelation;
 import org.springframework.hateoas.Links;
+import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.hateoas.mediatype.hal.HalLinkRelation;
 import org.springframework.util.StringUtils;
 
@@ -31,8 +32,10 @@ class SpringContentLinkCollector implements ContentGridLinkCollector {
     private final RestConfiguration restConfiguration;
     private final ContentPropertyToRequestMappingContext requestMappingContext;
     private final ContentPropertyToLinkrelMappingContext linkrelMappingContext;
+    private final MessageResolver resolver;
 
     @Override
+    @SuppressWarnings("ConstantConditions")
     public Links getLinksFor(Object object, Links existing) {
         // This implementation is inspired on the ContentLinksResourceProcessor from spring-content, but adapted to the context of a LinkCollector
 
@@ -77,7 +80,8 @@ class SpringContentLinkCollector implements ContentGridLinkCollector {
 
             var link = linkBuilder
                     .withRel(ContentGridLinkRelations.CONTENT)
-                    .withName(linkName);
+                    .withName(linkName)
+                    .withTitle(resolver.resolve(LinkTitle.forProperty(persistentEntity.getType(), contentProperty.getKey())));
 
 //            var mimeType = contentProperty.getValue().getMimeType(object);
 //            if(mimeType != null) {

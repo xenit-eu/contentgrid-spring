@@ -6,6 +6,8 @@ import com.contentgrid.spring.data.rest.mapping.Property;
 import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -20,10 +23,13 @@ import lombok.Value;
 import lombok.With;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.support.SpringFactoriesLoader;
+import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
+import org.springframework.hateoas.AffordanceModel.Named;
 import org.springframework.hateoas.AffordanceModel.PayloadMetadata;
 import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
 import org.springframework.hateoas.mediatype.InputTypeFactory;
 import org.springframework.hateoas.mediatype.html.HtmlInputType;
+import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 
 @RequiredArgsConstructor
@@ -38,17 +44,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         List<PropertyMetadata> properties = new ArrayList<>();
         extractPropertyMetadataForForms(formMapping.forDomainType(domainType))
                 .forEachOrdered(properties::add);
-        return new PayloadMetadata() {
-            @Override
-            public Stream<PropertyMetadata> stream() {
-                return properties.stream();
-            }
-
-            @Override
-            public Class<?> getType() {
-                return domainType;
-            }
-        };
+        return new ClassnameI18nedPayloadMetadata(domainType, properties);
     }
 
     @Override
@@ -57,17 +53,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         extractPropertyMetadataForForms(formMapping.forDomainType(domainType))
                 .filter(property -> !Objects.equals(property.getInputType(), HtmlInputType.URL_VALUE))
                 .forEachOrdered(properties::add);
-        return new PayloadMetadata() {
-            @Override
-            public Stream<PropertyMetadata> stream() {
-                return properties.stream();
-            }
-
-            @Override
-            public Class<?> getType() {
-                return domainType;
-            }
-        };
+        return new ClassnameI18nedPayloadMetadata(domainType, properties);
     }
 
     @Override
@@ -82,7 +68,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
                         .withReadOnly(false)
                 ).toList();
 
-        return properties::stream;
+        return new ClassnameI18nedPayloadMetadata(domainType, properties);
     }
 
     private Stream<PropertyMetadata> extractPropertyMetadataForForms(Container entity) {
@@ -199,6 +185,45 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         @Override
         public Optional<String> getPattern() {
             return Optional.empty();
+        }
+    }
+
+
+    @AllArgsConstructor
+    @RequiredArgsConstructor
+    static class ClassnameI18nedPayloadMetadata implements InputPayloadMetadata {
+        private final Class<?> domainType;
+        private final Collection<PropertyMetadata> properties;
+        @With
+        private List<MediaType> mediaTypes = Collections.emptyList();
+
+        @Override
+        public <T extends Named> T customize(T target, Function<PropertyMetadata, T> customizer) {
+            return properties.stream()
+                    .filter(propMeta -> propMeta.getName().equals(target.getName()))
+                    .findAny()
+                    .map(customizer)
+                    .orElse(target);
+        }
+
+        @Override
+        public List<String> getI18nCodes() {
+            return List.of(domainType.getName());
+        }
+
+        @Override
+        public List<MediaType> getMediaTypes() {
+            return this.mediaTypes;
+        }
+
+        @Override
+        public Stream<PropertyMetadata> stream() {
+            return properties.stream();
+        }
+
+        @Override
+        public Class<?> getType() {
+            return this.domainType;
         }
     }
 
