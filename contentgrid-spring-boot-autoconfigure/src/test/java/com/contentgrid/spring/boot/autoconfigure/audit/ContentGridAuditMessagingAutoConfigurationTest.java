@@ -2,7 +2,8 @@ package com.contentgrid.spring.boot.autoconfigure.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.contentgrid.spring.audit.handler.amqp.AmqpAuditHandler;
+import com.contentgrid.spring.audit.handler.messaging.MessageSendingAuditHandler;
+import com.contentgrid.spring.boot.autoconfigure.messaging.ContentGridMessagingAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
@@ -13,41 +14,41 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.testcontainers.containers.RabbitMQContainer;
 
-class ContentGridAmqpAuditAutoConfigurationTest {
+class ContentGridAuditMessagingAutoConfigurationTest {
 
-    private static final String AUDIT_EVENT_TO_CLOUD_EVENT_MESSAGE_CONVERTER_RABBIT_TEMPLATE_CUSTOMIZER = "auditEventToCloudEventMessageConverterRabbitTemplateCustomizer";
-    private static final String AUDIT_EVENT_MESSAGE_CONVERTER_RABBIT_TEMPLATE_CUSTOMIZER = "auditEventMessageConverterRabbitTemplateCustomizer";
+    private static final String AUDIT_EVENT_TO_CLOUD_EVENT_MESSAGE_CONVERTER = "auditEventToCloudEventMessageConverter";
 
     private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
-                    ContentGridAmqpAuditAutoConfiguration.class,
+                    ContentGridAuditMessagingAutoConfiguration.class,
                     ContentGridAuditLoggingAutoConfiguration.class,
+                    ContentGridMessagingAutoConfiguration.class,
                     RepositoryRestMvcAutoConfiguration.class
             ));
 
     @Test
-    void amqpHandlerEnabledWhenAmqpTemplateIsAvailable() {
+    void messagingHandlerEnabledWhenMessagingTemplateIsAvailable() {
         contextRunner.withConfiguration(AutoConfigurations.of(RabbitAutoConfiguration.class))
                 .withUserConfiguration(AmqpServiceConnection.class)
                 .run(context -> {
-                    assertThat(context).hasSingleBean(AmqpAuditHandler.class);
+                    assertThat(context).hasSingleBean(MessageSendingAuditHandler.class);
                 });
     }
 
     @Test
-    void amqpHandlerDisabledWithoutConfiguration() {
+    void messagingHandlerDisabledWithoutConfiguration() {
         contextRunner.run(context -> {
-            assertThat(context).doesNotHaveBean(AmqpAuditHandler.class);
+            assertThat(context).doesNotHaveBean(MessageSendingAuditHandler.class);
         });
     }
 
     @Test
-    void amqpHandlerDisabledByProperty() {
+    void messagingHandlerDisabledByProperty() {
         contextRunner.withConfiguration(AutoConfigurations.of(RabbitAutoConfiguration.class))
                 .withUserConfiguration(AmqpServiceConnection.class)
-                .withPropertyValues("contentgrid.audit.amqp.enabled=false")
+                .withPropertyValues("contentgrid.audit.messaging.enabled=false")
                 .run(context -> {
-                    assertThat(context).doesNotHaveBean(AmqpAuditHandler.class);
+                    assertThat(context).doesNotHaveBean(MessageSendingAuditHandler.class);
                 });
     }
 
@@ -56,9 +57,7 @@ class ContentGridAmqpAuditAutoConfigurationTest {
         contextRunner.withConfiguration(AutoConfigurations.of(RabbitAutoConfiguration.class))
                 .withUserConfiguration(AmqpServiceConnection.class)
                 .run(context -> {
-                    assertThat(context).doesNotHaveBean(
-                            AUDIT_EVENT_TO_CLOUD_EVENT_MESSAGE_CONVERTER_RABBIT_TEMPLATE_CUSTOMIZER);
-                    assertThat(context).hasBean(AUDIT_EVENT_MESSAGE_CONVERTER_RABBIT_TEMPLATE_CUSTOMIZER);
+                    assertThat(context).doesNotHaveBean(AUDIT_EVENT_TO_CLOUD_EVENT_MESSAGE_CONVERTER);
                 });
     }
 
@@ -66,11 +65,9 @@ class ContentGridAmqpAuditAutoConfigurationTest {
     void cloudEventsConverterUsedWhenSourceConfigured() {
         contextRunner.withConfiguration(AutoConfigurations.of(RabbitAutoConfiguration.class))
                 .withUserConfiguration(AmqpServiceConnection.class)
-                .withPropertyValues("contentgrid.audit.amqp.source=https://example.com/abc")
+                .withPropertyValues("contentgrid.audit.messaging.source=https://example.com/abc")
                 .run(context -> {
-                    assertThat(context).hasBean(
-                            AUDIT_EVENT_TO_CLOUD_EVENT_MESSAGE_CONVERTER_RABBIT_TEMPLATE_CUSTOMIZER);
-                    assertThat(context).doesNotHaveBean(AUDIT_EVENT_MESSAGE_CONVERTER_RABBIT_TEMPLATE_CUSTOMIZER);
+                    assertThat(context).hasBean(AUDIT_EVENT_TO_CLOUD_EVENT_MESSAGE_CONVERTER);
                 });
     }
 

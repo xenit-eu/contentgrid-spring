@@ -1,4 +1,4 @@
-package com.contentgrid.spring.audit.handler.amqp;
+package com.contentgrid.spring.audit.handler.messaging;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,11 +22,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.messaging.support.GenericMessage;
 
 class AuditEventToCloudEventMessageConverterTest {
+
+    private final static Message EMPTY_MESSAGE = new GenericMessage<>(new byte[0]);
 
     @Test
     void publishesBasicEvent() {
@@ -34,7 +37,7 @@ class AuditEventToCloudEventMessageConverterTest {
         var cloudEventCaptor = ArgumentCaptor.forClass(CloudEvent.class);
 
         Mockito.when(upstreamConverter.toMessage(cloudEventCaptor.capture(), Mockito.any()))
-                .thenReturn(new Message(new byte[0]));
+                .thenReturn(EMPTY_MESSAGE);
         var handler = new AuditEventToCloudEventMessageConverter(
                 upstreamConverter,
                 new ObjectMapper()::writeValueAsBytes,
@@ -47,7 +50,7 @@ class AuditEventToCloudEventMessageConverterTest {
                 .responseStatus(203)
                 .build();
 
-        handler.toMessage(event, new MessageProperties());
+        handler.toMessage(event, new MessageHeaders(null));
 
         assertThat(cloudEventCaptor.getValue()).satisfies(cloudEvent -> {
             assertThat(cloudEvent.getSource()).isEqualTo(URI.create("https://contentgrid.com/audit-source"));
@@ -65,7 +68,7 @@ class AuditEventToCloudEventMessageConverterTest {
         var cloudEventCaptor = ArgumentCaptor.forClass(CloudEvent.class);
 
         Mockito.when(upstreamConverter.toMessage(cloudEventCaptor.capture(), Mockito.any()))
-                .thenReturn(new Message(new byte[0]));
+                .thenReturn(EMPTY_MESSAGE);
         var handler = new AuditEventToCloudEventMessageConverter(
                 upstreamConverter,
                 new ObjectMapper()::writeValueAsBytes,
@@ -82,7 +85,7 @@ class AuditEventToCloudEventMessageConverterTest {
                 .id("123")
                 .build();
 
-        handler.toMessage(event, new MessageProperties());
+        handler.toMessage(event, new MessageHeaders(null));
 
         assertThat(cloudEventCaptor.getValue()).satisfies(cloudEvent -> {
             assertThat(cloudEvent.getSource()).isEqualTo(URI.create("https://contentgrid.com/audit-source"));
@@ -105,7 +108,7 @@ class AuditEventToCloudEventMessageConverterTest {
         var cloudEventCaptor = ArgumentCaptor.forClass(CloudEvent.class);
 
         Mockito.when(upstreamConverter.toMessage(cloudEventCaptor.capture(), Mockito.any()))
-                .thenReturn(new Message(new byte[0]));
+                .thenReturn(EMPTY_MESSAGE);
         var handler = new AuditEventToCloudEventMessageConverter(
                 upstreamConverter,
                 new ObjectMapper()::writeValueAsBytes,
@@ -121,7 +124,7 @@ class AuditEventToCloudEventMessageConverterTest {
                 .id("123")
                 .build();
 
-        handler.toMessage(event, new MessageProperties());
+        handler.toMessage(event, new MessageHeaders(null));
 
         assertThat(cloudEventCaptor.getValue()).satisfies(cloudEvent -> {
             assertThat(cloudEvent.getSource()).isEqualTo(URI.create("https://contentgrid.com/audit-source"));
@@ -145,7 +148,7 @@ class AuditEventToCloudEventMessageConverterTest {
         var cloudEventCaptor = ArgumentCaptor.forClass(CloudEvent.class);
 
         Mockito.when(upstreamConverter.toMessage(cloudEventCaptor.capture(), Mockito.any()))
-                .thenReturn(new Message(new byte[0]));
+                .thenReturn(EMPTY_MESSAGE);
         var handler = new AuditEventToCloudEventMessageConverter(
                 upstreamConverter,
                 new ObjectMapper()::writeValueAsBytes,
@@ -162,7 +165,7 @@ class AuditEventToCloudEventMessageConverterTest {
                 .relationName("xyz")
                 .build();
 
-        handler.toMessage(event, new MessageProperties());
+        handler.toMessage(event, new MessageHeaders(null));
 
         assertThat(cloudEventCaptor.getValue()).satisfies(cloudEvent -> {
             assertThat(cloudEvent.getSource()).isEqualTo(URI.create("https://contentgrid.com/audit-source"));
@@ -185,7 +188,7 @@ class AuditEventToCloudEventMessageConverterTest {
         var cloudEventCaptor = ArgumentCaptor.forClass(CloudEvent.class);
 
         Mockito.when(upstreamConverter.toMessage(cloudEventCaptor.capture(), Mockito.any()))
-                .thenReturn(new Message(new byte[0]));
+                .thenReturn(EMPTY_MESSAGE);
         var handler = new AuditEventToCloudEventMessageConverter(
                 upstreamConverter,
                 new ObjectMapper()::writeValueAsBytes,
@@ -203,7 +206,7 @@ class AuditEventToCloudEventMessageConverterTest {
                 .relationId("ZZZ")
                 .build();
 
-        handler.toMessage(event, new MessageProperties());
+        handler.toMessage(event, new MessageHeaders(null));
 
         assertThat(cloudEventCaptor.getValue()).satisfies(cloudEvent -> {
             assertThat(cloudEvent.getSource()).isEqualTo(URI.create("https://contentgrid.com/audit-source"));
@@ -226,7 +229,7 @@ class AuditEventToCloudEventMessageConverterTest {
         var cloudEventCaptor = ArgumentCaptor.forClass(CloudEvent.class);
 
         Mockito.when(upstreamConverter.toMessage(cloudEventCaptor.capture(), Mockito.any()))
-                .thenReturn(new Message(new byte[0]));
+                .thenReturn(EMPTY_MESSAGE);
         var handler = new AuditEventToCloudEventMessageConverter(
                 upstreamConverter,
                 new ObjectMapper()::writeValueAsBytes,
@@ -243,7 +246,7 @@ class AuditEventToCloudEventMessageConverterTest {
                 .contentName("xyz")
                 .build();
 
-        handler.toMessage(event, new MessageProperties());
+        handler.toMessage(event, new MessageHeaders(null));
 
         assertThat(cloudEventCaptor.getValue()).satisfies(cloudEvent -> {
             assertThat(cloudEvent.getSource()).isEqualTo(URI.create("https://contentgrid.com/audit-source"));
@@ -261,7 +264,7 @@ class AuditEventToCloudEventMessageConverterTest {
         var cloudEventCaptor = ArgumentCaptor.forClass(CloudEvent.class);
 
         Mockito.when(upstreamConverter.toMessage(cloudEventCaptor.capture(), Mockito.any()))
-                .thenReturn(new Message(new byte[0]));
+                .thenReturn(EMPTY_MESSAGE);
         var handler = new AuditEventToCloudEventMessageConverter(
                 upstreamConverter,
                 new ObjectMapper()::writeValueAsBytes,
@@ -275,7 +278,7 @@ class AuditEventToCloudEventMessageConverterTest {
                 .queryParameters(Map.of("xyz", List.of("123")))
                 .build();
 
-        handler.toMessage(event, new MessageProperties());
+        handler.toMessage(event, new MessageHeaders(null));
 
         assertThat(cloudEventCaptor.getValue()).satisfies(cloudEvent -> {
             assertThat(cloudEvent.getSource()).isEqualTo(URI.create("https://contentgrid.com/audit-source"));

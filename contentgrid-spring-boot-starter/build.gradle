@@ -14,7 +14,7 @@ dependencies {
 
     implementation project(':contentgrid-spring-swagger-ui')
     implementation project(':contentgrid-spring-audit-logging')
-    implementation project(':contentgrid-spring-amqp-cloudevents')
+    implementation 'io.cloudevents:cloudevents-spring'
 
     api 'org.springframework.boot:spring-boot-starter-integration'
     api 'org.springframework.boot:spring-boot-starter-validation'

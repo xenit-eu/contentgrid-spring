@@ -1,7 +1,7 @@
-package com.contentgrid.spring.audit.handler.amqp;
+package com.contentgrid.spring.audit.handler.messaging;
 
 import com.contentgrid.spring.audit.event.AbstractAuditEvent;
-import com.contentgrid.spring.audit.handler.amqp.AuditEventToCloudEventMapper.AuditEventToCloudEventMapperBuilder;
+import com.contentgrid.spring.audit.handler.messaging.AuditEventToCloudEventMapper.AuditEventToCloudEventMapperBuilder;
 import java.util.Objects;
 import java.util.function.Function;
 import lombok.AccessLevel;

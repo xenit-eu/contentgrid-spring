@@ -1,4 +1,4 @@
-package com.contentgrid.spring.audit.handler.amqp;
+package com.contentgrid.spring.audit.handler.messaging;
 
 import com.contentgrid.spring.audit.event.AbstractAuditEvent;
 import com.contentgrid.spring.audit.event.AbstractEntityRelationAuditEvent;
@@ -7,8 +7,6 @@ import com.contentgrid.spring.audit.event.EntityContentAuditEvent;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent.Operation;
 import com.contentgrid.spring.audit.event.EntitySearchAuditEvent;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.data.PojoCloudEventData;
 import java.net.URI;
@@ -17,11 +15,9 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.support.converter.MessageConversionException;
-import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.converter.MessageConverter;
 
 @RequiredArgsConstructor
 public class AuditEventToCloudEventMessageConverter implements MessageConverter {
@@ -63,8 +59,14 @@ public class AuditEventToCloudEventMessageConverter implements MessageConverter 
     );
 
     @Override
-    public Message toMessage(Object object, MessageProperties messageProperties) throws MessageConversionException {
-        if (object instanceof AbstractAuditEvent auditEvent) {
+    public Object fromMessage(Message<?> message, Class<?> targetClass) {
+        // TODO: implement converting back from a message to audit event?
+        return null;
+    }
+
+    @Override
+    public Message<?> toMessage(Object payload, MessageHeaders headers) {
+        if (payload instanceof AbstractAuditEvent auditEvent) {
             var typeMapper = TYPE_MAPPING.stream()
                     .filter(m -> m.supports(auditEvent))
                     .findFirst()
@@ -79,15 +81,14 @@ public class AuditEventToCloudEventMessageConverter implements MessageConverter 
                     .withData(PojoCloudEventData.wrap(auditEvent, mapper))
                     .build();
 
-            return delegate.toMessage(cloudEvent, messageProperties);
+            if (headers == null) {
+                // This is required so the CloudEventMessageConverter doesn't try to put null in a hashmap
+                headers = new MessageHeaders(null);
+            }
+
+            return delegate.toMessage(cloudEvent, headers);
 
         }
-        return delegate.toMessage(object, messageProperties);
-    }
-
-    @Override
-    @SneakyThrows
-    public Object fromMessage(Message message) throws MessageConversionException {
-        return delegate.fromMessage(message);
+        return null;
     }
 }

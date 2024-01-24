@@ -51,7 +51,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
         },
         properties = {
                 "server.servlet.encoding.enabled=false", // disables mock-mvc enforcing charset in request
-                "contentgrid.audit.amqp.enabled=false"
+                "contentgrid.audit.messaging.enabled=false"
         }
 )
 @AutoConfigureMockMvc
@@ -154,7 +154,7 @@ class AuditObservationHandlerTest {
     }
 
     @Test
-    void itemCreate() throws Exception{
+    void itemCreate() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/customers")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -446,7 +446,7 @@ class AuditObservationHandlerTest {
                     assertThat(event.getRequestMethod()).isEqualTo(method.toString());
                     assertThat(event.getRequestUri()).isEqualTo(uri);
                     assertThat(event.getResponseStatus()).isEqualTo(result.getResponse().getStatus());
-                    if(result.getResponse().getRedirectedUrl() != null) {
+                    if (result.getResponse().getRedirectedUrl() != null) {
                         assertThat(event.getResponseLocation()).isEqualTo(
                                 result.getResponse().getRedirectedUrl().replace("http://localhost", ""));
                     } else {

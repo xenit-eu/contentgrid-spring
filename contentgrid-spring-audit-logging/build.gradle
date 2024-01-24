@@ -8,22 +8,23 @@ plugins {
 dependencies {
     annotationProcessor platform(project(':contentgrid-spring-boot-platform'))
 
-    implementation platform(project(':contentgrid-spring-boot-platform'))
     compileOnly platform(project(':contentgrid-spring-boot-platform'))
+    compileOnly 'org.springframework:spring-messaging'
+    compileOnly 'io.cloudevents:cloudevents-spring'
+
+    implementation platform(project(':contentgrid-spring-boot-platform'))
     implementation 'io.micrometer:micrometer-observation'
     implementation 'org.springframework:spring-webmvc'
     implementation 'org.springframework.data:spring-data-rest-webmvc'
-    compileOnly 'org.springframework.amqp:spring-amqp'
-    compileOnly 'io.cloudevents:cloudevents-core'
     implementation 'com.github.paulcwarren:spring-content-rest'
     implementation 'jakarta.servlet:jakarta.servlet-api'
     implementation 'org.slf4j:slf4j-api'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
-    testImplementation 'org.springframework.amqp:spring-amqp'
-    testImplementation project(':contentgrid-spring-amqp-cloudevents')
-    testImplementation 'io.cloudevents:cloudevents-core'
+
+    testImplementation 'org.springframework:spring-messaging'
+    testImplementation 'io.cloudevents:cloudevents-spring'
 
     testImplementation testFixtures(project(':contentgrid-spring-data-rest'))
 }
