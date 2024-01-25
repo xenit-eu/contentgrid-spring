@@ -14,3 +14,9 @@ spring:
 logging:
   level:
     org.springframework.data.querydsl.binding: DEBUG
+
+contentgrid:
+  audit:
+    messaging:
+      source: https://example.contentgrid.cloud/abc
+      destination: audit
