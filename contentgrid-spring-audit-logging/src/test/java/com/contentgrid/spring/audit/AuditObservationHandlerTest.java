@@ -171,7 +171,7 @@ class AuditObservationHandlerTest {
                 .isInstanceOfSatisfying(EntityItemAuditEvent.class, event -> {
                     assertThat(event.getDomainType()).isEqualTo(Customer.class);
                     assertThat(event.getOperation()).isEqualTo(Operation.CREATE);
-                    assertThat(event.getId()).isEqualTo(created.getId());
+                    assertThat(event.getId()).isEqualTo(created.getId().toString());
                 });
     }
 
@@ -472,7 +472,7 @@ class AuditObservationHandlerTest {
             "POST,/xyz"
     })
     void noAuditEvents(HttpMethod method, String uri) throws Exception {
-        var result = mockMvc.perform(MockMvcRequestBuilders.request(method, uri))
+        mockMvc.perform(MockMvcRequestBuilders.request(method, uri))
                 .andReturn();
 
         assertThat(auditHandler.getEvents()).isEmpty();

@@ -3,6 +3,7 @@ package com.contentgrid.spring.boot.autoconfigure.audit;
 import com.contentgrid.spring.audit.handler.messaging.AuditEventMessageConverter;
 import com.contentgrid.spring.audit.handler.messaging.AuditEventToCloudEventMessageConverter;
 import com.contentgrid.spring.audit.handler.messaging.MessageSendingAuditHandler;
+import com.contentgrid.spring.audit.handler.messaging.Jackson2AuditMessagingModule;
 import com.contentgrid.spring.boot.autoconfigure.ContentGrid;
 import com.contentgrid.spring.boot.autoconfigure.audit.ContentGridAuditMessagingAutoConfiguration.ContentGridAuditMessagingProperties;
 import com.contentgrid.spring.boot.autoconfigure.messaging.ContentGridMessagingAutoConfiguration;
@@ -48,13 +49,12 @@ public class ContentGridAuditMessagingAutoConfiguration {
             CloudEventMessageConverter.class})
     @Order(10)
     MessageConverter auditEventToCloudEventMessageConverter(
-            ObjectProvider<ObjectMapper> objectMapper,
+            @ContentGrid(ContentGridAuditMessagingAutoConfiguration.class) ObjectMapper objectMapper,
             ContentGridAuditMessagingProperties auditProperties
     ) {
-        var mapper = objectMapper.getIfAvailable(ObjectMapper::new);
         return new AuditEventToCloudEventMessageConverter(
                 new CloudEventMessageConverter(),
-                mapper::writeValueAsBytes,
+                objectMapper::writeValueAsBytes,
                 auditProperties.getSource()
         );
     }
@@ -62,9 +62,26 @@ public class ContentGridAuditMessagingAutoConfiguration {
     @Bean
     @ContentGrid
     MessageConverter auditEventMessageConverter(
-            ObjectProvider<ObjectMapper> objectMapper
+            @ContentGrid(ContentGridAuditMessagingAutoConfiguration.class) ObjectMapper objectMapper
     ) {
-        return new AuditEventMessageConverter(objectMapper.getIfAvailable(ObjectMapper::new));
+        return new AuditEventMessageConverter(objectMapper);
+    }
+
+    @Bean
+    @ContentGrid(ContentGridAuditMessagingAutoConfiguration.class)
+    ObjectMapper auditObjectMapper(ObjectProvider<ObjectMapper> objectMapper) {
+        var originalMapper = objectMapper.getIfAvailable();
+        ObjectMapper mapper;
+        if (originalMapper != null) {
+            mapper = originalMapper.copy();
+        } else {
+            mapper = new ObjectMapper();
+        }
+
+        mapper.registerModule(new Jackson2AuditMessagingModule());
+
+        return mapper;
+
     }
 
     @ConfigurationProperties("contentgrid.audit.messaging")

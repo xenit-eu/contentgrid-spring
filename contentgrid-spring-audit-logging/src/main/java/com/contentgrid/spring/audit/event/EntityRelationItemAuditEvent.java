@@ -16,5 +16,5 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class EntityRelationItemAuditEvent extends AbstractEntityRelationAuditEvent {
 
-    Object relationId;
+    String relationId;
 }

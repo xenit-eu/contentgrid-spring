@@ -2,6 +2,7 @@ package com.contentgrid.spring.audit.extractor;
 
 import com.contentgrid.spring.audit.event.AbstractAuditEvent.AbstractAuditEventBuilder;
 import com.contentgrid.spring.audit.event.AbstractEntityItemAuditEvent;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mapping.context.PersistentEntities;
@@ -27,6 +28,7 @@ public class EntityItemCreateIdExtractor extends AbstractRepositoryEventListener
             AbstractAuditEventBuilder<?, ?> eventBuilder) {
         if (eventBuilder instanceof AbstractEntityItemAuditEvent.AbstractEntityItemAuditEventBuilder<?, ?> itemAuditEventBuilder) {
             Optional.ofNullable(context.get(EntityItemCreateIdExtractor.class))
+                    .map(Objects::toString)
                     .ifPresent(itemAuditEventBuilder::id);
         }
         return eventBuilder;
