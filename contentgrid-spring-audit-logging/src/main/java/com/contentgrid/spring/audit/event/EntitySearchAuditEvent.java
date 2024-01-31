@@ -17,4 +17,5 @@ import lombok.experimental.SuperBuilder;
 public class EntitySearchAuditEvent extends AbstractEntityAuditEvent {
 
     Map<String, List<String>> queryParameters;
+
 }

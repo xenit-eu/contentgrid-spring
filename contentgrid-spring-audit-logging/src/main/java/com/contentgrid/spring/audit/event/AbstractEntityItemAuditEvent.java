@@ -14,5 +14,5 @@ import lombok.experimental.SuperBuilder;
 @ToString(callSuper = true)
 public abstract class AbstractEntityItemAuditEvent extends AbstractEntityAuditEvent {
 
-    Object id;
+    String id;
 }

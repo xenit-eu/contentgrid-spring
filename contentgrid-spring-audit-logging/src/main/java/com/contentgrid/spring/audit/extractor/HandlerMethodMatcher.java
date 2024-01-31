@@ -7,13 +7,15 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.Nullable;
 import org.springframework.web.method.HandlerMethod;
 
 @Builder
+@Slf4j
 public class HandlerMethodMatcher {
 
-    @Nullable
+    @NonNull
     private final Class<?> type;
 
     @Singular
@@ -23,6 +25,9 @@ public class HandlerMethodMatcher {
     private HandlerMethodMatcher(Class<?> type, Set<String> methodNames) {
         this.type = type;
         this.methodNames = Set.copyOf(methodNames);
+        if (type == Void.TYPE) {
+            return;
+        }
         var methodNameValidation = new HashSet<>(methodNames);
 
         for (Method method : type.getDeclaredMethods()) {
@@ -54,9 +59,14 @@ public class HandlerMethodMatcher {
 
     public static class HandlerMethodMatcherBuilder {
 
-        @SneakyThrows
         public HandlerMethodMatcherBuilder className(String className) {
-            return type(Class.forName(className));
+            Class<?> type = Void.TYPE;
+            try {
+                type = Class.forName(className);
+            } catch (ClassNotFoundException classNotFoundException) {
+                log.warn("Class {} was not found", className);
+            }
+            return type(type);
         }
 
         @SneakyThrows

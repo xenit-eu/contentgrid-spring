@@ -14,10 +14,6 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public abstract class AbstractEntityAuditEvent extends AbstractAuditEvent {
 
-    private final Class<?> domainType;
+    Class<?> domainType;
 
-    protected AbstractEntityAuditEvent(AbstractEntityAuditEventBuilder<?, ?> b) {
-        super(b);
-        this.domainType = b.domainType;
-    }
 }

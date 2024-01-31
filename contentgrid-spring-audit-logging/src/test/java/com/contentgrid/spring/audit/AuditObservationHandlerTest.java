@@ -50,13 +50,16 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
                 AuditObservationHandlerTest.TestConfig.class
         },
         properties = {
-                "server.servlet.encoding.enabled=false" // disables mock-mvc enforcing charset in request
+                "server.servlet.encoding.enabled=false", // disables mock-mvc enforcing charset in request
+                "contentgrid.audit.messaging.enabled=false"
         }
 )
 @AutoConfigureMockMvc
 class AuditObservationHandlerTest {
+
     @TestConfiguration
     static class TestConfig {
+
         @Bean
         AggregatingAuditHandler aggregatingAuditHandler() {
             return new AggregatingAuditHandler();
@@ -151,7 +154,7 @@ class AuditObservationHandlerTest {
     }
 
     @Test
-    void itemCreate() throws Exception{
+    void itemCreate() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/customers")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -168,7 +171,7 @@ class AuditObservationHandlerTest {
                 .isInstanceOfSatisfying(EntityItemAuditEvent.class, event -> {
                     assertThat(event.getDomainType()).isEqualTo(Customer.class);
                     assertThat(event.getOperation()).isEqualTo(Operation.CREATE);
-                    assertThat(event.getId()).isEqualTo(created.getId());
+                    assertThat(event.getId()).isEqualTo(created.getId().toString());
                 });
     }
 
@@ -443,7 +446,7 @@ class AuditObservationHandlerTest {
                     assertThat(event.getRequestMethod()).isEqualTo(method.toString());
                     assertThat(event.getRequestUri()).isEqualTo(uri);
                     assertThat(event.getResponseStatus()).isEqualTo(result.getResponse().getStatus());
-                    if(result.getResponse().getRedirectedUrl() != null) {
+                    if (result.getResponse().getRedirectedUrl() != null) {
                         assertThat(event.getResponseLocation()).isEqualTo(
                                 result.getResponse().getRedirectedUrl().replace("http://localhost", ""));
                     } else {
@@ -469,7 +472,7 @@ class AuditObservationHandlerTest {
             "POST,/xyz"
     })
     void noAuditEvents(HttpMethod method, String uri) throws Exception {
-        var result = mockMvc.perform(MockMvcRequestBuilders.request(method, uri))
+        mockMvc.perform(MockMvcRequestBuilders.request(method, uri))
                 .andReturn();
 
         assertThat(auditHandler.getEvents()).isEmpty();

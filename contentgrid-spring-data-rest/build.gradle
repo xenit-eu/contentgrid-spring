@@ -55,6 +55,7 @@ dependencies {
     testFixturesCompileOnly 'org.projectlombok:lombok'
     testFixturesImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testFixturesImplementation 'org.testcontainers:postgresql'
+    testFixturesImplementation 'org.testcontainers:rabbitmq'
 
 
     testFixturesRuntimeOnly 'org.postgresql:postgresql'
