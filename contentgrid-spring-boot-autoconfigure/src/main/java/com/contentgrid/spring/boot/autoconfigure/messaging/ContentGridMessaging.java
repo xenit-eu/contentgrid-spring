@@ -1,4 +1,4 @@
-package com.contentgrid.spring.boot.autoconfigure;
+package com.contentgrid.spring.boot.autoconfigure.messaging;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -12,6 +12,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Qualifier
-public @interface ContentGrid {
+public @interface ContentGridMessaging {
 
 }

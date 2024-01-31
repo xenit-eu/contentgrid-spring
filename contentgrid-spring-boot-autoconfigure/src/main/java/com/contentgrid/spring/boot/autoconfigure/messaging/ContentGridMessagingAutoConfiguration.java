@@ -1,7 +1,6 @@
 package com.contentgrid.spring.boot.autoconfigure.messaging;
 
 
-import com.contentgrid.spring.boot.autoconfigure.ContentGrid;
 import java.util.Collection;
 import org.springframework.amqp.rabbit.core.RabbitMessagingTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -21,11 +20,11 @@ import org.springframework.messaging.core.MessageSendingOperations;
 public class ContentGridMessagingAutoConfiguration {
 
     @Bean
-    @ContentGrid
+    @ContentGridMessaging
     @ConditionalOnSingleCandidate(RabbitTemplate.class)
     MessageSendingOperations<String> contentGridRabbitMessagingTemplate(
             RabbitTemplate rabbitTemplate,
-            @ContentGrid
+            @ContentGridMessaging
             Collection<MessageConverter> messageConverters
     ) {
         var messagingTemplate = new RabbitMessagingTemplate(rabbitTemplate);
