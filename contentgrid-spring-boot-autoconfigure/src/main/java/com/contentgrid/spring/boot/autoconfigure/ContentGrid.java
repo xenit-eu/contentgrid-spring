@@ -14,5 +14,4 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @Qualifier
 public @interface ContentGrid {
 
-    Class<?> value() default ContentGrid.class;
 }

@@ -2,8 +2,8 @@ package com.contentgrid.spring.boot.autoconfigure.audit;
 
 import com.contentgrid.spring.audit.handler.messaging.AuditEventMessageConverter;
 import com.contentgrid.spring.audit.handler.messaging.AuditEventToCloudEventMessageConverter;
-import com.contentgrid.spring.audit.handler.messaging.MessageSendingAuditHandler;
 import com.contentgrid.spring.audit.handler.messaging.Jackson2AuditMessagingModule;
+import com.contentgrid.spring.audit.handler.messaging.MessageSendingAuditHandler;
 import com.contentgrid.spring.boot.autoconfigure.ContentGrid;
 import com.contentgrid.spring.boot.autoconfigure.audit.ContentGridAuditMessagingAutoConfiguration.ContentGridAuditMessagingProperties;
 import com.contentgrid.spring.boot.autoconfigure.messaging.ContentGridMessagingAutoConfiguration;
@@ -12,7 +12,6 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.spring.messaging.CloudEventMessageConverter;
 import java.net.URI;
 import lombok.Data;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -43,13 +42,18 @@ public class ContentGridAuditMessagingAutoConfiguration {
     }
 
     @Bean
+    Jackson2AuditMessagingModule jackson2AuditMessagingModule() {
+        return new Jackson2AuditMessagingModule();
+    }
+
+    @Bean
     @ContentGrid
     @ConditionalOnProperty("contentgrid.audit.messaging.source")
     @ConditionalOnClass({CloudEvent.class, AuditEventToCloudEventMessageConverter.class,
             CloudEventMessageConverter.class})
     @Order(10)
     MessageConverter auditEventToCloudEventMessageConverter(
-            @ContentGrid(ContentGridAuditMessagingAutoConfiguration.class) ObjectMapper objectMapper,
+            ObjectMapper objectMapper,
             ContentGridAuditMessagingProperties auditProperties
     ) {
         return new AuditEventToCloudEventMessageConverter(
@@ -62,26 +66,9 @@ public class ContentGridAuditMessagingAutoConfiguration {
     @Bean
     @ContentGrid
     MessageConverter auditEventMessageConverter(
-            @ContentGrid(ContentGridAuditMessagingAutoConfiguration.class) ObjectMapper objectMapper
+            ObjectMapper objectMapper
     ) {
         return new AuditEventMessageConverter(objectMapper);
-    }
-
-    @Bean
-    @ContentGrid(ContentGridAuditMessagingAutoConfiguration.class)
-    ObjectMapper auditObjectMapper(ObjectProvider<ObjectMapper> objectMapper) {
-        var originalMapper = objectMapper.getIfAvailable();
-        ObjectMapper mapper;
-        if (originalMapper != null) {
-            mapper = originalMapper.copy();
-        } else {
-            mapper = new ObjectMapper();
-        }
-
-        mapper.registerModule(new Jackson2AuditMessagingModule());
-
-        return mapper;
-
     }
 
     @ConfigurationProperties("contentgrid.audit.messaging")
