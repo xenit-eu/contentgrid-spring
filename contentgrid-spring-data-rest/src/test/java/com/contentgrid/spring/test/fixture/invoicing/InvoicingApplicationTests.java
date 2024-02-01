@@ -2,6 +2,7 @@ package com.contentgrid.spring.test.fixture.invoicing;
 
 import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.not;
 import static org.hamcrest.Matchers.endsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -60,6 +61,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
@@ -166,6 +168,14 @@ class InvoicingApplicationTests {
                 description.appendValueList("[", ", ", "]", curies);
             }
         };
+    }
+
+    private String toEtag(int version) {
+        return "\"%d\"".formatted(version);
+    }
+
+    private ResultMatcher checkEtag(int expected) {
+        return headers().string("Etag", toEtag(expected));
     }
 
     @Nested
@@ -983,6 +993,7 @@ class InvoicingApplicationTests {
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
                             .andExpect(content().string(EXT_ASCII_TEXT))
+                            .andExpect(checkEtag(invoice.getVersion()))
                     ;
                             /* This assertion is changed in SB3; and is technically incorrect
                             (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
@@ -1012,13 +1023,16 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postInvoiceContent_textPlainUtf8_http201() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
                     mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -1026,6 +1040,7 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
                 }
 
                 @Test
@@ -1121,6 +1136,103 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
+                void postInvoiceContent_createWithIfMatch_http201() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT)
+                                    .header("If-Match", toEtag(prevVersion)))
+                            .andExpect(status().isCreated());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
+                }
+
+                @Test
+                @Disabled("ACC-1189")
+                void postInvoiceContent_createWithBadIfMatch_http412() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT)
+                                    .header("If-Match", "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoice.getContentId()).isBlank();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getVersion()).isEqualTo(prevVersion);
+                }
+
+                @Test
+                void postInvoiceContent_updateWithIfMatch_http200() throws Exception {
+                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT)
+                                    .header("If-Match", toEtag(prevVersion)))
+                            .andExpect(status().isOk());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            EXT_ASCII_TEXT);
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
+                }
+
+                @Test
+                void postInvoiceContent_updateWithBadIfMatch_http412() throws Exception {
+                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT)
+                                    .header("If-Match", "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getVersion()).isEqualTo(prevVersion);
+                }
+
+                @Test
                 void postInvoiceContent_missingEntity_http404() throws Exception {
                     mockMvc.perform(post("/invoices/{id}/content", UUID.randomUUID())
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -1199,13 +1311,16 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putInvoiceContent_textPlainUtf8_http201() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
                     mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -1213,6 +1328,7 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
                 }
 
                 @Test
@@ -1308,6 +1424,103 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
+                void putInvoiceContent_createWithIfMatch_http201() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT)
+                                    .header("If-Match", toEtag(prevVersion)))
+                            .andExpect(status().isCreated());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
+                }
+
+                @Test
+                @Disabled("ACC-1189")
+                void putInvoiceContent_createWithBadIfMatch_http412() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT)
+                                    .header("If-Match", "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoice.getContentId()).isBlank();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getVersion()).isEqualTo(prevVersion);
+                }
+
+                @Test
+                void putInvoiceContent_updateWithIfMatch_http200() throws Exception {
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT)
+                                    .header("If-Match", toEtag(prevVersion)))
+                            .andExpect(status().isOk());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            EXT_ASCII_TEXT);
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
+                }
+
+                @Test
+                void putInvoiceContent_updateWithBadIfMatch_http412() throws Exception {
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT)
+                                    .header("If-Match", "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getVersion()).isEqualTo(prevVersion);
+                }
+
+                @Test
                 void putInvoiceContent_missingEntity_http404() throws Exception {
                     mockMvc.perform(put("/invoices/{id}/content", UUID.randomUUID())
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -1392,6 +1605,7 @@ class InvoicingApplicationTests {
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
                     invoice.setContentFilename("content.txt");
                     invoices.save(invoice);
+                    var prevVersion = invoice.getVersion();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(status().isNoContent());
@@ -1403,6 +1617,52 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
+                }
+
+                @Test
+                void deleteContent_withIfMatch_http204() throws Exception {
+                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .header("If-Match", toEtag(prevVersion)))
+                            .andExpect(status().isNoContent());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoice.getContentId()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
+                }
+
+                @Test
+                void deleteContent_withBadIfMatch_http412() throws Exception {
+                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+
+                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .header("If-Match", "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getVersion()).isEqualTo(prevVersion);
                 }
 
                 @Test
@@ -1415,6 +1675,28 @@ class InvoicingApplicationTests {
                 void deleteContent_noEntity_http404() throws Exception {
                     mockMvc.perform(delete("/invoices/{id}/content", UUID.randomUUID()))
                             .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void deleteContent_noContentWithIfMatch_http404() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .header("If-Match", toEtag(prevVersion)))
+                            .andExpect(status().isNotFound());
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoice.getVersion()).isEqualTo(prevVersion);
+                }
+
+                @Test
+                void deleteContent_noContentWithBadIfMatch_http404() throws Exception {
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var prevVersion = invoice.getVersion();
+                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .header("If-Match", "\"INVALID\""))
+                            .andExpect(status().isNotFound());
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    assertThat(invoice.getVersion()).isEqualTo(prevVersion);
                 }
 
                 @Test
