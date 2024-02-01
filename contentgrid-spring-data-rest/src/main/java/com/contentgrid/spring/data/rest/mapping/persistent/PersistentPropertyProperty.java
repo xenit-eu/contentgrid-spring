@@ -55,7 +55,7 @@ public class PersistentPropertyProperty implements Property {
 
     @Override
     public boolean isIgnored() {
-        return false;
+        return property.isVersionProperty();
     }
 
     @Override
