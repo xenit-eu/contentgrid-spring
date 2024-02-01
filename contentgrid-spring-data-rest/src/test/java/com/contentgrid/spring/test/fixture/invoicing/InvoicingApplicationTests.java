@@ -307,12 +307,14 @@ class InvoicingApplicationTests {
 
             @Test
             void getInvoice_shouldReturn_http200_ok() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                 mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .contentType("application/json"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
-                        .andExpect(jsonPath("$._links.curies").value(curies()));
+                        .andExpect(jsonPath("$._links.curies").value(curies()))
+                        .andExpect(checkEtag(invoice.getVersion()));
             }
 
         }
@@ -348,6 +350,36 @@ class InvoicingApplicationTests {
                         .andExpect(status().isNoContent());
             }
 
+            @Test
+            void putInvoice_withIfMatch_http204_ok() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .header("If-Match", toEtag(invoice.getVersion()))
+                                .contentType("application/json")
+                                .content("""
+                                        {
+                                            "number": "%s",
+                                            "paid": true
+                                        }
+                                        """.formatted(INVOICE_NUMBER_1)))
+                        .andExpect(status().isNoContent());
+            }
+
+            @Test
+            void putInvoice_WithBadIfMatch_http412() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .header("If-Match", toEtag(invoice.getVersion() + 1))
+                                .contentType("application/json")
+                                .content("""
+                                        {
+                                            "number": "%s",
+                                            "paid": true
+                                        }
+                                        """.formatted(INVOICE_NUMBER_1)))
+                        .andExpect(status().isPreconditionFailed());
+            }
+
         }
 
         @Nested
@@ -364,6 +396,34 @@ class InvoicingApplicationTests {
                                         }
                                         """))
                         .andExpect(status().isNoContent());
+            }
+
+            @Test
+            void patchInvoice_withIfMatch_http204_ok() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .header("If-Match", toEtag(invoice.getVersion()))
+                                .contentType("application/json")
+                                .content("""
+                                        {
+                                            "paid": true
+                                        }
+                                        """))
+                        .andExpect(status().isNoContent());
+            }
+
+            @Test
+            void patchInvoice_withBadIfMatch_http412() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .header("If-Match", toEtag(invoice.getVersion() + 1))
+                                .contentType("application/json")
+                                .content("""
+                                        {
+                                            "paid": true
+                                        }
+                                        """))
+                        .andExpect(status().isPreconditionFailed());
             }
 
         }
@@ -386,6 +446,22 @@ class InvoicingApplicationTests {
                         .andExpect(status().isNoContent());
 
                 assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isEmpty();
+            }
+
+            @Test
+            void deleteInvoice_withIfMatch_http204_ok() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .header("If-Match", toEtag(invoice.getVersion())))
+                        .andExpect(status().isNoContent());
+            }
+
+            @Test
+            void deleteInvoice_withBadIfMatch_http412() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .header("If-Match", toEtag(invoice.getVersion() + 1)))
+                        .andExpect(status().isPreconditionFailed());
             }
 
         }
