@@ -1225,9 +1225,17 @@ class InvoicingApplicationTests {
                                     .header("If-Match", toEtag(prevVersion)))
                             .andExpect(status().isCreated());
 
-                    // get content, expecting the etag to change
+                    // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
                 }
 
                 @Test
@@ -1243,9 +1251,16 @@ class InvoicingApplicationTests {
                                     .header("If-Match", "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagEqualTo(prevVersion));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).isNull();
+                    assertThat(invoice.getContentId()).isBlank();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
                 }
 
                 @Test
@@ -1266,9 +1281,15 @@ class InvoicingApplicationTests {
                                     .header("If-Match", toEtag(prevVersion)))
                             .andExpect(status().isOk());
 
-                    // get content, expecting the etag to change
+                    // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            EXT_ASCII_TEXT);
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
                 }
 
                 @Test
@@ -1289,9 +1310,15 @@ class InvoicingApplicationTests {
                                     .header("If-Match", "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagEqualTo(prevVersion));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                 }
 
                 @Test
@@ -1493,9 +1520,17 @@ class InvoicingApplicationTests {
                                     .header("If-Match", toEtag(prevVersion)))
                             .andExpect(status().isCreated());
 
-                    // get content, expecting the etag to change
+                    // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
                 }
 
                 @Test
@@ -1511,9 +1546,16 @@ class InvoicingApplicationTests {
                                     .header("If-Match", "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagEqualTo(prevVersion));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).isNull();
+                    assertThat(invoice.getContentId()).isBlank();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
                 }
 
                 @Test
@@ -1534,9 +1576,15 @@ class InvoicingApplicationTests {
                                     .header("If-Match", toEtag(prevVersion)))
                             .andExpect(status().isOk());
 
-                    // get content, expecting the etag to change
+                    // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            EXT_ASCII_TEXT);
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
                 }
 
                 @Test
@@ -1557,9 +1605,16 @@ class InvoicingApplicationTests {
                                     .header("If-Match", "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagEqualTo(prevVersion));
+
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                 }
 
                 @Test
@@ -1674,9 +1729,15 @@ class InvoicingApplicationTests {
                                     .header("If-Match", toEtag(prevVersion)))
                             .andExpect(status().isNoContent());
 
-                    // get content, expecting the etag to change
+                    // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoice.getContentId()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
                 }
 
                 @Test
@@ -1693,9 +1754,16 @@ class InvoicingApplicationTests {
                                     .header("If-Match", "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagEqualTo(prevVersion));
+                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                 }
 
                 @Test
@@ -1718,7 +1786,7 @@ class InvoicingApplicationTests {
                                     .header("If-Match", toEtag(prevVersion)))
                             .andExpect(status().isNotFound());
 
-                    // get content, expecting the etag to be unchanged
+                    // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagEqualTo(prevVersion));
                 }
@@ -1731,7 +1799,7 @@ class InvoicingApplicationTests {
                                     .header("If-Match", "\"INVALID\""))
                             .andExpect(status().isNotFound());
 
-                    // get content, expecting the etag to be unchanged
+                    // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(etagEqualTo(prevVersion));
                 }
@@ -1885,9 +1953,18 @@ class InvoicingApplicationTests {
                                     .header("If-Match", toEtag(prevVersion)))
                             .andExpect(status().isCreated());
 
-                    // get content, expecting the etag to change
+                    // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isNull();
                 }
 
                 @Test
@@ -1903,9 +1980,12 @@ class InvoicingApplicationTests {
                                     .header("If-Match", "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagEqualTo(prevVersion));
+                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customer.getContent()).isNull();
                 }
 
                 @Test
@@ -1918,6 +1998,11 @@ class InvoicingApplicationTests {
                     var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
                     var prevVersion = customer.getVersion();
 
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+
                     // update content, ONLY changing the charset
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .header("If-Match", toEtag(prevVersion))
@@ -1926,9 +2011,15 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT))
                             .andExpect(status().isOk());
 
-                    // get content, expecting the etag to change
+                    // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            EXT_ASCII_TEXT);
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
                 }
 
                 @Test
@@ -1941,6 +2032,11 @@ class InvoicingApplicationTests {
                     var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
                     var prevVersion = customer.getVersion();
 
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+
                     // update content, ONLY changing the charset
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .header("If-Match", "\"INVALID\"")
@@ -1949,9 +2045,15 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagEqualTo(prevVersion));
+                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                 }
 
                 @Test
@@ -2007,9 +2109,18 @@ class InvoicingApplicationTests {
                                     .header("If-Match", toEtag(prevVersion)))
                             .andExpect(status().isCreated());
 
-                    // get content, expecting the etag to change
+                    // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isNull();
                 }
 
                 @Test
@@ -2025,9 +2136,12 @@ class InvoicingApplicationTests {
                                     .header("If-Match", "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagEqualTo(prevVersion));
+                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customer.getContent()).isNull();
                 }
 
                 @Test
@@ -2040,6 +2154,11 @@ class InvoicingApplicationTests {
                     var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
                     var prevVersion = customer.getVersion();
 
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+
                     // update content, ONLY changing the charset
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .header("If-Match", toEtag(prevVersion))
@@ -2048,9 +2167,15 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT))
                             .andExpect(status().isOk());
 
-                    // get content, expecting the etag to change
+                    // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            EXT_ASCII_TEXT);
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
                 }
 
                 @Test
@@ -2063,6 +2188,11 @@ class InvoicingApplicationTests {
                     var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
                     var prevVersion = customer.getVersion();
 
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+
                     // update content, ONLY changing the charset
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .header("If-Match", "\"INVALID\"")
@@ -2071,9 +2201,15 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagEqualTo(prevVersion));
+                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                 }
 
             }
@@ -2112,9 +2248,11 @@ class InvoicingApplicationTests {
                                     .header("If-Match", toEtag(prevVersion)))
                             .andExpect(status().isNoContent());
 
-                    // get content, expecting the etag to change
+                    // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagNotEqualTo(prevVersion));
+                    var content = customersContent.getResource(customer, PropertyPath.from("content"));
+                    assertThat(content).isNull();
                 }
 
                 @Test
@@ -2131,9 +2269,15 @@ class InvoicingApplicationTests {
                                     .header("If-Match", "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
-                    // get content, expecting the etag to be unchanged
+                    // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(etagEqualTo(prevVersion));
+                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                 }
 
                 @Test
