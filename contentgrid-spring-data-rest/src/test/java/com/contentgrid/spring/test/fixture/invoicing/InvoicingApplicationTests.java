@@ -487,7 +487,7 @@ class InvoicingApplicationTests {
                     var newOrderId = orders.save(new Order(xenit)).getId();
                     var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
 
-                    // try to add order to invoice using PUT - should fail
+                    // set the orders using PUT, using single-link object syntax
                     mockMvc.perform(put("/invoices/%s/orders".formatted(invoiceNumber))
                                     .accept(MediaType.APPLICATION_JSON)
                                     .contentType(MediaType.APPLICATION_JSON)
