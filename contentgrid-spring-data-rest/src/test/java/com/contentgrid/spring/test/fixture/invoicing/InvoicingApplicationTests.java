@@ -171,15 +171,15 @@ class InvoicingApplicationTests {
         };
     }
 
-    private String toEtag(int version) {
+    private static String toEtag(int version) {
         return "\"%d\"".formatted(version);
     }
 
-    private ResultMatcher etagEqualTo(int expected) {
+    private static ResultMatcher etagEqualTo(int expected) {
         return headers().string("Etag", toEtag(expected));
     }
 
-    private ResultMatcher etagNotEqualTo(int notExpected) {
+    private static ResultMatcher etagNotEqualTo(int notExpected) {
         var matcher = Matchers.not(toEtag(notExpected));
         return headers().string("Etag", matcher);
     }
@@ -375,7 +375,7 @@ class InvoicingApplicationTests {
             void putInvoice_WithBadIfMatch_http412() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header("If-Match", toEtag(invoice.getVersion() + 1))
+                                .header("If-Match", "\"INVALID\"")
                                 .contentType("application/json")
                                 .content("""
                                         {
@@ -422,7 +422,7 @@ class InvoicingApplicationTests {
             void patchInvoice_withBadIfMatch_http412() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header("If-Match", toEtag(invoice.getVersion() + 1))
+                                .header("If-Match", "\"INVALID\"")
                                 .contentType("application/json")
                                 .content("""
                                         {
@@ -466,7 +466,7 @@ class InvoicingApplicationTests {
             void deleteInvoice_withBadIfMatch_http412() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header("If-Match", toEtag(invoice.getVersion() + 1)))
+                                .header("If-Match", "\"INVALID\""))
                         .andExpect(status().isPreconditionFailed());
             }
 
