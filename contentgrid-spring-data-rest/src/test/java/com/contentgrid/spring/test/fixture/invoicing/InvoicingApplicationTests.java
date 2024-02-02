@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -122,8 +123,8 @@ class InvoicingApplicationTests {
         var promoCyber = promos.save(new PromotionCampaign("CYBER-MON", "Cyber Monday"));
         PROMO_CYBER = promoCyber.getPromoCode();
 
-        var xenit = customers.save(new Customer(null, "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
-        var inbev = customers.save(new Customer(null, "AB InBev", ORG_INBEV_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
+        var xenit = customers.save(new Customer(null, 0, "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
+        var inbev = customers.save(new Customer(null, 0, "AB InBev", ORG_INBEV_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
 
         XENIT_ID = xenit.getId();
         INBEV_ID = inbev.getId();
@@ -176,6 +177,11 @@ class InvoicingApplicationTests {
 
     private ResultMatcher checkEtag(int expected) {
         return headers().string("Etag", toEtag(expected));
+    }
+
+    private ResultMatcher checkNotEtag(int notExpected) {
+        var matcher = Matchers.not(toEtag(notExpected));
+        return headers().string("Etag", matcher);
     }
 
     @Nested

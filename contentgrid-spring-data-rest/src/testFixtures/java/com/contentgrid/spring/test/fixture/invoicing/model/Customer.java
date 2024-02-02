@@ -20,6 +20,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,6 +39,9 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @JsonProperty(access = Access.READ_ONLY)
     private UUID id;
+
+    @Version
+    private int version;
 
     private String name;
 
