@@ -175,11 +175,11 @@ class InvoicingApplicationTests {
         return "\"%d\"".formatted(version);
     }
 
-    private ResultMatcher checkEtag(int expected) {
+    private ResultMatcher etagEqualTo(int expected) {
         return headers().string("Etag", toEtag(expected));
     }
 
-    private ResultMatcher checkNotEtag(int notExpected) {
+    private ResultMatcher etagNotEqualTo(int notExpected) {
         var matcher = Matchers.not(toEtag(notExpected));
         return headers().string("Etag", matcher);
     }
@@ -320,7 +320,7 @@ class InvoicingApplicationTests {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
                         .andExpect(jsonPath("$._links.curies").value(curies()))
-                        .andExpect(checkEtag(invoice.getVersion()));
+                        .andExpect(etagEqualTo(invoice.getVersion()));
             }
 
         }
@@ -1075,7 +1075,7 @@ class InvoicingApplicationTests {
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
                             .andExpect(content().string(EXT_ASCII_TEXT))
-                            .andExpect(checkEtag(invoice.getVersion()))
+                            .andExpect(etagEqualTo(invoice.getVersion()))
                     ;
                             /* This assertion is changed in SB3; and is technically incorrect
                             (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
