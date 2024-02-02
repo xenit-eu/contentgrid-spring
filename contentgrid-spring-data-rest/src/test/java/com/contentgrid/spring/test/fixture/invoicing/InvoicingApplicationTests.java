@@ -1838,6 +1838,7 @@ class InvoicingApplicationTests {
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
                             .andExpect(content().string(EXT_ASCII_TEXT))
+                            .andExpect(etagEqualTo(customer.getVersion()))
                     ;
                             /* This assertion is changed in SB3; and is technically incorrect
                             (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
@@ -1918,6 +1919,87 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
+                void postCustomerContent_createWithIfMatch_http201() throws Exception {
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT)
+                                    .header("If-Match", toEtag(prevVersion)))
+                            .andExpect(status().isCreated());
+
+                    // get content, expecting the etag to change
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagNotEqualTo(prevVersion));
+                }
+
+                @Test
+                @Disabled("ACC-1189")
+                void postCustomerContent_createWithBadIfMatch_http412() throws Exception {
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT)
+                                    .header("If-Match", "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    // get content, expecting the etag to be unchanged
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagEqualTo(prevVersion));
+                }
+
+                @Test
+                void postCustomerContent_updateWithIfMatch_http200() throws Exception {
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .header("If-Match", toEtag(prevVersion))
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT))
+                            .andExpect(status().isOk());
+
+                    // get content, expecting the etag to change
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagNotEqualTo(prevVersion));
+                }
+
+                @Test
+                void postCustomerContent_updateWithBadIfMatch_http412() throws Exception {
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .header("If-Match", "\"INVALID\"")
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT))
+                            .andExpect(status().isPreconditionFailed());
+
+                    // get content, expecting the etag to be unchanged
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagEqualTo(prevVersion));
+                }
+
+                @Test
                 void postCustomerContent_missingEntity_http404() throws Exception {
                     mockMvc.perform(post("/customers/{id}/content", UUID.randomUUID())
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -1958,6 +2040,87 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getFilename()).isNull();
                 }
 
+                @Test
+                void putCustomerContent_createWithIfMatch_http201() throws Exception {
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT)
+                                    .header("If-Match", toEtag(prevVersion)))
+                            .andExpect(status().isCreated());
+
+                    // get content, expecting the etag to change
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagNotEqualTo(prevVersion));
+                }
+
+                @Test
+                @Disabled("ACC-1189")
+                void putCustomerContent_createWithBadIfMatch_http412() throws Exception {
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT)
+                                    .header("If-Match", "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    // get content, expecting the etag to be unchanged
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagEqualTo(prevVersion));
+                }
+
+                @Test
+                void putCustomerContent_updateWithIfMatch_http200() throws Exception {
+                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .header("If-Match", toEtag(prevVersion))
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT))
+                            .andExpect(status().isOk());
+
+                    // get content, expecting the etag to change
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagNotEqualTo(prevVersion));
+                }
+
+                @Test
+                void putCustomerContent_updateWithBadIfMatch_http412() throws Exception {
+                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    // update content, ONLY changing the charset
+                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .header("If-Match", "\"INVALID\"")
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT))
+                            .andExpect(status().isPreconditionFailed());
+
+                    // get content, expecting the etag to be unchanged
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagEqualTo(prevVersion));
+                }
+
             }
 
             @Nested
@@ -1978,6 +2141,44 @@ class InvoicingApplicationTests {
 
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
+                }
+
+                @Test
+                void deleteContent_withIfMatch_http204() throws Exception {
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .header("If-Match", toEtag(prevVersion)))
+                            .andExpect(status().isNoContent());
+
+                    // get content, expecting the etag to change
+                    mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagNotEqualTo(prevVersion));
+                }
+
+                @Test
+                void deleteContent_withBadIfMatch_http412() throws Exception {
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .characterEncoding(StandardCharsets.ISO_8859_1)
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
+                            .andExpect(status().isCreated());
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var prevVersion = customer.getVersion();
+
+                    mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .header("If-Match", "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    // get content, expecting the etag to be unchanged
+                    mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(etagEqualTo(prevVersion));
                 }
 
                 @Test
