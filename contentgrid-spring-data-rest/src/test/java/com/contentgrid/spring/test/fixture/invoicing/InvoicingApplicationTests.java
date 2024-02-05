@@ -60,6 +60,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
@@ -365,9 +366,8 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            @Disabled("ACC-1191")
+            @Transactional(propagation = Propagation.NOT_SUPPORTED)
             void putInvoice_WithBadIfMatch_http412() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
                                 .contentType("application/json")
@@ -378,7 +378,9 @@ class InvoicingApplicationTests {
                                         }
                                         """.formatted(INVOICE_NUMBER_1)))
                         .andExpect(status().isPreconditionFailed());
-                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                // getReferenceById is lazy, doesn't work without transaction
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 assertThat(invoice.isPaid()).isFalse();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
@@ -425,9 +427,8 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            @Disabled("ACC-1191")
+            @Transactional(propagation = Propagation.NOT_SUPPORTED)
             void patchInvoice_withBadIfMatch_http412() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
                                 .contentType("application/json")
@@ -437,7 +438,9 @@ class InvoicingApplicationTests {
                                         }
                                         """))
                         .andExpect(status().isPreconditionFailed());
-                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                // getReferenceById is lazy, doesn't work without transaction
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 assertThat(invoice.isPaid()).isFalse();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
