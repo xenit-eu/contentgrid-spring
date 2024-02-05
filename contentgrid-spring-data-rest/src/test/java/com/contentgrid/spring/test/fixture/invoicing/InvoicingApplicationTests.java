@@ -349,7 +349,7 @@ class InvoicingApplicationTests {
             void putInvoice_withIfMatch_http204_ok() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header("If-Match", toEtag(invoice.getVersion()))
+                                .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
                                 .contentType("application/json")
                                 .content("""
                                         {
@@ -369,7 +369,7 @@ class InvoicingApplicationTests {
             void putInvoice_WithBadIfMatch_http412() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header("If-Match", "\"INVALID\"")
+                                .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
                                 .contentType("application/json")
                                 .content("""
                                         {
@@ -410,7 +410,7 @@ class InvoicingApplicationTests {
             void patchInvoice_withIfMatch_http204_ok() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header("If-Match", toEtag(invoice.getVersion()))
+                                .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
                                 .contentType("application/json")
                                 .content("""
                                         {
@@ -429,7 +429,7 @@ class InvoicingApplicationTests {
             void patchInvoice_withBadIfMatch_http412() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header("If-Match", "\"INVALID\"")
+                                .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
                                 .contentType("application/json")
                                 .content("""
                                         {
@@ -469,7 +469,7 @@ class InvoicingApplicationTests {
             void deleteInvoice_withIfMatch_http204_ok() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header("If-Match", toEtag(invoice.getVersion())))
+                                .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion())))
                         .andExpect(status().isNoContent());
 
                 assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isEmpty();
@@ -479,7 +479,7 @@ class InvoicingApplicationTests {
             void deleteInvoice_withBadIfMatch_http412() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header("If-Match", "\"INVALID\""))
+                                .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                         .andExpect(status().isPreconditionFailed());
 
                 assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isNotEmpty();
@@ -1237,7 +1237,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .header("If-Match", toEtag(prevVersion)))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
                             .andExpect(status().isCreated());
 
                     // get invoice, expecting the etag to change
@@ -1263,7 +1263,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .header("If-Match", "\"INVALID\""))
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
                     // get invoice, expecting the etag to be unchanged
@@ -1293,7 +1293,7 @@ class InvoicingApplicationTests {
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT)
-                                    .header("If-Match", toEtag(prevVersion)))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
                             .andExpect(status().isOk());
 
                     // get invoice, expecting the etag to change
@@ -1322,7 +1322,7 @@ class InvoicingApplicationTests {
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT)
-                                    .header("If-Match", "\"INVALID\""))
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
                     // get invoice, expecting the etag to be unchanged
@@ -1532,7 +1532,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .header("If-Match", toEtag(prevVersion)))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
                             .andExpect(status().isCreated());
 
                     // get invoice, expecting the etag to change
@@ -1558,7 +1558,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .header("If-Match", "\"INVALID\""))
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
                     // get invoice, expecting the etag to be unchanged
@@ -1588,7 +1588,7 @@ class InvoicingApplicationTests {
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT)
-                                    .header("If-Match", toEtag(prevVersion)))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
                             .andExpect(status().isOk());
 
                     // get invoice, expecting the etag to change
@@ -1617,7 +1617,7 @@ class InvoicingApplicationTests {
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT)
-                                    .header("If-Match", "\"INVALID\""))
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
                     // get invoice, expecting the etag to be unchanged
@@ -1741,7 +1741,7 @@ class InvoicingApplicationTests {
                     var prevVersion = invoice.getVersion();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .header("If-Match", toEtag(prevVersion)))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
                             .andExpect(status().isNoContent());
 
                     // get invoice, expecting the etag to change
@@ -1766,7 +1766,7 @@ class InvoicingApplicationTests {
                     var prevVersion = invoice.getVersion();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .header("If-Match", "\"INVALID\""))
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
                     // get invoice, expecting the etag to be unchanged
@@ -1798,7 +1798,7 @@ class InvoicingApplicationTests {
                     var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                     var prevVersion = invoice.getVersion();
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .header("If-Match", toEtag(prevVersion)))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
                             .andExpect(status().isNotFound());
 
                     // get invoice, expecting the etag to be unchanged
@@ -1811,7 +1811,7 @@ class InvoicingApplicationTests {
                     var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                     var prevVersion = invoice.getVersion();
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .header("If-Match", "\"INVALID\""))
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                             .andExpect(status().isNotFound());
 
                     // get invoice, expecting the etag to be unchanged
@@ -1965,7 +1965,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .header("If-Match", toEtag(prevVersion)))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
                             .andExpect(status().isCreated());
 
                     // get customer, expecting the etag to change
@@ -1992,7 +1992,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .header("If-Match", "\"INVALID\""))
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
                     // get customer, expecting the etag to be unchanged
@@ -2020,7 +2020,7 @@ class InvoicingApplicationTests {
 
                     // update content, ONLY changing the charset
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header("If-Match", toEtag(prevVersion))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT))
@@ -2054,7 +2054,7 @@ class InvoicingApplicationTests {
 
                     // update content, ONLY changing the charset
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header("If-Match", "\"INVALID\"")
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT))
@@ -2121,7 +2121,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .header("If-Match", toEtag(prevVersion)))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
                             .andExpect(status().isCreated());
 
                     // get customer, expecting the etag to change
@@ -2148,7 +2148,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .header("If-Match", "\"INVALID\""))
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
                     // get customer, expecting the etag to be unchanged
@@ -2176,7 +2176,7 @@ class InvoicingApplicationTests {
 
                     // update content, ONLY changing the charset
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header("If-Match", toEtag(prevVersion))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT))
@@ -2210,7 +2210,7 @@ class InvoicingApplicationTests {
 
                     // update content, ONLY changing the charset
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header("If-Match", "\"INVALID\"")
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT))
@@ -2260,7 +2260,7 @@ class InvoicingApplicationTests {
                     var prevVersion = customer.getVersion();
 
                     mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header("If-Match", toEtag(prevVersion)))
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
                             .andExpect(status().isNoContent());
 
                     // get customer, expecting the etag to change
@@ -2281,7 +2281,7 @@ class InvoicingApplicationTests {
                     var prevVersion = customer.getVersion();
 
                     mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header("If-Match", "\"INVALID\""))
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                             .andExpect(status().isPreconditionFailed());
 
                     // get customer, expecting the etag to be unchanged
