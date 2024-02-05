@@ -124,7 +124,7 @@ class EntityChangeHibernateEventListenerTest {
     void whenCustomerIsUpdatedTwice_postUpdateShouldBeCalledTwice_ok() {
         Customer saved = customerRepository.save(customer(c -> c.setVat("BE125")));
         saved.setName("description for update");
-        saved= customerRepository.save(saved);
+        saved = customerRepository.save(saved);
 
         saved.setName("description for second update");
         customerRepository.save(saved);
