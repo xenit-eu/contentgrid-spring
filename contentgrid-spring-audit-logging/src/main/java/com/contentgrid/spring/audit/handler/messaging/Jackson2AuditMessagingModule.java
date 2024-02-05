@@ -56,7 +56,9 @@ public class Jackson2AuditMessagingModule extends SimpleModule {
             "subject.relation",
             "subject.relation.id",
             "subject.content",
-            "search"
+            "search",
+            "app.deploymentid",
+            "app.applicationid"
     })
     private abstract static class AbstractAuditEventMixin {
 
@@ -101,6 +103,15 @@ public class Jackson2AuditMessagingModule extends SimpleModule {
         @JsonProperty("search")
         @JsonInclude(Include.NON_NULL)
         abstract Object getQueryParameters();
+
+        @JsonProperty("app.deploymentid")
+        @JsonInclude(Include.NON_NULL)
+        abstract String getDeploymentId();
+
+        @JsonProperty("app.applicationid")
+        @JsonInclude(Include.NON_NULL)
+        abstract String getApplicationId();
+
     }
 
     @JsonAppend(props = {

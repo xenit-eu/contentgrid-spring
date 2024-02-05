@@ -9,7 +9,6 @@ import org.springframework.messaging.core.MessageSendingOperations;
 
 @RequiredArgsConstructor
 public class MessageSendingAuditHandler implements AuditEventHandler {
-
     @NonNull
     private final MessageSendingOperations<String> messageSendingOperations;
 

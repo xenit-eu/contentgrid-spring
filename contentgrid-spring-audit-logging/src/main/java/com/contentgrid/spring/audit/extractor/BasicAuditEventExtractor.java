@@ -6,12 +6,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.observation.ServerRequestObservationContext;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
+@RequiredArgsConstructor
 public class BasicAuditEventExtractor implements AuditEventExtractor {
+    private final String appId;
+    private final String deplId;
 
     private static final Set<HandlerMethodMatcher> IGNORED_HANDLERS = Set.of(
             HandlerMethodMatcher.builder()
@@ -62,7 +66,9 @@ public class BasicAuditEventExtractor implements AuditEventExtractor {
                 .requestMethod(context.getCarrier().getMethod())
                 .requestUri(context.getCarrier().getRequestURI())
                 .responseStatus(context.getResponse().getStatus())
-                .responseLocation(location.orElse(null));
+                .responseLocation(location.orElse(null))
+                .applicationId(appId)
+                .deploymentId(deplId);
     }
 
     @Override

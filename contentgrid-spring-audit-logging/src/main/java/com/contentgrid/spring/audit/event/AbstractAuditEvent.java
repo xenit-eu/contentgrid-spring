@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.With;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
@@ -20,4 +21,6 @@ public abstract class AbstractAuditEvent {
     int responseStatus;
     String responseLocation;
 
+    String deploymentId;
+    String applicationId;
 }

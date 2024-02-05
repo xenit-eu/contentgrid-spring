@@ -10,6 +10,8 @@ import com.contentgrid.spring.audit.extractor.EntityRelationEventExtractor;
 import com.contentgrid.spring.audit.extractor.EntitySearchEventExtractor;
 import com.contentgrid.spring.audit.handler.AuditEventHandler;
 import java.util.List;
+import java.util.UUID;
+import lombok.Data;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mapping.context.PersistentEntities;
@@ -24,9 +26,15 @@ public class ContentGridAuditEventConfiguration {
         return new AuditObservationHandler(auditEventExtractors, auditEventHandlers);
     }
 
+    @Data
+    public static class ContentgridAuditSystemProperties {
+        private String deploymentId = new UUID(0, 0).toString();
+        private String applicationId = new UUID(0, 0).toString();
+    }
+
     @Bean
-    BasicAuditEventExtractor basicAuditEventExtractor() {
-        return new BasicAuditEventExtractor();
+    BasicAuditEventExtractor basicAuditEventExtractor(ContentgridAuditSystemProperties systemProperties) {
+        return new BasicAuditEventExtractor(systemProperties.getApplicationId(), systemProperties.getDeploymentId());
     }
 
     @Bean
