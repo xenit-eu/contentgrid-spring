@@ -27,7 +27,6 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.PromotionCampaig
 import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingAddressRepository;
 import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
 import com.contentgrid.spring.test.fixture.invoicing.store.InvoiceContentStore;
-import jakarta.transaction.Transactional;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -60,6 +59,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
