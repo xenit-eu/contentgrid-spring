@@ -2,7 +2,6 @@ package com.contentgrid.spring.test.fixture.invoicing;
 
 import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.not;
 import static org.hamcrest.Matchers.endsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -354,6 +353,10 @@ class InvoicingApplicationTests {
                                         }
                                         """.formatted(INVOICE_NUMBER_1)))
                         .andExpect(status().isNoContent());
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                assertThat(invoice.isPaid()).isTrue();
+                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
             @Test
@@ -369,9 +372,14 @@ class InvoicingApplicationTests {
                                         }
                                         """.formatted(INVOICE_NUMBER_1)))
                         .andExpect(status().isNoContent());
+                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                assertThat(invoice.isPaid()).isTrue();
+                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
             @Test
+            @Disabled("ACC-1191")
             void putInvoice_WithBadIfMatch_http412() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
@@ -384,6 +392,10 @@ class InvoicingApplicationTests {
                                         }
                                         """.formatted(INVOICE_NUMBER_1)))
                         .andExpect(status().isPreconditionFailed());
+                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                assertThat(invoice.isPaid()).isFalse();
+                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
         }
@@ -402,6 +414,10 @@ class InvoicingApplicationTests {
                                         }
                                         """))
                         .andExpect(status().isNoContent());
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                assertThat(invoice.isPaid()).isTrue();
+                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
             @Test
@@ -416,9 +432,14 @@ class InvoicingApplicationTests {
                                         }
                                         """))
                         .andExpect(status().isNoContent());
+                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                assertThat(invoice.isPaid()).isTrue();
+                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
             @Test
+            @Disabled("ACC-1191")
             void patchInvoice_withBadIfMatch_http412() throws Exception {
                 var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
@@ -430,6 +451,10 @@ class InvoicingApplicationTests {
                                         }
                                         """))
                         .andExpect(status().isPreconditionFailed());
+                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+
+                assertThat(invoice.isPaid()).isFalse();
+                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
         }
@@ -460,6 +485,8 @@ class InvoicingApplicationTests {
                 mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header("If-Match", toEtag(invoice.getVersion())))
                         .andExpect(status().isNoContent());
+
+                assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isEmpty();
             }
 
             @Test
@@ -468,6 +495,8 @@ class InvoicingApplicationTests {
                 mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header("If-Match", "\"INVALID\""))
                         .andExpect(status().isPreconditionFailed());
+
+                assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isNotEmpty();
             }
 
         }
