@@ -1,6 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing;
 
 import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
+import static com.contentgrid.spring.test.matchers.EtagHeaderMatcher.toEtag;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -40,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -61,7 +61,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
@@ -168,19 +167,6 @@ class InvoicingApplicationTests {
                 description.appendValueList("[", ", ", "]", curies);
             }
         };
-    }
-
-    private static String toEtag(int version) {
-        return "\"%d\"".formatted(version);
-    }
-
-    private static ResultMatcher etagEqualTo(int expected) {
-        return headers().string("Etag", toEtag(expected));
-    }
-
-    private static ResultMatcher etagNotEqualTo(int notExpected) {
-        var matcher = Matchers.not(toEtag(notExpected));
-        return headers().string("Etag", matcher);
     }
 
     @Nested
@@ -319,7 +305,7 @@ class InvoicingApplicationTests {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
                         .andExpect(jsonPath("$._links.curies").value(curies()))
-                        .andExpect(etagEqualTo(invoice.getVersion()));
+                        .andExpect(headers().etag().isEqualTo(invoice.getVersion()));
             }
 
         }
@@ -1104,7 +1090,7 @@ class InvoicingApplicationTests {
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
                             .andExpect(content().string(EXT_ASCII_TEXT))
-                            .andExpect(etagEqualTo(invoice.getVersion()))
+                            .andExpect(headers().etag().isEqualTo(invoice.getVersion()))
                     ;
                             /* This assertion is changed in SB3; and is technically incorrect
                             (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
@@ -1256,7 +1242,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
@@ -1282,7 +1268,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).isNull();
@@ -1312,7 +1298,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
@@ -1341,7 +1327,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
@@ -1551,7 +1537,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
@@ -1577,7 +1563,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).isNull();
@@ -1607,7 +1593,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
@@ -1636,7 +1622,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
 
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
@@ -1760,7 +1746,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoice.getContentId()).isNull();
@@ -1785,7 +1771,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                     invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
@@ -1817,7 +1803,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                 }
 
                 @Test
@@ -1830,7 +1816,7 @@ class InvoicingApplicationTests {
 
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                 }
 
                 @Test
@@ -1890,7 +1876,7 @@ class InvoicingApplicationTests {
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
                             .andExpect(content().string(EXT_ASCII_TEXT))
-                            .andExpect(etagEqualTo(customer.getVersion()))
+                            .andExpect(headers().etag().isEqualTo(customer.getVersion()))
                     ;
                             /* This assertion is changed in SB3; and is technically incorrect
                             (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
@@ -1984,7 +1970,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
@@ -2011,7 +1997,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                     customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
                     assertThat(customer.getContent()).isNull();
@@ -2042,7 +2028,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
@@ -2076,7 +2062,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                     customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
@@ -2140,7 +2126,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
@@ -2167,7 +2153,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                     customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
                     assertThat(customer.getContent()).isNull();
@@ -2198,7 +2184,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
@@ -2232,7 +2218,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                     customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
@@ -2279,7 +2265,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagNotEqualTo(prevVersion));
+                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
                 }
@@ -2300,7 +2286,7 @@ class InvoicingApplicationTests {
 
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(etagEqualTo(prevVersion));
+                            .andExpect(headers().etag().isEqualTo(prevVersion));
                     customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
