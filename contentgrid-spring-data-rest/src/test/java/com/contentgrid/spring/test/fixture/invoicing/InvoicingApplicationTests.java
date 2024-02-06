@@ -631,6 +631,53 @@ class InvoicingApplicationTests {
                             .andExpect(status().isNoContent());
                 }
 
+                @Test
+                void putJson_withIfMatch_http204() throws Exception {
+                    // fictive example: fix the customer
+                    var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
+                    var prevVersion = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow().getVersion();
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "customer" : {
+                                                        "href": "/customers/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(correctCustomerId)))
+                            .andExpect(status().isNoContent());
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
+                }
+
+                @Test
+                @Disabled("ACC-1188")
+                void putJson_withIfBadMatch_http412() throws Exception {
+                    // fictive example: fix the customer
+                    var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
+                    var prevVersion = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow().getVersion();
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "customer" : {
+                                                        "href": "/customers/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(correctCustomerId)))
+                            .andExpect(status().isPreconditionFailed());
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    assertThat(invoice.getVersion()).isEqualTo(prevVersion);
+                }
+
             }
 
             @Nested
@@ -666,6 +713,81 @@ class InvoicingApplicationTests {
                             assertThat(invoice.getOrders()).singleElement().satisfies(order -> {
                                 assertThat(order.getId()).isEqualTo(newOrderId.get());
                             });
+                        });
+                    });
+                }
+
+                @Test
+                void putJson_withIfMatch_http204_noContent() throws Exception {
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    doInTransaction(() -> {
+                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                        newOrderId.set(orders.save(new Order(xenit)).getId());
+                    });
+                    var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
+                    var prevVersion = invoices.findById(invoiceNumber).orElseThrow().getVersion();
+
+                    // set the orders using PUT, using single-link object syntax
+                    mockMvc.perform(put("/invoices/%s/orders".formatted(invoiceNumber))
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "orders" : {
+                                                        "href": "/orders/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(newOrderId)))
+                            .andExpect(status().isNoContent());
+
+                    // assert orders collection has been replaced
+                    doInTransaction(() -> {
+                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
+                            assertThat(invoice.getOrders()).singleElement().satisfies(order -> {
+                                assertThat(order.getId()).isEqualTo(newOrderId.get());
+                            });
+                            assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
+                        });
+                    });
+                }
+
+                @Test
+                @Disabled("ACC-1188")
+                void putJson_withBadIfMatch_http412() throws Exception {
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    doInTransaction(() -> {
+                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                        newOrderId.set(orders.save(new Order(xenit)).getId());
+                    });
+                    var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
+                    var prevVersion = invoices.findById(invoiceNumber).orElseThrow().getVersion();
+
+                    // set the orders using PUT, using single-link object syntax
+                    mockMvc.perform(put("/invoices/%s/orders".formatted(invoiceNumber))
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "orders" : {
+                                                        "href": "/orders/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(newOrderId)))
+                            .andExpect(status().isPreconditionFailed());
+
+                    // assert orders collection has been replaced
+                    doInTransaction(() -> {
+                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
+                            assertThat(invoice.getOrders())
+                                    .map(Order::getId)
+                                    .containsExactlyInAnyOrder(ORDER_1_ID, ORDER_2_ID);
+                            assertThat(invoice.getVersion()).isEqualTo(prevVersion);
                         });
                     });
                 }
@@ -722,6 +844,59 @@ class InvoicingApplicationTests {
                     var order = orders.findById(ORDER_2_ID).orElseThrow();
                     assertThat(order.getShippingAddress()).isNotNull();
 
+                }
+
+                @Test
+                void putShippingAddress_forOrderWithIfMatch_http204_noContent() throws Exception {
+
+                    var addressId = shippingAddresses.save(new ShippingAddress()).getId();
+                    var prevVersion = orders.findById(ORDER_2_ID).orElseThrow().getVersion();
+
+                    mockMvc.perform(put("/orders/{id}/shippingAddress", ORDER_2_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "shippingAddress" : {
+                                                        "href": "/shipping-addresses/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(addressId)))
+                            .andExpect(status().isNoContent());
+
+                    var order = orders.findById(ORDER_2_ID).orElseThrow();
+                    assertThat(order.getShippingAddress()).isNotNull();
+                    assertThat(order.getVersion()).isNotEqualTo(prevVersion);
+                }
+
+                @Test
+                @Disabled("ACC-1188")
+                void putShippingAddress_forOrderWithBadIfMatch_http412() throws Exception {
+
+                    var addressId = shippingAddresses.save(new ShippingAddress()).getId();
+                    var prevVersion = orders.findById(ORDER_2_ID).orElseThrow().getVersion();
+
+                    mockMvc.perform(put("/orders/{id}/shippingAddress", ORDER_2_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "shippingAddress" : {
+                                                        "href": "/shipping-addresses/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(addressId)))
+                            .andExpect(status().isPreconditionFailed());
+
+                    var order = orders.findById(ORDER_2_ID).orElseThrow();
+                    assertThat(order.getShippingAddress()).isNull();
+                    assertThat(order.getVersion()).isEqualTo(prevVersion);
                 }
             }
 
@@ -789,6 +964,49 @@ class InvoicingApplicationTests {
                         assertThat(order.getPromos()).hasSize(2);
                     });
                 }
+
+                @Test
+                void putUriList_Promos_forOrder_withIfMatch_http204_noContent() throws Exception {
+                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
+                    mockMvc.perform(put("/orders/{id}/promos", ORDER_1_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
+                                    .contentType(RestMediaTypes.TEXT_URI_LIST_VALUE)
+                                    .content("""
+                                            /promotions/XMAS-2022
+                                            /promotions/FREE-SHIP
+                                            """)
+                            )
+                            .andExpect(status().isNoContent());
+
+                    doInTransaction(() -> {
+                        var order = orders.findById(ORDER_1_ID).orElseThrow();
+                        assertThat(order.getPromos()).hasSize(2);
+                        assertThat(order.getVersion()).isNotEqualTo(prevVersion);
+                    });
+                }
+
+                @Test
+                @Disabled("ACC-1188")
+                void putUriList_Promos_forOrder_withBadIfMatch_http412() throws Exception {
+                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
+                    mockMvc.perform(put("/orders/{id}/promos", ORDER_1_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
+                                    .contentType(RestMediaTypes.TEXT_URI_LIST_VALUE)
+                                    .content("""
+                                            /promotions/XMAS-2022
+                                            /promotions/FREE-SHIP
+                                            """)
+                            )
+                            .andExpect(status().isPreconditionFailed());
+
+                    doInTransaction(() -> {
+                        var order = orders.findById(ORDER_1_ID).orElseThrow();
+                        assertThat(order.getPromos()).hasSize(1);
+                        assertThat(order.getVersion()).isEqualTo(prevVersion);
+                    });
+                }
             }
         }
 
@@ -823,7 +1041,7 @@ class InvoicingApplicationTests {
             class OneToMany {
 
                 @Test
-                void putJson_shouldAppend_http204_noContent() throws Exception {
+                void postJson_shouldAppend_http204_noContent() throws Exception {
                     AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
                     doInTransaction(() -> {
                         var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
@@ -853,6 +1071,83 @@ class InvoicingApplicationTests {
                             assertThat(invoice.getOrders())
                                     .hasSize(3)
                                     .anyMatch(order -> order.getId().equals(newOrderId.get()));
+                        });
+                    });
+                }
+
+                @Test
+                void postJson_withIfMatch_shouldAppend_http204() throws Exception {
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    doInTransaction(() -> {
+                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                        newOrderId.set(orders.save(new Order(xenit)).getId());
+                    });
+
+                    var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
+                    var prevVersion = invoices.findById(invoiceNumber).orElseThrow().getVersion();
+
+                    // add an order to an invoice
+                    mockMvc.perform(post("/invoices/%s/orders".formatted(invoiceNumber))
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "orders" : {
+                                                        "href": "/orders/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(newOrderId)))
+                            .andExpect(status().isNoContent());
+
+                    // assert orders collection has been augmented
+                    doInTransaction(() -> {
+                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
+                            assertThat(invoice.getOrders())
+                                    .hasSize(3)
+                                    .anyMatch(order -> order.getId().equals(newOrderId.get()));
+                            assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
+                        });
+                    });
+                }
+
+                @Test
+                @Disabled("ACC-1188")
+                void postJson_withBadIfMatch_http412() throws Exception {
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    doInTransaction(() -> {
+                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                        newOrderId.set(orders.save(new Order(xenit)).getId());
+                    });
+
+                    var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
+                    var prevVersion = invoices.findById(invoiceNumber).orElseThrow().getVersion();
+
+                    // add an order to an invoice
+                    mockMvc.perform(post("/invoices/%s/orders".formatted(invoiceNumber))
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "orders" : {
+                                                        "href": "/orders/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(newOrderId)))
+                            .andExpect(status().isPreconditionFailed());
+
+                    // assert orders collection has been augmented
+                    doInTransaction(() -> {
+                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
+                            assertThat(invoice.getOrders())
+                                    .hasSize(2)
+                                    .noneMatch(order -> order.getId().equals(newOrderId.get()));
+                            assertThat(invoice.getVersion()).isEqualTo(prevVersion);
                         });
                     });
                 }
@@ -928,6 +1223,51 @@ class InvoicingApplicationTests {
                         assertThat(order.getPromos()).hasSize(3);
                     });
                 }
+
+                @Test
+                void postUriList_promos_forOrder_withIfMatch_http204_noContent() throws Exception {
+                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
+                    mockMvc.perform(post("/orders/{id}/promos", ORDER_1_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
+                                    .contentType(RestMediaTypes.TEXT_URI_LIST)
+                                    .content("""
+                                            /promotions/XMAS-2022
+                                            /promotions/FREE-SHIP
+                                            """)
+
+                            )
+                            .andExpect(status().isNoContent());
+
+                    doInTransaction(() -> {
+                        var order = orders.findById(ORDER_1_ID).orElseThrow();
+                        assertThat(order.getPromos()).hasSize(3);
+                        assertThat(order.getVersion()).isNotEqualTo(prevVersion);
+                    });
+                }
+
+                @Test
+                @Disabled("ACC-1188")
+                void postUriList_promos_forOrder_withBadIfMatch_http412() throws Exception {
+                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
+                    mockMvc.perform(post("/orders/{id}/promos", ORDER_1_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
+                                    .contentType(RestMediaTypes.TEXT_URI_LIST)
+                                    .content("""
+                                            /promotions/XMAS-2022
+                                            /promotions/FREE-SHIP
+                                            """)
+
+                            )
+                            .andExpect(status().isPreconditionFailed());
+
+                    doInTransaction(() -> {
+                        var order = orders.findById(ORDER_1_ID).orElseThrow();
+                        assertThat(order.getPromos()).hasSize(1);
+                        assertThat(order.getVersion()).isEqualTo(prevVersion);
+                    });
+                }
             }
         }
 
@@ -947,6 +1287,37 @@ class InvoicingApplicationTests {
 
                     assertThat(orders.findById(ORDER_1_ID))
                             .hasValueSatisfying(order -> assertThat(order.getCustomer()).isNull());
+                }
+
+                @Test
+                void deleteOrderCustomer_withIfMatch_http204() throws Exception {
+                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
+                    mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
+                            .andExpect(status().isNoContent());
+
+                    assertThat(orders.findById(ORDER_1_ID))
+                            .hasValueSatisfying(order -> {
+                                assertThat(order.getCustomer()).isNull();
+                                assertThat(order.getVersion()).isNotEqualTo(prevVersion);
+                            });
+                }
+
+                @Test
+                @Disabled("ACC-1188")
+                void deleteOrderCustomer_withBadIfMatch_http412() throws Exception {
+                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
+                    mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    assertThat(orders.findById(ORDER_1_ID))
+                            .hasValueSatisfying(order -> {
+                                assertThat(order.getCustomer()).isNotNull();
+                                assertThat(order.getVersion()).isEqualTo(prevVersion);
+                            });
                 }
             }
 
@@ -977,6 +1348,45 @@ class InvoicingApplicationTests {
 
                     assertThat(orders.findById(ORDER_1_ID))
                             .hasValueSatisfying(order -> assertThat(order.getShippingAddress()).isNull());
+                }
+
+                @Test
+                void deleteShippingAddress_fromOrder_withIfMatch_http204() throws Exception {
+                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
+                        assertThat(order.getShippingAddress()).isNotNull();
+                    });
+                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
+
+                    mockMvc.perform(delete("/orders/{orderId}/shippingAddress", ORDER_1_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
+                            .andExpect(status().isNoContent());
+
+                    assertThat(orders.findById(ORDER_1_ID))
+                            .hasValueSatisfying(order -> {
+                                assertThat(order.getShippingAddress()).isNull();
+                                assertThat(order.getVersion()).isNotEqualTo(prevVersion);
+                            });
+                }
+
+                @Test
+                @Disabled("ACC-1188")
+                void deleteShippingAddress_fromOrder_withBadIfMatch_http412() throws Exception {
+                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
+                        assertThat(order.getShippingAddress()).isNotNull();
+                    });
+                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
+
+                    mockMvc.perform(delete("/orders/{orderId}/shippingAddress", ORDER_1_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
+                            .andExpect(status().isPreconditionFailed());
+
+                    assertThat(orders.findById(ORDER_1_ID))
+                            .hasValueSatisfying(order -> {
+                                assertThat(order.getShippingAddress()).isNotNull();
+                                assertThat(order.getVersion()).isEqualTo(prevVersion);
+                            });
                 }
             }
 
