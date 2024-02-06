@@ -210,7 +210,7 @@ class InvoicingApplicationTests {
             @Test
             void listInvoices_returns_http200_ok() throws Exception {
                 mockMvc.perform(get("/invoices")
-                                .contentType("application/json"))
+                                .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.page.size").value(20))
                         .andExpect(jsonPath("$.page.totalElements").value(2))
@@ -225,7 +225,7 @@ class InvoicingApplicationTests {
             @Test
             void listInvoices_withFilter_returns_http200_ok() throws Exception {
                 mockMvc.perform(get("/invoices?number={number}", INVOICE_NUMBER_1)
-                        .contentType("application/json"))
+                        .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(1))
                         .andExpect(jsonPath("$._embedded.['item'][0].number").value(INVOICE_NUMBER_1));
@@ -234,7 +234,7 @@ class InvoicingApplicationTests {
             @Test
             void listInvoices_withFilter_ignoreCase_returns_http200_ok() throws Exception {
                 mockMvc.perform(get("/invoices?number={number}", INVOICE_NUMBER_1.toLowerCase(Locale.ROOT))
-                                .contentType("application/json"))
+                                .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(1))
                         .andExpect(jsonPath("$._embedded.['item'][0].number").value(INVOICE_NUMBER_1));
@@ -261,7 +261,7 @@ class InvoicingApplicationTests {
             @Test
             void checkInvoiceCollection_shouldReturn_http204_noContent() throws Exception {
                 mockMvc.perform(head("/invoices")
-                                .contentType("application/json"))
+                                .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isNoContent());
             }
         }
@@ -280,7 +280,7 @@ class InvoicingApplicationTests {
                                             "counterparty": "/customers/%s"
                                         }
                                         """.formatted(customerId))
-                                .contentType("application/json"))
+                                .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isCreated())
                         .andExpect(headers().location().path("/invoices/{id}"));
             }
@@ -302,7 +302,7 @@ class InvoicingApplicationTests {
                                             }
                                         }
                                         """.formatted(customerId))
-                                .contentType("application/json"))
+                                .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isCreated())
                         .andExpect(headers().location().path("/orders/{id}"))
                         .andReturn();
@@ -334,7 +334,7 @@ class InvoicingApplicationTests {
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .contentType("application/json"))
+                                .accept(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
                         .andExpect(jsonPath("$._links.curies").value(curies()))
@@ -369,7 +369,7 @@ class InvoicingApplicationTests {
             @Test
             void headInvoice_shouldReturn_http204_noContent() throws Exception {
                 mockMvc.perform(head("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .contentType("application/json"))
+                                .accept(MediaType.APPLICATION_JSON))
                         .andExpect(status().isNoContent());
             }
 
@@ -383,7 +383,7 @@ class InvoicingApplicationTests {
             @Test
             void putInvoice_shouldReturn_http204_ok() throws Exception {
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .contentType("application/json")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
                                             "number": "%s",
@@ -402,7 +402,7 @@ class InvoicingApplicationTests {
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
-                                .contentType("application/json")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
                                             "number": "%s",
@@ -420,7 +420,7 @@ class InvoicingApplicationTests {
             void putInvoice_WithBadIfMatch_http412() throws Exception {
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                .contentType("application/json")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
                                             "number": "%s",
@@ -444,7 +444,7 @@ class InvoicingApplicationTests {
             @Test
             void patchInvoice_shouldReturn_http204_ok() throws Exception {
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .contentType("application/json")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
                                             "paid": true
@@ -462,7 +462,7 @@ class InvoicingApplicationTests {
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
-                                .contentType("application/json")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
                                             "paid": true
@@ -479,7 +479,7 @@ class InvoicingApplicationTests {
             void patchInvoice_withBadIfMatch_http412() throws Exception {
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                .contentType("application/json")
+                                .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
                                             "paid": true
@@ -550,7 +550,7 @@ class InvoicingApplicationTests {
                 void getCustomer_forInvoice_shouldReturn_http302_redirect() throws Exception {
 
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isFound())
                             .andExpect(headers().location().uri("http://localhost/customers/{id}", XENIT_ID));
                 }
@@ -563,7 +563,7 @@ class InvoicingApplicationTests {
                 void getInvoices_forCustomer_shouldReturn_http302_redirect() throws Exception {
 
                     mockMvc.perform(get("/customers/" + customerIdByVat(ORG_XENIT_VAT) + "/invoices")
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isFound())
                             .andExpect(
                                     headers().location().uri("http://localhost/invoices?counterparty={id}", XENIT_ID));
@@ -583,7 +583,7 @@ class InvoicingApplicationTests {
                 @Test
                 void getShippingAddress_forOrder_shouldReturn_http302_redirect() throws Exception {
                     mockMvc.perform(get("/orders/{id}/shippingAddress", ORDER_1_ID)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isFound())
                             .andExpect(headers().location()
                                     .uri("http://localhost/shipping-addresses/{id}", ADDRESS_ID_XENIT));
@@ -597,7 +597,7 @@ class InvoicingApplicationTests {
                 @Test
                 void getPromos_forOrder_shouldReturn_http302_redirect() throws Exception {
                     mockMvc.perform(get("/orders/{id}/promos", ORDER_1_ID)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isFound())
                             .andExpect(headers().location().uri("http://localhost/promotions?orders={id}", ORDER_1_ID));
 
@@ -775,7 +775,7 @@ class InvoicingApplicationTests {
                 @Test
                 void putUriList_Promos_forOrder_shouldReturn_http204_noContent() throws Exception {
                     mockMvc.perform(put("/orders/{id}/promos", ORDER_1_ID)
-                                    .accept("application/json")
+                                    .accept(MediaType.APPLICATION_JSON)
                                     .contentType(RestMediaTypes.TEXT_URI_LIST_VALUE)
                                     .content("""
                                             /promotions/XMAS-2022
@@ -942,7 +942,7 @@ class InvoicingApplicationTests {
                 void deleteOrderCustomer_shouldReturn_http204() throws Exception {
 
                     mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isNoContent());
 
                     assertThat(orders.findById(ORDER_1_ID))
@@ -957,7 +957,7 @@ class InvoicingApplicationTests {
                 void deleteToManyAssoc_shouldReturn_http405_methodNotAllowed() throws Exception {
 
                     mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/orders")
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isMethodNotAllowed());
                 }
             }
@@ -972,7 +972,7 @@ class InvoicingApplicationTests {
                     });
 
                     mockMvc.perform(delete("/orders/{orderId}/shippingAddress", ORDER_1_ID)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isNoContent());
 
                     assertThat(orders.findById(ORDER_1_ID))
@@ -986,7 +986,7 @@ class InvoicingApplicationTests {
                 @Test
                 void deletePromos_fromOrder_shouldReturn_http405_methodNotAllowed() throws Exception {
                     mockMvc.perform(delete("/orders/{orderId}/promos", ORDER_1_ID)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isMethodNotAllowed());
                 }
             }
@@ -1008,7 +1008,7 @@ class InvoicingApplicationTests {
                 void getInvoicesOrders_shouldReturn_http302() throws Exception {
 
                     mockMvc.perform(get("/invoices/{invoice}/orders/{order}", invoiceId(INVOICE_NUMBER_1), ORDER_1_ID)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isFound())
                             .andExpect(headers().location().uri("http://localhost/orders/{id}", ORDER_1_ID));
                 }
@@ -1023,7 +1023,7 @@ class InvoicingApplicationTests {
                     var counterPartyId = invoice.getCounterparty().getId();
 
                     mockMvc.perform(get("/invoices/" + invoice.getId() + "/counterparty/" + counterPartyId)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isFound())
                             .andExpect(header().string(HttpHeaders.LOCATION,
                                     endsWith("/customers/%s".formatted(counterPartyId))));
@@ -1035,7 +1035,7 @@ class InvoicingApplicationTests {
                     var wrongCounterparty = customerIdByVat(ORG_INBEV_VAT);
 
                     mockMvc.perform(get("/invoices/" + invoice.getId() + "/counterparty/" + wrongCounterparty)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isNotFound());
                 }
             }
@@ -1050,7 +1050,7 @@ class InvoicingApplicationTests {
                     promos.findByPromoCode(PROMO_CYBER).orElseThrow();
 
                     mockMvc.perform(get("/orders/{id}/promos/{promoCode}", ORDER_1_ID, PROMO_CYBER)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isFound())
                             .andExpect(headers().location().uri("http://localhost/promotions/{promoCode}", PROMO_XMAS));
 
@@ -1059,7 +1059,7 @@ class InvoicingApplicationTests {
                 @Test
                 void getPromoById_forOrder_invalidId_shouldReturn_http404_notFound() throws Exception {
                     mockMvc.perform(get("/orders/{id}/promos/{promoCode}", ORDER_1_ID, PROMO_XMAS)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isNotFound());
 
                 }
@@ -1081,7 +1081,7 @@ class InvoicingApplicationTests {
                     });
 
                     mockMvc.perform(delete("/invoices/{invoice}/orders/{order}", INVOICE_1_ID, ORDER_1_ID)
-                                    .accept("application/json"))
+                                    .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isNoContent());
 
                 }
@@ -1099,7 +1099,7 @@ class InvoicingApplicationTests {
 
                     mockMvc.perform(
                                     delete("/orders/{orderId}/shippingAddress/{addressId}", ORDER_1_ID, ADDRESS_ID_XENIT)
-                                            .accept("application/json"))
+                                            .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isNoContent());
 
                     assertThat(orders.findById(ORDER_1_ID))
@@ -1116,7 +1116,7 @@ class InvoicingApplicationTests {
 
                     mockMvc.perform(
                                     delete("/orders/{orderId}/shippingAddress/{addressId}", ORDER_1_ID, UUID.randomUUID())
-                                            .accept("application/json"))
+                                            .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isNotFound());
 
                 }
@@ -1561,7 +1561,7 @@ class InvoicingApplicationTests {
                 @Test
                 void putInvoiceContent_textPlainLatin1_noCharset_http201() throws Exception {
                     mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .contentType("text/plain")
+                                    .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
 
