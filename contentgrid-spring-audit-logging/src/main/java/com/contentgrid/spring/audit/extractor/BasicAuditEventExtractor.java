@@ -12,10 +12,7 @@ import org.springframework.http.server.observation.ServerRequestObservationConte
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
-@RequiredArgsConstructor
 public class BasicAuditEventExtractor implements AuditEventExtractor {
-    private final String appId;
-    private final String deplId;
 
     private static final Set<HandlerMethodMatcher> IGNORED_HANDLERS = Set.of(
             HandlerMethodMatcher.builder()
@@ -66,9 +63,7 @@ public class BasicAuditEventExtractor implements AuditEventExtractor {
                 .requestMethod(context.getCarrier().getMethod())
                 .requestUri(context.getCarrier().getRequestURI())
                 .responseStatus(context.getResponse().getStatus())
-                .responseLocation(location.orElse(null))
-                .applicationId(appId)
-                .deploymentId(deplId);
+                .responseLocation(location.orElse(null));
     }
 
     @Override
