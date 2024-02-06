@@ -38,8 +38,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import lombok.SneakyThrows;
+import java.util.concurrent.atomic.AtomicReference;
+
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.hamcrest.BaseMatcher;
@@ -55,7 +55,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.rest.webmvc.RestMediaTypes;
@@ -64,19 +63,11 @@ import org.springframework.hateoas.Links;
 import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
@@ -338,7 +329,7 @@ class InvoicingApplicationTests {
 
             @Test
             void getInvoice_shouldReturn_http200_ok() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .contentType("application/json"))
@@ -350,7 +341,7 @@ class InvoicingApplicationTests {
 
             @Test
             void getInvoice_withIfNoneMatch_http304() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                 var prevVersion = invoice.getVersion();
 
                 mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
@@ -360,7 +351,7 @@ class InvoicingApplicationTests {
 
             @Test
             void getInvoice_withOutdatedIfNoneMatch_http200_ok() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                 var outdatedVersion = invoice.getVersion() - 1;
 
                 mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
@@ -398,7 +389,7 @@ class InvoicingApplicationTests {
                                         }
                                         """.formatted(INVOICE_NUMBER_1)))
                         .andExpect(status().isNoContent());
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
@@ -406,7 +397,7 @@ class InvoicingApplicationTests {
 
             @Test
             void putInvoice_withIfMatch_http204_ok() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
                                 .contentType("application/json")
@@ -417,14 +408,13 @@ class InvoicingApplicationTests {
                                         }
                                         """.formatted(INVOICE_NUMBER_1)))
                         .andExpect(status().isNoContent());
-                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
             @Test
-//            @Transactional(propagation = Propagation.NOT_SUPPORTED)
             void putInvoice_WithBadIfMatch_http412() throws Exception {
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
@@ -437,7 +427,6 @@ class InvoicingApplicationTests {
                                         """.formatted(INVOICE_NUMBER_1)))
                         .andExpect(status().isPreconditionFailed());
 
-                // getReferenceById is lazy, doesn't work without transaction
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 assertThat(invoice.isPaid()).isFalse();
@@ -460,7 +449,7 @@ class InvoicingApplicationTests {
                                         }
                                         """))
                         .andExpect(status().isNoContent());
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
@@ -468,7 +457,7 @@ class InvoicingApplicationTests {
 
             @Test
             void patchInvoice_withIfMatch_http204_ok() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
                                 .contentType("application/json")
@@ -478,14 +467,13 @@ class InvoicingApplicationTests {
                                         }
                                         """))
                         .andExpect(status().isNoContent());
-                invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
             @Test
-            @Transactional(propagation = Propagation.NOT_SUPPORTED)
             void patchInvoice_withBadIfMatch_http412() throws Exception {
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
@@ -496,8 +484,6 @@ class InvoicingApplicationTests {
                                         }
                                         """))
                         .andExpect(status().isPreconditionFailed());
-
-                // getReferenceById is lazy, doesn't work without transaction
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 assertThat(invoice.isPaid()).isFalse();
@@ -528,7 +514,7 @@ class InvoicingApplicationTests {
 
             @Test
             void deleteInvoice_withIfMatch_http204_ok() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                 mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion())))
                         .andExpect(status().isNoContent());
@@ -538,7 +524,6 @@ class InvoicingApplicationTests {
 
             @Test
             void deleteInvoice_withBadIfMatch_http412() throws Exception {
-                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
                 mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
                         .andExpect(status().isPreconditionFailed());
@@ -651,8 +636,11 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putJson_shouldReplaceLinksAndReturn_http204_noContent() throws Exception {
-                    var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
-                    var newOrderId = orders.save(new Order(xenit)).getId();
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    doInTransaction(() -> {
+                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                        newOrderId.set(orders.save(new Order(xenit)).getId());
+                    });
                     var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
 
                     // set the orders using PUT, using single-link object syntax
@@ -671,17 +659,22 @@ class InvoicingApplicationTests {
                             .andExpect(status().isNoContent());
 
                     // assert orders collection has been replaced
-                    assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
-                        assertThat(invoice.getOrders()).singleElement().satisfies(order -> {
-                            assertThat(order.getId()).isEqualTo(newOrderId);
+                    doInTransaction(() -> {
+                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
+                            assertThat(invoice.getOrders()).singleElement().satisfies(order -> {
+                                assertThat(order.getId()).isEqualTo(newOrderId.get());
+                            });
                         });
                     });
                 }
 
                 @Test
                 void putUriList_shouldReplaceLinksAndReturn_http204_noContent() throws Exception {
-                    var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
-                    var newOrderId = orders.save(new Order(xenit)).getId();
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    doInTransaction(() -> {
+                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                        newOrderId.set(orders.save(new Order(xenit)).getId());
+                    });
                     mockMvc.perform(put("/invoices/{id}/orders", INVOICE_1_ID)
                             .contentType(RestMediaTypes.TEXT_URI_LIST)
                             .content(
@@ -692,12 +685,13 @@ class InvoicingApplicationTests {
                             )
                     ).andExpect(status().isNoContent());
 
-                    assertThat(invoices.findById(INVOICE_1_ID)).hasValueSatisfying(invoice -> {
-                        assertThat(invoice.getOrders())
-                                .map(Order::getId)
-                                .containsExactlyInAnyOrder(ORDER_1_ID, newOrderId);
+                    doInTransaction(() -> {
+                        assertThat(invoices.findById(INVOICE_1_ID)).hasValueSatisfying(invoice -> {
+                            assertThat(invoice.getOrders())
+                                    .map(Order::getId)
+                                    .containsExactlyInAnyOrder(ORDER_1_ID, newOrderId.get());
+                        });
                     });
-
                 }
             }
 
@@ -734,9 +728,10 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putJson_emptyPromos_forOrder_shouldReturn_http204_noContent() throws Exception {
-
-                    assertThat(orders.findById(ORDER_1_ID)).isNotNull()
-                            .hasValueSatisfying(order -> assertThat(order.getPromos()).hasSize(1));
+                    doInTransaction(() -> {
+                        assertThat(orders.findById(ORDER_1_ID)).isNotNull()
+                                .hasValueSatisfying(order -> assertThat(order.getPromos()).hasSize(1));
+                    });
 
                     mockMvc.perform(put("/orders/{id}/promos", ORDER_1_ID)
                                     .accept(MediaType.APPLICATION_JSON)
@@ -744,8 +739,10 @@ class InvoicingApplicationTests {
                                     .content(""))
                             .andExpect(status().isNoContent());
 
-                    assertThat(orders.findById(ORDER_1_ID)).isNotNull()
-                            .hasValueSatisfying(order -> assertThat(order.getPromos()).hasSize(0));
+                    doInTransaction(() -> {
+                        assertThat(orders.findById(ORDER_1_ID)).isNotNull()
+                                .hasValueSatisfying(order -> assertThat(order.getPromos()).hasSize(0));
+                    });
                 }
 
                 @Test
@@ -767,9 +764,10 @@ class InvoicingApplicationTests {
                             )
                             .andExpect(status().isNoContent());
 
-                    var order = orders.findById(ORDER_1_ID).orElseThrow();
-                    assertThat(order.getPromos()).hasSize(2);
-
+                    doInTransaction(() -> {
+                        var order = orders.findById(ORDER_1_ID).orElseThrow();
+                        assertThat(order.getPromos()).hasSize(2);
+                    });
                 }
 
                 @Test
@@ -784,8 +782,10 @@ class InvoicingApplicationTests {
                             )
                             .andExpect(status().isNoContent());
 
-                    var order = orders.findById(ORDER_1_ID).orElseThrow();
-                    assertThat(order.getPromos()).hasSize(2);
+                    doInTransaction(() -> {
+                        var order = orders.findById(ORDER_1_ID).orElseThrow();
+                        assertThat(order.getPromos()).hasSize(2);
+                    });
                 }
             }
         }
@@ -822,8 +822,11 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putJson_shouldAppend_http204_noContent() throws Exception {
-                    var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
-                    var newOrderId = orders.save(new Order(xenit)).getId();
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    doInTransaction(() -> {
+                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                        newOrderId.set(orders.save(new Order(xenit)).getId());
+                    });
 
                     var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
 
@@ -843,11 +846,12 @@ class InvoicingApplicationTests {
                             .andExpect(status().isNoContent());
 
                     // assert orders collection has been augmented
-                    assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
-                        assertThat(invoice.getOrders())
-                                .hasSize(3)
-                                .anyMatch(order -> order.getId().equals(newOrderId));
-
+                    doInTransaction(() -> {
+                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
+                            assertThat(invoice.getOrders())
+                                    .hasSize(3)
+                                    .anyMatch(order -> order.getId().equals(newOrderId.get()));
+                        });
                     });
                 }
             }
@@ -1069,8 +1073,10 @@ class InvoicingApplicationTests {
 
                 @Test
                 void deleteOrderById_fromInvoice_shouldReturn_http204() throws Exception {
-                    var invoice = invoices.findById(INVOICE_1_ID).orElseThrow();
-                    assertThat(invoice.getOrders()).contains(orders.findById(ORDER_1_ID).orElseThrow());
+                    doInTransaction(() -> {
+                        var invoice = invoices.findById(INVOICE_1_ID).orElseThrow();
+                        assertThat(invoice.getOrders()).contains(orders.findById(ORDER_1_ID).orElseThrow());
+                    });
 
                     mockMvc.perform(delete("/invoices/{invoice}/orders/{order}", INVOICE_1_ID, ORDER_1_ID)
                                     .accept("application/json"))
@@ -1140,12 +1146,12 @@ class InvoicingApplicationTests {
                 @Test
                 void getInvoiceContent() throws Exception {
                     var filename = "💩 and 📝.txt";
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
                     invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
                     invoice.setContentFilename(filename);
-                    invoices.save(invoice);
+                    invoice = invoices.save(invoice);
 
                     var encodedFilename = UriUtils.encodeQuery(filename, StandardCharsets.UTF_8);
                     mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
@@ -1179,7 +1185,7 @@ class InvoicingApplicationTests {
                 @Test
                 void getInvoiceContent_withIfNoneMatch_http304() throws Exception {
                     var filename = "💩 and 📝.txt";
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
                     invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
@@ -1195,7 +1201,7 @@ class InvoicingApplicationTests {
                 @Test
                 void getInvoiceContent_withOutDatedIfNoneMatch_http200() throws Exception {
                     var filename = "💩 and 📝.txt";
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
                     invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
@@ -1225,7 +1231,7 @@ class InvoicingApplicationTests {
                                     .content(UNICODE_TEXT))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -1243,7 +1249,7 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -1260,7 +1266,7 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     // you have to "know" the charset encoding
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
@@ -1280,7 +1286,7 @@ class InvoicingApplicationTests {
                                     .content(UNICODE_TEXT))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment"))).hasContent(
                             UNICODE_TEXT);
@@ -1297,12 +1303,12 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postInvoiceContent_update_http200() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
                     invoice.setContentFilename("content.txt");
-                    invoices.save(invoice);
+                    invoice = invoices.save(invoice);
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -1318,6 +1324,8 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT))
                             .andExpect(status().isOk());
 
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
@@ -1329,7 +1337,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postInvoiceContent_createWithIfMatch_http201() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
@@ -1342,7 +1350,7 @@ class InvoicingApplicationTests {
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -1355,7 +1363,7 @@ class InvoicingApplicationTests {
                 @Test
                 @Disabled("ACC-1189")
                 void postInvoiceContent_createWithBadIfMatch_http412() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
@@ -1368,7 +1376,7 @@ class InvoicingApplicationTests {
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).isNull();
                     assertThat(invoice.getContentId()).isBlank();
@@ -1384,7 +1392,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     // update content, ONLY changing the charset
@@ -1398,7 +1406,7 @@ class InvoicingApplicationTests {
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             EXT_ASCII_TEXT);
@@ -1413,7 +1421,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     // update content, ONLY changing the charset
@@ -1427,7 +1435,7 @@ class InvoicingApplicationTests {
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -1453,7 +1461,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postMultipartContent_http201() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     assertThat(invoicesContent.getContent(invoice)).isNull();
 
                     var bytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
@@ -1462,7 +1470,7 @@ class InvoicingApplicationTests {
                                     .file(file))
                             .andExpect(status().isCreated());
 
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -1474,7 +1482,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postMultipartContent_updateDifferentContentType_http200() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
                     invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
@@ -1488,7 +1496,7 @@ class InvoicingApplicationTests {
                                     .file(file))
                             .andExpect(status().isOk());
 
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
                             .hasBinaryContent(content);
@@ -1500,7 +1508,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postMultipartContent_noPayload_http400() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     assertThat(invoicesContent.getContent(invoice)).isNull();
 
                     mockMvc.perform(multipart(HttpMethod.POST, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
@@ -1520,7 +1528,7 @@ class InvoicingApplicationTests {
                                     .content(UNICODE_TEXT))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -1538,7 +1546,7 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -1555,7 +1563,7 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     // you have to "know" the charset encoding
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
@@ -1575,7 +1583,7 @@ class InvoicingApplicationTests {
                                     .content(UNICODE_TEXT))
                             .andExpect(status().isCreated());
 
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment"))).hasContent(
                             UNICODE_TEXT);
@@ -1592,12 +1600,12 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putInvoiceContent_update_http200() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
                     invoice.setContentFilename("content.txt");
-                    invoices.save(invoice);
+                    invoice = invoices.save(invoice);
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -1613,6 +1621,8 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT))
                             .andExpect(status().isOk());
 
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
@@ -1624,7 +1634,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putInvoiceContent_createWithIfMatch_http201() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
@@ -1637,7 +1647,7 @@ class InvoicingApplicationTests {
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -1650,7 +1660,7 @@ class InvoicingApplicationTests {
                 @Test
                 @Disabled("ACC-1189")
                 void putInvoiceContent_createWithBadIfMatch_http412() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
@@ -1663,7 +1673,7 @@ class InvoicingApplicationTests {
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).isNull();
                     assertThat(invoice.getContentId()).isBlank();
@@ -1679,7 +1689,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     // update content, ONLY changing the charset
@@ -1693,7 +1703,7 @@ class InvoicingApplicationTests {
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             EXT_ASCII_TEXT);
@@ -1708,7 +1718,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     // update content, ONLY changing the charset
@@ -1723,7 +1733,7 @@ class InvoicingApplicationTests {
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
 
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -1749,7 +1759,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putMultipartContent_http201() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     assertThat(invoicesContent.getContent(invoice)).isNull();
 
                     var bytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
@@ -1758,7 +1768,7 @@ class InvoicingApplicationTests {
                                     .file(file))
                             .andExpect(status().isCreated());
 
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -1770,7 +1780,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putMultipartContent_updateDifferentContentType_http200() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
                     invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
@@ -1784,7 +1794,7 @@ class InvoicingApplicationTests {
                                     .file(file))
                             .andExpect(status().isOk());
 
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
                             .hasBinaryContent(content);
@@ -1796,7 +1806,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putMultipartContent_noPayload_http400() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     assertThat(invoicesContent.getContent(invoice)).isNull();
 
                     mockMvc.perform(multipart(HttpMethod.PUT, "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
@@ -1810,7 +1820,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void deleteContent_http204() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
                     invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
@@ -1820,6 +1830,7 @@ class InvoicingApplicationTests {
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(status().isNoContent());
 
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var content = invoicesContent.getResource(invoice, PropertyPath.from("content"));
                     assertThat(content).isNull();
 
@@ -1836,7 +1847,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
@@ -1846,7 +1857,7 @@ class InvoicingApplicationTests {
                     // get invoice, expecting the etag to change
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoice.getContentId()).isNull();
                     assertThat(invoice.getContentLength()).isNull();
@@ -1861,7 +1872,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
@@ -1871,7 +1882,7 @@ class InvoicingApplicationTests {
                     // get invoice, expecting the etag to be unchanged
                     mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
-                    invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                     assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -1894,7 +1905,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void deleteContent_noContentWithIfMatch_http404() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
@@ -1907,7 +1918,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void deleteContent_noContentWithBadIfMatch_http404() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
@@ -1920,7 +1931,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void deleteMultipleContentProperties() throws Exception {
-                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var contentBytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
                     invoicesContent.setContent(invoice, PropertyPath.from("content"),
                             new ByteArrayInputStream(contentBytes));
@@ -1932,7 +1943,7 @@ class InvoicingApplicationTests {
                             new ByteArrayInputStream(attachmentBytes));
                     invoice.setAttachmentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
                     invoice.setAttachmentFilename("attachment.txt");
-                    invoices.save(invoice);
+                    invoice = invoices.save(invoice);
 
                     assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNotNull();
                     assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNotNull();
@@ -1940,12 +1951,14 @@ class InvoicingApplicationTests {
                     mockMvc.perform(delete("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(status().isNoContent());
 
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNotNull();
                     assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNull();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(status().isNoContent());
 
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNull();
                     assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNull();
                 }
@@ -1962,12 +1975,12 @@ class InvoicingApplicationTests {
                 @Test
                 void getCustomerContent() throws Exception {
                     var filename = "💩 and 📝.txt";
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
                     customersContent.setContent(customer, PropertyPath.from("content"), stream);
                     customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
                     customer.getContent().setFilename(filename);
-                    customers.save(customer);
+                    customer = customers.save(customer);
 
                     var encodedFilename = UriUtils.encodeQuery(filename, StandardCharsets.UTF_8);
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
@@ -2001,7 +2014,7 @@ class InvoicingApplicationTests {
                 @Test
                 void getCustomerContent_withIfNoneMatch_http304() throws Exception {
                     var filename = "💩 and 📝.txt";
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
                     customersContent.setContent(customer, PropertyPath.from("content"), stream);
                     customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
@@ -2017,7 +2030,7 @@ class InvoicingApplicationTests {
                 @Test
                 void getCustomerContent_withOutdatedIfNoneMatch_http200() throws Exception {
                     var filename = "💩 and 📝.txt";
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
                     customersContent.setContent(customer, PropertyPath.from("content"), stream);
                     customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
@@ -2047,7 +2060,7 @@ class InvoicingApplicationTests {
                                     .content(UNICODE_TEXT))
                             .andExpect(status().isCreated());
 
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -2060,12 +2073,12 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postCustomerContent_update_http200() throws Exception {
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     customersContent.setContent(customer, PropertyPath.from("content"), stream);
                     customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_LATIN1);
                     customer.getContent().setFilename("content.txt");
-                    customers.save(customer);
+                    customer = customers.save(customer);
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -2082,6 +2095,7 @@ class InvoicingApplicationTests {
                                     .content(EXT_ASCII_TEXT))
                             .andExpect(status().isOk());
 
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
                             EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
@@ -2093,7 +2107,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postCustomerContent_createWithIfMatch_http201() throws Exception {
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
@@ -2106,7 +2120,7 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -2120,7 +2134,7 @@ class InvoicingApplicationTests {
                 @Test
                 @Disabled("ACC-1189")
                 void postCustomerContent_createWithBadIfMatch_http412() throws Exception {
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
@@ -2133,7 +2147,7 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customer.getContent()).isNull();
                 }
@@ -2145,7 +2159,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
@@ -2164,7 +2178,7 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
                             EXT_ASCII_TEXT);
@@ -2179,7 +2193,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
@@ -2198,7 +2212,7 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -2236,7 +2250,7 @@ class InvoicingApplicationTests {
                                     .content(UNICODE_TEXT))
                             .andExpect(status().isCreated());
 
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -2249,7 +2263,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putCustomerContent_createWithIfMatch_http201() throws Exception {
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
@@ -2262,7 +2276,7 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
                             UNICODE_TEXT);
@@ -2276,7 +2290,7 @@ class InvoicingApplicationTests {
                 @Test
                 @Disabled("ACC-1189")
                 void putCustomerContent_createWithBadIfMatch_http412() throws Exception {
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
@@ -2289,7 +2303,7 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customer.getContent()).isNull();
                 }
@@ -2301,7 +2315,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
@@ -2320,7 +2334,7 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
                             EXT_ASCII_TEXT);
@@ -2335,7 +2349,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
@@ -2354,7 +2368,7 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -2370,7 +2384,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void deleteContent_http204() throws Exception {
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
                     customersContent.setContent(customer, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
                     customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_LATIN1);
@@ -2380,6 +2394,7 @@ class InvoicingApplicationTests {
                     mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(status().isNoContent());
 
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
                 }
@@ -2391,7 +2406,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
@@ -2401,6 +2416,8 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to change
                     mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
+
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
                 }
@@ -2412,7 +2429,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
                             .andExpect(status().isCreated());
-                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
 
                     mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
@@ -2422,7 +2439,7 @@ class InvoicingApplicationTests {
                     // get customer, expecting the etag to be unchanged
                     mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
