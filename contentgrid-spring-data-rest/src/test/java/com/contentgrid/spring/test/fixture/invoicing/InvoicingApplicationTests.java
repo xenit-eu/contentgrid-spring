@@ -313,8 +313,10 @@ class InvoicingApplicationTests {
                         .map(UUID::fromString)
                         .orElseThrow();
 
-                assertThat(orders.findById(orderId)).hasValueSatisfying(order -> {
-                    assertThat(order.getPromos()).hasSize(2);
+                doInTransaction(() -> {
+                    assertThat(orders.findById(orderId)).hasValueSatisfying(order -> {
+                        assertThat(order.getPromos()).hasSize(2);
+                    });
                 });
             }
         }
