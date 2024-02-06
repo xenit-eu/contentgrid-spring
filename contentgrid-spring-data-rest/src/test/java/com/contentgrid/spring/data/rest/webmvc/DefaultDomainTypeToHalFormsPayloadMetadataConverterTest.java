@@ -124,17 +124,18 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
         var metadata = converter.convertToSearchPayloadMetadata(Customer.class);
 
         assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
-                        "vat",
-                        "content.size",
-                        "content.mimetype",
-                        "content.filename",
-                        "invoices.number",
-                        "invoices.paid",
-                        "invoices.content.length",
+                "vat",
+                "birthday",
+                "content.size",
+                "content.mimetype",
+                "content.filename",
+                "invoices.number",
+                "invoices.paid",
+                "invoices.content.length",
                         /*"invoices.content.length.lt",
                         "invoices.content.length.gt"*/
-                        "invoices.orders.id"
-                );
+                "invoices.orders.id"
+        );
     }
 
     @Test
@@ -143,6 +144,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
         assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
                 "customer.vat",
+                "customer.birthday",
                 "customer.content.size",
                 "customer.content.mimetype",
                 "customer.content.filename",

@@ -67,6 +67,10 @@ class HalLinkTitlesAndFormPromptsTest {
                                             name: "vat",
                                             type: "text"
                                         },
+                                        {
+                                            name: "birthday",
+                                            type: "datetime"
+                                        },
                                         { name: "content.size", type: "number" }, { name: "content.mimetype", type: "text" }, { name: "content.filename", type: "text" },
                                         { name: "invoices.number", type: "text" }, { name: "invoices.paid", type: "checkbox" }, { name: "invoices.orders.id" }, { name: "invoices.content.length", type: "number" }
                                     ]

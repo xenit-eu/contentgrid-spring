@@ -59,6 +59,7 @@ public class Customer {
     @CollectionFilterParam
     private Content content;
 
+    @CollectionFilterParam
     private Instant birthday;
 
     @JsonProperty("total_spend")
