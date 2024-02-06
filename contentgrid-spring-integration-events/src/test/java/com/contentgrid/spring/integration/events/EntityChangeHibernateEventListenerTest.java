@@ -154,11 +154,11 @@ class EntityChangeHibernateEventListenerTest {
 
     @Test
     void whenPromoIsAddedToOrderPromos_manyToMany_postUpdateCollectionShouldBeCalledOnce_ok() {
-        UUID orderId = orderRepository.save(new Order()).getId();
         // We have to run this in a transaction and verify the interactions _after_ the transaction closes, because
         // events are sent after committing the tx. If we don't run it in a transaction, hibernate complains about
         // a lack of an open session when we try to do anything with order.promos.
         transactionTemplate.executeWithoutResult((status) -> {
+            UUID orderId = orderRepository.save(new Order()).getId();
             // Order has a Set<PromotionCampaign> that is initialized to null. To avoid a PostUpdate event being sent because
             // hibernate hydrated that to an empty PersistentBag, we save and get Order first before calling anything on it.
             Order order = orderRepository.findById(orderId).orElseThrow();
