@@ -348,6 +348,25 @@ class InvoicingApplicationTests {
                         .andExpect(headers().etag().isEqualTo(invoice.getVersion()));
             }
 
+            @Test
+            void getInvoice_withIfNoneMatch_http304() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var prevVersion = invoice.getVersion();
+
+                mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .header(HttpHeaders.IF_NONE_MATCH, toEtag(prevVersion)))
+                        .andExpect(status().isNotModified());
+            }
+
+            @Test
+            void getInvoice_withOutdatedIfNoneMatch_http200_ok() throws Exception {
+                var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                var outdatedVersion = invoice.getVersion() - 1;
+
+                mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .header(HttpHeaders.IF_NONE_MATCH, toEtag(outdatedVersion)))
+                        .andExpect(status().isOk());
+            }
         }
 
         @Nested
@@ -1156,6 +1175,42 @@ class InvoicingApplicationTests {
                                     .accept(MediaType.ALL_VALUE))
                             .andExpect(status().isNotFound());
                 }
+
+                @Test
+                void getInvoiceContent_withIfNoneMatch_http304() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
+                    invoice.setContentFilename(filename);
+                    invoice = invoices.save(invoice);
+
+                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.IF_NONE_MATCH, toEtag(invoice.getVersion())))
+                            .andExpect(status().isNotModified());
+                }
+
+                @Test
+                void getInvoiceContent_withOutDatedIfNoneMatch_http200() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var invoice = invoices.getReferenceById(invoiceId(INVOICE_NUMBER_1));
+                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
+                    invoice.setContentFilename(filename);
+                    invoice = invoices.save(invoice);
+                    var outdatedVersion = invoice.getVersion() - 1;
+
+                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.IF_NONE_MATCH, toEtag(outdatedVersion)))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().string(EXT_ASCII_TEXT))
+                            .andExpect(headers().etag().isNotEqualTo(outdatedVersion));
+                }
             }
 
             @Nested
@@ -1941,6 +1996,42 @@ class InvoicingApplicationTests {
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .accept(MediaType.ALL_VALUE))
                             .andExpect(status().isNotFound());
+                }
+
+                @Test
+                void getCustomerContent_withIfNoneMatch_http304() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
+                    customersContent.setContent(customer, PropertyPath.from("content"), stream);
+                    customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
+                    customer.getContent().setFilename(filename);
+                    customer = customers.save(customer);
+
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.IF_NONE_MATCH, toEtag(customer.getVersion())))
+                            .andExpect(status().isNotModified());
+                }
+
+                @Test
+                void getCustomerContent_withOutdatedIfNoneMatch_http200() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var customer = customers.getReferenceById(customerIdByVat(ORG_XENIT_VAT));
+                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
+                    customersContent.setContent(customer, PropertyPath.from("content"), stream);
+                    customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
+                    customer.getContent().setFilename(filename);
+                    customer = customers.save(customer);
+                    var outdatedVersion = customer.getVersion() - 1;
+
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.IF_NONE_MATCH, toEtag(outdatedVersion)))
+                            .andExpect(status().isOk())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().string(EXT_ASCII_TEXT))
+                            .andExpect(headers().etag().isNotEqualTo(outdatedVersion));
                 }
             }
 
