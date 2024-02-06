@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
@@ -37,18 +38,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.content.commons.property.PropertyPath;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.rest.webmvc.RestMediaTypes;
@@ -57,19 +64,27 @@ import org.springframework.hateoas.Links;
 import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
 @Slf4j
-@Transactional
 @SpringBootTest(properties = {
         "server.servlet.encoding.enabled=false" // disables mock-mvc enforcing charset in request
 })
+@EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 class InvoicingApplicationTests {
 
@@ -115,6 +130,21 @@ class InvoicingApplicationTests {
     @Autowired
     CustomerContentStore customersContent;
 
+    @Autowired
+    PlatformTransactionManager transactionManager;
+
+
+    void doInTransaction(ThrowingCallable callable) {
+        new TransactionTemplate(this.transactionManager).execute(status -> {
+            try {
+                callable.call();
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        });
+    }
+
     @BeforeEach
     void setupTestData() {
         PROMO_XMAS = promos.save(new PromotionCampaign("XMAS-2022", "10% off ")).getPromoCode();
@@ -145,8 +175,17 @@ class InvoicingApplicationTests {
 
     }
 
+    @AfterEach
+    void cleanupTestData() {
+        invoices.deleteAll();
+        orders.deleteAll();
+        shippingAddresses.deleteAll();
+        customers.deleteAll();
+        promos.deleteAll();
+    }
+
     private Matcher<Object> curies() {
-        var curies =  ((List<Link>)curieProvider.getCurieInformation(Links.NONE))
+        var curies = ((List<Link>) curieProvider.getCurieInformation(Links.NONE))
                 .stream()
                 .map(curie -> Map.of(
                         "href", curie.getHref(),
@@ -157,7 +196,7 @@ class InvoicingApplicationTests {
         return new BaseMatcher<Object>() {
             @Override
             public boolean matches(Object actual) {
-                if(actual instanceof List<?> items) {
+                if (actual instanceof List<?> items) {
                     return curies.equals(items);
                 }
                 return false;
@@ -366,7 +405,7 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            @Transactional(propagation = Propagation.NOT_SUPPORTED)
+//            @Transactional(propagation = Propagation.NOT_SUPPORTED)
             void putInvoice_WithBadIfMatch_http412() throws Exception {
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
@@ -840,9 +879,10 @@ class InvoicingApplicationTests {
                             )
                             .andExpect(status().isNoContent());
 
-                    var order = orders.findById(ORDER_1_ID).orElseThrow();
-                    assertThat(order.getPromos()).hasSize(3);
-
+                    doInTransaction(() -> {
+                        var order = orders.findById(ORDER_1_ID).orElseThrow();
+                        assertThat(order.getPromos()).hasSize(3);
+                    });
                 }
 
                 @Test
@@ -858,9 +898,10 @@ class InvoicingApplicationTests {
                             )
                             .andExpect(status().isNoContent());
 
-                    var order = orders.findById(ORDER_1_ID).orElseThrow();
-                    assertThat(order.getPromos()).hasSize(3);
-
+                    doInTransaction(() -> {
+                        var order = orders.findById(ORDER_1_ID).orElseThrow();
+                        assertThat(order.getPromos()).hasSize(3);
+                    });
                 }
             }
         }
