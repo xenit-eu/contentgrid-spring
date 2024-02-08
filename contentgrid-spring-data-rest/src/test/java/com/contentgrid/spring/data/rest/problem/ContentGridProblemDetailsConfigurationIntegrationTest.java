@@ -3,6 +3,7 @@ package com.contentgrid.spring.data.rest.problem;
 import static com.contentgrid.spring.data.rest.problem.ProblemDetailsMockMvcMatchers.problemDetails;
 import static com.contentgrid.spring.data.rest.problem.ProblemDetailsMockMvcMatchers.validationConstraintViolation;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -500,4 +501,22 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
 
     }
 
+    /**
+     * Tests all invalid collection filter values
+     */
+    @Nested
+    class CollectionFilterValueErrors {
+
+        @Test
+        void invalidDateFilterValue() throws Exception {
+            mockMvc.perform(get("/customers?birthday=invalid")
+                            .accept(MediaType.APPLICATION_JSON)
+                    )
+                    .andExpect(problemDetails()
+                            .withStatusCode(HttpStatus.BAD_REQUEST)
+                            .withType(PROBLEM_TYPE_PREFIX + "invalid-filter-parameter/format")
+                    );
+        }
+
+    }
 }

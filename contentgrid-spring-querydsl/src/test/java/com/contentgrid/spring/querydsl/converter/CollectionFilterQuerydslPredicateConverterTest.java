@@ -3,11 +3,10 @@ package com.contentgrid.spring.querydsl.converter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
+import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import com.contentgrid.spring.querydsl.test.fixtures.QTestObject;
 import com.contentgrid.spring.querydsl.test.fixtures.TestObject;
-import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
-import com.contentgrid.spring.querydsl.mapping.CollectionFilters;
-import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import com.contentgrid.spring.querydsl.test.mapping.TestCollectionFilter;
 import com.contentgrid.spring.querydsl.test.mapping.TestCollectionFiltersMapping;
 import com.querydsl.core.types.Path;
@@ -15,7 +14,6 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -82,7 +80,7 @@ class CollectionFilterQuerydslPredicateConverterTest {
         );
 
         assertThatThrownBy(() -> converter.getPredicate(TestObject.class, Map.of("test", inputValues)))
-                .isInstanceOfSatisfying(InvalidCollectionFilterValueException.class, exception -> {
+                .isInstanceOfSatisfying(CollectionFilterValueConversionException.class, exception -> {
                     assertThat(exception.getFilter()).isEqualTo(filter);
                     assertThat(exception.getInvalidValue()).isEqualTo(inputValues.iterator().next());
                 });

@@ -2,7 +2,10 @@ package com.contentgrid.spring.data.rest.problem;
 
 import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties;
 import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties.FieldViolationProblemProperties;
+import com.contentgrid.spring.data.rest.problem.ext.InvalidFilterProblemProperties;
 import com.contentgrid.spring.data.rest.validation.OnEntityDelete;
+import com.contentgrid.spring.querydsl.converter.CollectionFilterValueConversionException;
+import com.contentgrid.spring.querydsl.mapping.InvalidCollectionFilterValueException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -124,6 +127,40 @@ public class ContentGridExceptionHandler {
         }
 
         return message + " at " + location.offsetDescription();
+    }
+
+    @ExceptionHandler
+    ResponseEntity<Problem> handleCollectionFilterValueConversionException(
+            CollectionFilterValueConversionException exception
+    ) {
+        return responseEntityFactory.createResponse(
+                problemFactory.createProblem(
+                                ProblemType.INVALID_FILTER_PARAMETER_FORMAT,
+                                exception.getFilter().getFilterName(),
+                                Objects.toString(exception.getInvalidValue()),
+                                exception.getCause().getTargetType()
+                        )
+                        .withStatus(HttpStatus.BAD_REQUEST)
+                        .withProperties(new InvalidFilterProblemProperties(exception.getFilter().getFilterName(),
+                                exception.getInvalidValue()))
+        );
+    }
+
+    @ExceptionHandler
+    ResponseEntity<Problem> handleInvalidCollectionFilterValueException(
+            InvalidCollectionFilterValueException exception
+    ) {
+        return responseEntityFactory.createResponse(
+                problemFactory.createProblem(
+                                ProblemType.INVALID_FILTER_PARAMETER,
+                                exception.getFilter().getFilterName(),
+                                Objects.toString(exception.getInvalidValue())
+                        )
+                        .withStatus(HttpStatus.BAD_REQUEST)
+                        .withProperties(new InvalidFilterProblemProperties(exception.getFilter().getFilterName(),
+                                exception.getInvalidValue()))
+        );
+
     }
 
 }

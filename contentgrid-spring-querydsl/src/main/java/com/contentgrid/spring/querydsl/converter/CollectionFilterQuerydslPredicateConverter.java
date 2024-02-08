@@ -25,11 +25,11 @@ public class CollectionFilterQuerydslPredicateConverter {
             mapping.named(paramName).ifPresent(filter -> {
                 Collection<?> typedParameters;
                 try {
-                     typedParameters = convertParametersToType(filter.getParameterType(), paramValues);
-                } catch(ConversionFailedException e) {
-                    throw new InvalidCollectionFilterValueException(filter, e.getValue(), e);
+                    typedParameters = convertParametersToType(filter.getParameterType(), paramValues);
+                } catch (ConversionFailedException e) {
+                    throw new CollectionFilterValueConversionException(filter, e.getValue(), e);
                 }
-                ((CollectionFilter<Object>)filter)
+                ((CollectionFilter<Object>) filter)
                         .createPredicate((Collection<Object>) typedParameters)
                         .ifPresent(predicateBuilder::and);
             });
