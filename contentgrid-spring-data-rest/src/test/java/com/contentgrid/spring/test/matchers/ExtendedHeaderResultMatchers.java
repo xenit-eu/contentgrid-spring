@@ -11,4 +11,8 @@ public class ExtendedHeaderResultMatchers extends HeaderResultMatchers {
     public LocationHeaderMatcher location() {
         return new LocationHeaderMatcher();
     }
+
+    public EtagHeaderMatcher etag() {
+        return new EtagHeaderMatcher();
+    }
 }
