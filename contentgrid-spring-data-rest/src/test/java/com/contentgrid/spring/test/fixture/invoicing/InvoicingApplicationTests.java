@@ -685,7 +685,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putJson_shouldReplaceLinksAndReturn_http204_noContent() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
                     doInTransaction(() -> {
                         var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
                         newOrderId.set(orders.save(new Order(xenit)).getId());
@@ -719,7 +719,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putJson_withIfMatch_http204_noContent() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
                     doInTransaction(() -> {
                         var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
                         newOrderId.set(orders.save(new Order(xenit)).getId());
@@ -757,7 +757,7 @@ class InvoicingApplicationTests {
                 @Test
                 @Disabled("ACC-1188")
                 void putJson_withBadIfMatch_http412() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
                     doInTransaction(() -> {
                         var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
                         newOrderId.set(orders.save(new Order(xenit)).getId());
@@ -794,7 +794,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putUriList_shouldReplaceLinksAndReturn_http204_noContent() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
                     doInTransaction(() -> {
                         var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
                         newOrderId.set(orders.save(new Order(xenit)).getId());
@@ -1042,7 +1042,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postJson_shouldAppend_http204_noContent() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
                     doInTransaction(() -> {
                         var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
                         newOrderId.set(orders.save(new Order(xenit)).getId());
@@ -1077,7 +1077,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postJson_withIfMatch_shouldAppend_http204() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
                     doInTransaction(() -> {
                         var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
                         newOrderId.set(orders.save(new Order(xenit)).getId());
@@ -1116,7 +1116,7 @@ class InvoicingApplicationTests {
                 @Test
                 @Disabled("ACC-1188")
                 void postJson_withBadIfMatch_http412() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(UUID.randomUUID());
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
                     doInTransaction(() -> {
                         var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
                         newOrderId.set(orders.save(new Order(xenit)).getId());
@@ -1493,6 +1493,11 @@ class InvoicingApplicationTests {
                     mockMvc.perform(delete("/invoices/{invoice}/orders/{order}", INVOICE_1_ID, ORDER_1_ID)
                                     .accept(MediaType.APPLICATION_JSON))
                             .andExpect(status().isNoContent());
+
+                    doInTransaction(() -> {
+                        var invoice = invoices.findById(INVOICE_1_ID).orElseThrow();
+                        assertThat(invoice.getOrders()).doesNotContain(orders.findById(ORDER_1_ID).orElseThrow());
+                    });
 
                 }
             }
