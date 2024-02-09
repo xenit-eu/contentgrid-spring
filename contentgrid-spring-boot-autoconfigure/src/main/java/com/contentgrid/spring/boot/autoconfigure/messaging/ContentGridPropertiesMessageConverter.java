@@ -1,10 +1,12 @@
 package com.contentgrid.spring.boot.autoconfigure.messaging;
 
+import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.SmartMessageConverter;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 
 /**
  * Delegates message conversion to a composite MessageConverter, but adds applicationId and deploymentId to the headers
@@ -36,10 +38,13 @@ public class ContentGridPropertiesMessageConverter implements SmartMessageConver
     }
 
     private MessageHeaders extendHeaders(MessageHeaders headers) {
-        return MessageBuilder.withPayload("foo").copyHeaders(headers)
-                .setHeaderIfAbsent("applicationId", systemProperties.getApplicationId())
-                .setHeaderIfAbsent("deploymentId", systemProperties.getDeploymentId())
-                .build()
-                .getHeaders();
+        var map = new HashMap<>(headers);
+        if (systemProperties.getApplicationId() != null) {
+            map.put("applicationId", systemProperties.getApplicationId());
+        }
+        if (systemProperties.getDeploymentId() != null) {
+            map.put("deploymentId", systemProperties.getDeploymentId());
+        }
+        return new MessageHeaders(map);
     }
 }

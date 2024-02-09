@@ -6,7 +6,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.Set;
-import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.observation.ServerRequestObservationContext;
 import org.springframework.web.servlet.HandlerMapping;
