@@ -1778,7 +1778,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                @Disabled("ACC-1189")
                 void postInvoiceContent_createWithBadIfMatch_http412() throws Exception {
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
@@ -2075,7 +2074,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                @Disabled("ACC-1189")
                 void putInvoiceContent_createWithBadIfMatch_http412() throws Exception {
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
@@ -2549,7 +2547,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                @Disabled("ACC-1189")
                 void postCustomerContent_createWithBadIfMatch_http412() throws Exception {
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
@@ -2562,7 +2559,7 @@ class InvoicingApplicationTests {
                             .andExpect(status().isPreconditionFailed());
 
                     // get customer, expecting the etag to be unchanged
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                    mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
@@ -2705,7 +2702,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                @Disabled("ACC-1189")
                 void putCustomerContent_createWithBadIfMatch_http412() throws Exception {
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
@@ -2718,7 +2714,7 @@ class InvoicingApplicationTests {
                             .andExpect(status().isPreconditionFailed());
 
                     // get customer, expecting the etag to be unchanged
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                    mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(headers().etag().isEqualTo(prevVersion));
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
