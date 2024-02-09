@@ -5,14 +5,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.SmartMessageConverter;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
 /**
  * Delegates message conversion to a composite MessageConverter, but adds applicationId and deploymentId to the headers
  */
 @RequiredArgsConstructor
-public class ContentGridPropertiesMessageConverter implements SmartMessageConverter {
+public class ContentGridSourceHeadersMessageConverter implements SmartMessageConverter {
 
     private final SmartMessageConverter delegate;
     private final ContentGridMessagingSystemProperties systemProperties;
