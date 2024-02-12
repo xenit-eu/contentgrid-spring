@@ -19,5 +19,4 @@ public abstract class AbstractAuditEvent {
 
     int responseStatus;
     String responseLocation;
-
 }

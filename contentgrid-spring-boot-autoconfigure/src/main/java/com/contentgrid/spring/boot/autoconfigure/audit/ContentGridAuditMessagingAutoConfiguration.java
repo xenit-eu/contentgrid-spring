@@ -4,8 +4,8 @@ import com.contentgrid.spring.audit.handler.messaging.AuditEventMessageConverter
 import com.contentgrid.spring.audit.handler.messaging.AuditEventToCloudEventMessageConverter;
 import com.contentgrid.spring.audit.handler.messaging.Jackson2AuditMessagingModule;
 import com.contentgrid.spring.audit.handler.messaging.MessageSendingAuditHandler;
-import com.contentgrid.spring.boot.autoconfigure.messaging.ContentGridMessaging;
 import com.contentgrid.spring.boot.autoconfigure.audit.ContentGridAuditMessagingAutoConfiguration.ContentGridAuditMessagingProperties;
+import com.contentgrid.spring.boot.autoconfigure.messaging.ContentGridMessaging;
 import com.contentgrid.spring.boot.autoconfigure.messaging.ContentGridMessagingAutoConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cloudevents.CloudEvent;

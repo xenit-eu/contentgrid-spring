@@ -101,6 +101,7 @@ public class Jackson2AuditMessagingModule extends SimpleModule {
         @JsonProperty("search")
         @JsonInclude(Include.NON_NULL)
         abstract Object getQueryParameters();
+
     }
 
     @JsonAppend(props = {
