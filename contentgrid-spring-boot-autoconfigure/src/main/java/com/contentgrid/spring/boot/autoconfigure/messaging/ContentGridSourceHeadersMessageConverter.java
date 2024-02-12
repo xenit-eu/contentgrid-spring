@@ -1,6 +1,8 @@
 package com.contentgrid.spring.boot.autoconfigure.messaging;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
@@ -37,7 +39,7 @@ public class ContentGridSourceHeadersMessageConverter implements SmartMessageCon
     }
 
     private MessageHeaders extendHeaders(MessageHeaders headers) {
-        var map = new HashMap<>(headers);
+        var map = new HashMap<>(Objects.requireNonNullElseGet(headers, Map::of));
         if (systemProperties.getApplicationId() != null) {
             map.put("applicationId", systemProperties.getApplicationId());
         }
