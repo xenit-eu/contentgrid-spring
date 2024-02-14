@@ -9,17 +9,14 @@ import org.springframework.messaging.core.MessageSendingOperations;
 
 @RequiredArgsConstructor
 public class MessageSendingAuditHandler implements AuditEventHandler {
+
     @NonNull
     private final MessageSendingOperations<String> messageSendingOperations;
 
-    @Nullable
+    @NonNull
     private final String destination;
 
     public void handle(AbstractAuditEvent auditEvent) {
-        if (destination == null) {
-            messageSendingOperations.convertAndSend(auditEvent);
-        } else {
-            messageSendingOperations.convertAndSend(destination, auditEvent);
-        }
+        messageSendingOperations.convertAndSend(destination, auditEvent);
     }
 }

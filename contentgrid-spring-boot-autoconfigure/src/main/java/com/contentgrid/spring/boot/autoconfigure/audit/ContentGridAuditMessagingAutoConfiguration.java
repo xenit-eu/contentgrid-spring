@@ -12,6 +12,7 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.spring.messaging.CloudEventMessageConverter;
 import java.net.URI;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -19,8 +20,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.core.annotation.Order;
 import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.messaging.core.AbstractMessageSendingTemplate;
 import org.springframework.messaging.core.MessageSendingOperations;
 
 @AutoConfiguration(
@@ -30,10 +33,14 @@ import org.springframework.messaging.core.MessageSendingOperations;
 @ConditionalOnClass({MessageSendingOperations.class, MessageSendingAuditHandler.class})
 @ConditionalOnBean(value = MessageSendingOperations.class, annotation = ContentGridMessaging.class)
 @EnableConfigurationProperties(ContentGridAuditMessagingProperties.class)
-@ConditionalOnProperty(value = "contentgrid.audit.messaging.enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = ContentGridAuditMessagingAutoConfiguration.CONTENTGRID_AUDIT_MESSAGING, name = "enabled", matchIfMissing = true)
+@Slf4j
 public class ContentGridAuditMessagingAutoConfiguration {
 
+    public static final String CONTENTGRID_AUDIT_MESSAGING = "contentgrid.audit.messaging";
+
     @Bean
+    @ConditionalOnProperty(prefix = CONTENTGRID_AUDIT_MESSAGING, name = "destination")
     MessageSendingAuditHandler messageSendingAuditHandler(
             @ContentGridMessaging MessageSendingOperations<String> sendingOperations,
             ContentGridAuditMessagingProperties auditProperties
@@ -48,7 +55,7 @@ public class ContentGridAuditMessagingAutoConfiguration {
 
     @Bean
     @ContentGridMessaging
-    @ConditionalOnProperty("contentgrid.audit.messaging.source")
+    @ConditionalOnProperty(prefix = CONTENTGRID_AUDIT_MESSAGING, name = "source")
     @ConditionalOnClass({CloudEvent.class, AuditEventToCloudEventMessageConverter.class,
             CloudEventMessageConverter.class})
     @Order(10)
@@ -71,7 +78,7 @@ public class ContentGridAuditMessagingAutoConfiguration {
         return new AuditEventMessageConverter(objectMapper);
     }
 
-    @ConfigurationProperties("contentgrid.audit.messaging")
+    @ConfigurationProperties(CONTENTGRID_AUDIT_MESSAGING)
     @Data
     static class ContentGridAuditMessagingProperties {
 
