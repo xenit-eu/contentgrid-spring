@@ -26,7 +26,8 @@ class ContentGridAuditMessagingAutoConfigurationTest {
                     ContentGridAuditLoggingAutoConfiguration.class,
                     ContentGridMessagingAutoConfiguration.class,
                     RepositoryRestMvcAutoConfiguration.class
-            ));
+            ))
+            .withPropertyValues("contentgrid.audit.messaging.destination=xyz");
 
     @Test
     void messagingHandlerEnabledWhenMessagingTemplateIsAvailable() {
@@ -34,6 +35,16 @@ class ContentGridAuditMessagingAutoConfigurationTest {
                 .withUserConfiguration(AmqpServiceConnection.class)
                 .run(context -> {
                     assertThat(context).hasSingleBean(MessageSendingAuditHandler.class);
+                });
+    }
+
+    @Test
+    void messagingHandlerDisabledWhenDestinationIsMissing() {
+        contextRunner.withConfiguration(AutoConfigurations.of(RabbitAutoConfiguration.class))
+                .withUserConfiguration(AmqpServiceConnection.class)
+                .withPropertyValues("contentgrid.audit.messaging.destination=false")
+                .run(context -> {
+                    assertThat(context).doesNotHaveBean(MessageSendingAuditHandler.class);
                 });
     }
 

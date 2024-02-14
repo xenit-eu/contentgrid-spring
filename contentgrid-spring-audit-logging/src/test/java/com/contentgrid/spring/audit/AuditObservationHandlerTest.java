@@ -2,14 +2,19 @@ package com.contentgrid.spring.audit;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.contentgrid.spring.audit.event.AbstractAuditEvent;
+import com.contentgrid.spring.audit.event.AbstractAuditEvent.AbstractAuditEventBuilder;
 import com.contentgrid.spring.audit.event.EntityContentAuditEvent;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent;
 import com.contentgrid.spring.audit.event.EntityItemAuditEvent.Operation;
 import com.contentgrid.spring.audit.event.EntityRelationAuditEvent;
 import com.contentgrid.spring.audit.event.EntityRelationItemAuditEvent;
 import com.contentgrid.spring.audit.event.EntitySearchAuditEvent;
+import com.contentgrid.spring.audit.extractor.AuditEventExtractor;
+import com.contentgrid.spring.audit.extractor.BasicAuditEventExtractor;
+import com.contentgrid.spring.audit.handler.AuditEventHandler;
 import com.contentgrid.spring.audit.test.handler.AggregatingAuditHandler;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
@@ -21,10 +26,13 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -39,6 +47,9 @@ import org.springframework.data.rest.webmvc.RestMediaTypes;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.observation.ServerRequestObservationContext;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -419,6 +430,99 @@ class AuditObservationHandlerTest {
                     assertThat(event.getOperation()).isEqualTo(EntityContentAuditEvent.Operation.DELETE);
                 });
     }
+
+    @Nested
+    class HandlesThrownExceptions {
+
+        private static final ServerRequestObservationContext SERVER_REQUEST_OBSERVATION_CONTEXT = new ServerRequestObservationContext(
+                new MockHttpServletRequest(),
+                new MockHttpServletResponse());
+
+
+        @Test
+        void handlesExceptionsDuringExtraction() {
+            var aggregating = new AggregatingAuditHandler();
+            var handler = new AuditObservationHandler(
+                    List.of(new ThrowingDuringCreateAuditEventExtractor(), new BasicAuditEventExtractor()),
+                    List.of(aggregating)
+            );
+
+            assertThatCode(() -> {
+                handler.onStop(SERVER_REQUEST_OBSERVATION_CONTEXT);
+            }).doesNotThrowAnyException();
+
+            assertThat(aggregating.getEvents()).isNotEmpty();
+        }
+
+        @Test
+        void handlesExceptionsDuringEnhance() {
+            var aggregating = new AggregatingAuditHandler();
+            var handler = new AuditObservationHandler(
+                    List.of(new ThrowingDuringEnhanceAuditEventExtractor(), new BasicAuditEventExtractor()),
+                    List.of(aggregating)
+            );
+
+            assertThatCode(() -> {
+                handler.onStop(SERVER_REQUEST_OBSERVATION_CONTEXT);
+            }).doesNotThrowAnyException();
+
+            assertThat(aggregating.getEvents()).isNotEmpty();
+        }
+
+        @Test
+        void handlesExceptionsDuringHandle() {
+            var aggregating = new AggregatingAuditHandler();
+            var handler = new AuditObservationHandler(
+                    List.of(new BasicAuditEventExtractor()),
+                    List.of(new ThrowingAuditEventHandler(), aggregating)
+            );
+
+            assertThatCode(() -> {
+                handler.onStop(SERVER_REQUEST_OBSERVATION_CONTEXT);
+            }).doesNotThrowAnyException();
+
+            assertThat(aggregating.getEvents()).isNotEmpty();
+        }
+
+        private static class ThrowingDuringCreateAuditEventExtractor implements AuditEventExtractor {
+
+            @Override
+            public Optional<AbstractAuditEventBuilder<?, ?>> createEventBuilder(
+                    ServerRequestObservationContext context) {
+                throw new RuntimeException("BOO!");
+            }
+
+            @Override
+            public AbstractAuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
+                    AbstractAuditEventBuilder<?, ?> eventBuilder) {
+                return null;
+            }
+        }
+
+        private static class ThrowingDuringEnhanceAuditEventExtractor implements AuditEventExtractor {
+
+            @Override
+            public Optional<AbstractAuditEventBuilder<?, ?>> createEventBuilder(
+                    ServerRequestObservationContext context) {
+                return Optional.empty();
+            }
+
+            @Override
+            public AbstractAuditEventBuilder<?, ?> enhance(ServerRequestObservationContext context,
+                    AbstractAuditEventBuilder<?, ?> eventBuilder) {
+                throw new RuntimeException("BOO!");
+            }
+        }
+
+        private static class ThrowingAuditEventHandler implements AuditEventHandler {
+
+            @Override
+            public void handle(AbstractAuditEvent auditEvent) {
+                throw new RuntimeException("BOO!");
+            }
+        }
+    }
+
 
     @ParameterizedTest
     @CsvSource({
