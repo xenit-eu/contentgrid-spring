@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -65,13 +66,17 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
 @Slf4j
+@WebAppConfiguration
 @SpringBootTest(properties = {
         "server.servlet.encoding.enabled=false" // disables mock-mvc enforcing charset in request
 })
@@ -81,9 +86,11 @@ class InvoicingApplicationTests {
 
     static final String INVOICE_NUMBER_1 = "I-2022-0001";
     static final String INVOICE_NUMBER_2 = "I-2022-0002";
+    static final String INVOICE_NUMBER_3 = "I-2022-0003";
 
     static final String ORG_XENIT_VAT = "BE0887582365";
     static final String ORG_INBEV_VAT = "BE0417497106";
+    static final String ORG_EXAMPLE_VAT = "BE0123456789";
 
     static UUID XENIT_ID, INBEV_ID;
     static UUID ORDER_1_ID, ORDER_2_ID;
@@ -93,6 +100,9 @@ class InvoicingApplicationTests {
     static String PROMO_XMAS, PROMO_SHIPPING, PROMO_CYBER;
 
     static UUID ADDRESS_ID_XENIT;
+
+    @Autowired
+    private WebApplicationContext context;
 
     @Autowired
     private MockMvc mockMvc;
@@ -1719,6 +1729,88 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
+                void postMultipartInvoiceContent_textPlainUtf8_http201() throws Exception {
+                    // Build mockMvc with web application context
+                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+                    // Create multipart file
+                    var file = new MockMultipartFile("file", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
+                            UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
+
+                    mockMvc.perform(multipart("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .file(file))
+                            .andDo(print()) // print manually since web application context disables mockmvc auto-printing
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isEqualTo(file.getOriginalFilename());
+                }
+
+                @Test
+                @Disabled("ACC-1216")
+                void postMultipartInvoiceEntityAndContent_textPlainUtf8_http201() throws Exception {
+                    // Build mockMvc with web application context
+                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+                    // Create multipart file
+                    var file = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
+                            UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
+
+                    mockMvc.perform(multipart("/invoices")
+                                    .file(file)
+                                    .param("number", INVOICE_NUMBER_3)
+                                    .param("counterparty", "/customers/" + customerIdByVat(ORG_XENIT_VAT)))
+                            .andDo(print())
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_3)).orElseThrow();
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isEqualTo(file.getOriginalFilename());
+                }
+
+                @Test
+                @Disabled("ACC-1216")
+                void postMultipartInvoiceEntityAndContent_multipleContentProperties_http201() throws Exception {
+                    // Build mockMvc with web application context
+                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+                    // Create multipart file
+                    var contentFile = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
+                            UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
+                    var attachmentFile = new MockMultipartFile("attachment", "attachment.txt",
+                            MIMETYPE_PLAINTEXT_LATIN1, EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
+
+                    mockMvc.perform(multipart("/invoices")
+                                    .file(contentFile)
+                                    .file(attachmentFile)
+                                    .param("number", INVOICE_NUMBER_3)
+                                    .param("counterparty", "/customers/" + customerIdByVat(ORG_XENIT_VAT)))
+                            .andDo(print())
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_3)).orElseThrow();
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isEqualTo(contentFile.getOriginalFilename());
+                    assertThat(invoice.getAttachmentId()).isNotBlank();
+                    assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getAttachmentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getAttachmentFilename()).isEqualTo(attachmentFile.getOriginalFilename());
+                }
+
+                @Test
                 void postInvoiceContent_update_http200() throws Exception {
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -2012,6 +2104,30 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void putMultipartInvoiceContent_textPlainUtf8_http201() throws Exception {
+                    // Build mockMvc with web application context
+                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+                    // Create multipart file
+                    var file = new MockMultipartFile("file", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
+                            UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
+
+                    mockMvc.perform(multipart(HttpMethod.PUT,
+                                    "/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .file(file))
+                            .andDo(print())
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isEqualTo(file.getOriginalFilename());
                 }
 
                 @Test
@@ -2487,6 +2603,58 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
+                void postMultipartCustomerContent_TextPlainUtf8_http201() throws Exception {
+                    // Build mockMvc with web application context
+                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+                    // Create multipart file
+                    var file = new MockMultipartFile("file", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
+                            UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
+
+                    mockMvc.perform(multipart("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .file(file))
+                            .andDo(print())
+                            .andExpect(status().isCreated());
+
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isEqualTo(file.getOriginalFilename());
+                }
+
+                @Test
+                @Disabled("ACC-1049")
+                void postMultipartCustomerEntityAndContent_textPlainUtf8_http201() throws Exception {
+                    // Build mockMvc with web application context
+                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+                    // Create multipart file
+                    var file = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
+                            UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
+
+                    mockMvc.perform(multipart("/customers")
+                                    .file(file)
+                                    .param("name", "Example")
+                                    .param("vat", ORG_EXAMPLE_VAT))
+                            .andDo(print())
+                            .andExpect(status().isCreated());
+
+                    // Check whether customer exists
+                    var customer = customers.findById(customerIdByVat(ORG_EXAMPLE_VAT)).orElseThrow();
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isEqualTo(file.getOriginalFilename());
+                }
+
+                @Test
                 void postCustomerContent_update_http200() throws Exception {
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -2673,6 +2841,30 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isNull();
+                }
+
+                @Test
+                void putMultipartCustomerContent_textPlainUtf8_http201() throws Exception {
+                    // Build mockMvc with web application context
+                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
+                    // Create multipart file
+                    var file = new MockMultipartFile("file", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
+                            UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
+
+                    mockMvc.perform(multipart(HttpMethod.PUT, "/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .file(file))
+                            .andDo(print())
+                            .andExpect(status().isCreated());
+
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isEqualTo(file.getOriginalFilename());
                 }
 
                 @Test
