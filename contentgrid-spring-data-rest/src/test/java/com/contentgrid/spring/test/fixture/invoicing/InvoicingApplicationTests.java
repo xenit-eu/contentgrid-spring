@@ -2627,7 +2627,7 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                @Disabled("ACC-1049")
+                @Disabled("ACC-1216")
                 void postMultipartCustomerEntityAndContent_textPlainUtf8_http201() throws Exception {
                     // Build mockMvc with web application context
                     mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
