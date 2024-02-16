@@ -65,6 +65,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -78,6 +79,7 @@ import org.springframework.web.util.UriUtils;
 @EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @WithMockJwt
+@WithMockUser(username = "John")
 class InvoicingApplicationTests {
 
     static final String INVOICE_NUMBER_1 = "I-2022-0001";
@@ -146,8 +148,8 @@ class InvoicingApplicationTests {
         var promoCyber = promos.save(new PromotionCampaign("CYBER-MON", "Cyber Monday"));
         PROMO_CYBER = promoCyber.getPromoCode();
 
-        var xenit = customers.save(new Customer(null, 0, "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
-        var inbev = customers.save(new Customer(null, 0, "AB InBev", ORG_INBEV_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
+        var xenit = customers.save(new Customer(null, 0, null, null, null, null, "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
+        var inbev = customers.save(new Customer(null, 0, null, null, null, null, "AB InBev", ORG_INBEV_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
 
         XENIT_ID = xenit.getId();
         INBEV_ID = inbev.getId();
