@@ -8,10 +8,12 @@ import com.contentgrid.spring.querydsl.predicate.None;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -32,11 +34,17 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.rest.RestResource;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Invoice {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -45,6 +53,22 @@ public class Invoice {
 
     @Version
     private int version;
+
+    @CreatedBy
+    @JsonProperty(access = Access.READ_ONLY)
+    private String createdBy;
+
+    @CreatedDate
+    @JsonProperty(access = Access.READ_ONLY)
+    private Instant createdDate;
+
+    @LastModifiedBy
+    @JsonProperty(access = Access.READ_ONLY)
+    private String lastModifiedBy;
+
+    @LastModifiedDate
+    @JsonProperty(access = Access.READ_ONLY)
+    private Instant lastModifiedDate;
 
     @Column(nullable = false)
     @CollectionFilterParam(predicate = EqualsIgnoreCase.class)

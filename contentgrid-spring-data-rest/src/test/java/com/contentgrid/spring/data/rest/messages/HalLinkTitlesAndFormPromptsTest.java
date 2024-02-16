@@ -40,7 +40,7 @@ class HalLinkTitlesAndFormPromptsTest {
 
     @BeforeEach
     void setup() {
-        customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, "Abc", "ABC", null, null, null, Set.of(), Set.of()));
+        customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, null, null, null, null, "Abc", "ABC", null, null, null, Set.of(), Set.of()));
         invoice = invoiceRepository.save(new Invoice("12345678", true, true, customer, Set.of()));
     }
 

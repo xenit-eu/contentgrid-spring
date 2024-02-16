@@ -5,6 +5,7 @@ import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
 import com.contentgrid.spring.test.fixture.invoicing.model.support.Content;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.validation.constraints.NotNull;
@@ -27,6 +28,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.content.rest.RestResource;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 
 @Entity
 @Getter
@@ -42,6 +47,22 @@ public class Customer {
 
     @Version
     private int version;
+
+    @CreatedBy
+    @JsonProperty(access = Access.READ_ONLY)
+    private String createdBy;
+
+    @CreatedDate
+    @JsonProperty(access = Access.READ_ONLY)
+    private Instant createdDate;
+
+    @LastModifiedBy
+    @JsonProperty(access = Access.READ_ONLY)
+    private String lastModifiedBy;
+
+    @LastModifiedDate
+    @JsonProperty(access = Access.READ_ONLY)
+    private Instant lastModifiedDate;
 
     private String name;
 
