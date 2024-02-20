@@ -66,17 +66,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
 
 @Slf4j
-@WebAppConfiguration
 @SpringBootTest(properties = {
         "server.servlet.encoding.enabled=false" // disables mock-mvc enforcing charset in request
 })
@@ -100,9 +96,6 @@ class InvoicingApplicationTests {
     static String PROMO_XMAS, PROMO_SHIPPING, PROMO_CYBER;
 
     static UUID ADDRESS_ID_XENIT;
-
-    @Autowired
-    private WebApplicationContext context;
 
     @Autowired
     private MockMvc mockMvc;
@@ -1660,8 +1653,8 @@ class InvoicingApplicationTests {
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -1715,8 +1708,8 @@ class InvoicingApplicationTests {
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getAttachmentId()).isNotBlank();
                     assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getAttachmentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -1753,8 +1746,8 @@ class InvoicingApplicationTests {
 
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            EXT_ASCII_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
 
@@ -1779,8 +1772,8 @@ class InvoicingApplicationTests {
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -1834,8 +1827,8 @@ class InvoicingApplicationTests {
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            EXT_ASCII_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
                 }
@@ -1898,8 +1891,8 @@ class InvoicingApplicationTests {
 
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -1944,23 +1937,19 @@ class InvoicingApplicationTests {
                 @Test
                 @Disabled("ACC-1216")
                 void postMultipartEntityAndContent_textPlainUtf8_http201() throws Exception {
-                    // Build mockMvc with web application context
-                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-                    // Create multipart file
                     var file = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                             UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
 
-                    mockMvc.perform(multipart("/invoices")
+                    mockMvc.perform(multipart(HttpMethod.POST, "/invoices")
                                     .file(file)
                                     .param("number", INVOICE_NUMBER_3)
                                     .param("counterparty", "/customers/" + customerIdByVat(ORG_XENIT_VAT)))
-                            .andDo(print())
                             .andExpect(status().isCreated());
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_3)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -1970,26 +1959,22 @@ class InvoicingApplicationTests {
                 @Test
                 @Disabled("ACC-1216")
                 void postMultipartEntityAndContent_multipleContentProperties_http201() throws Exception {
-                    // Build mockMvc with web application context
-                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-                    // Create multipart file
                     var contentFile = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                             UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
                     var attachmentFile = new MockMultipartFile("attachment", "attachment.txt",
                             MIMETYPE_PLAINTEXT_LATIN1, EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
 
-                    mockMvc.perform(multipart("/invoices")
+                    mockMvc.perform(multipart(HttpMethod.POST, "/invoices")
                                     .file(contentFile)
                                     .file(attachmentFile)
                                     .param("number", INVOICE_NUMBER_3)
                                     .param("counterparty", "/customers/" + customerIdByVat(ORG_XENIT_VAT)))
-                            .andDo(print())
                             .andExpect(status().isCreated());
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_3)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -2015,8 +2000,8 @@ class InvoicingApplicationTests {
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -2070,8 +2055,8 @@ class InvoicingApplicationTests {
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getAttachmentId()).isNotBlank();
                     assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getAttachmentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -2108,8 +2093,8 @@ class InvoicingApplicationTests {
 
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            EXT_ASCII_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
 
@@ -2134,8 +2119,8 @@ class InvoicingApplicationTests {
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -2189,8 +2174,8 @@ class InvoicingApplicationTests {
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            EXT_ASCII_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
                 }
@@ -2254,8 +2239,8 @@ class InvoicingApplicationTests {
 
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -2546,8 +2531,8 @@ class InvoicingApplicationTests {
 
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(customer.getContent()).isNotNull();
                     assertThat(customer.getContent().getId()).isNotBlank();
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
@@ -2580,8 +2565,8 @@ class InvoicingApplicationTests {
                             .andExpect(status().isOk());
 
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            EXT_ASCII_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
 
@@ -2606,8 +2591,8 @@ class InvoicingApplicationTests {
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(customer.getContent()).isNotNull();
                     assertThat(customer.getContent().getId()).isNotBlank();
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
@@ -2663,8 +2648,8 @@ class InvoicingApplicationTests {
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            EXT_ASCII_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
                 }
@@ -2729,8 +2714,8 @@ class InvoicingApplicationTests {
 
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(customer.getContent()).isNotNull();
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
@@ -2740,24 +2725,20 @@ class InvoicingApplicationTests {
                 @Test
                 @Disabled("ACC-1216")
                 void postMultipartEntityAndContent_textPlainUtf8_http201() throws Exception {
-                    // Build mockMvc with web application context
-                    mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-                    // Create multipart file
                     var file = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                             UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
 
-                    mockMvc.perform(multipart("/customers")
+                    mockMvc.perform(multipart(HttpMethod.POST, "/customers")
                                     .file(file)
                                     .param("name", "Example")
                                     .param("vat", ORG_EXAMPLE_VAT))
-                            .andDo(print())
                             .andExpect(status().isCreated());
 
                     // Check whether customer exists
                     var customer = customers.findById(customerIdByVat(ORG_EXAMPLE_VAT)).orElseThrow();
 
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(customer.getContent()).isNotNull();
                     assertThat(customer.getContent().getId()).isNotBlank();
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
@@ -2781,8 +2762,8 @@ class InvoicingApplicationTests {
 
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(customer.getContent()).isNotNull();
                     assertThat(customer.getContent().getId()).isNotBlank();
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
@@ -2807,8 +2788,8 @@ class InvoicingApplicationTests {
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(customer.getContent()).isNotNull();
                     assertThat(customer.getContent().getId()).isNotBlank();
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
@@ -2864,8 +2845,8 @@ class InvoicingApplicationTests {
                             .andExpect(headers().etag().isNotEqualTo(prevVersion));
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            EXT_ASCII_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
                 }
@@ -2914,8 +2895,8 @@ class InvoicingApplicationTests {
 
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
-                            UNICODE_TEXT);
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
+                            .hasContent(UNICODE_TEXT);
                     assertThat(customer.getContent().getId()).isNotBlank();
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
