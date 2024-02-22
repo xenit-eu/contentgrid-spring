@@ -1934,7 +1934,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                @Disabled("ACC-1216")
                 void postMultipartEntityAndContent_textPlainUtf8_http201() throws Exception {
                     var file = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                             UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
@@ -1956,7 +1955,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                @Disabled("ACC-1216")
                 void postMultipartEntityAndContent_multipleContentProperties_http201() throws Exception {
                     var contentFile = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                             UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
@@ -2722,7 +2720,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                @Disabled("ACC-1216")
                 void postMultipartEntityAndContent_textPlainUtf8_http201() throws Exception {
                     var file = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                             UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
