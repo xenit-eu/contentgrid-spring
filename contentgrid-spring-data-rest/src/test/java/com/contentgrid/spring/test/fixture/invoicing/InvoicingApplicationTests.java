@@ -23,6 +23,7 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
+import com.contentgrid.spring.test.fixture.invoicing.model.support.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
@@ -160,8 +161,8 @@ class InvoicingApplicationTests {
         var promoCyber = promos.save(new PromotionCampaign("CYBER-MON", "Cyber Monday"));
         PROMO_CYBER = promoCyber.getPromoCode();
 
-        var xenit = customers.save(new Customer(null, 0, null, null, null, null, "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
-        var inbev = customers.save(new Customer(null, 0, null, null, null, null, "AB InBev", ORG_INBEV_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
+        var xenit = customers.save(new Customer(null, 0, new AuditMetadata(), "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
+        var inbev = customers.save(new Customer(null, 0, new AuditMetadata(), "AB InBev", ORG_INBEV_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
 
         XENIT_ID = xenit.getId();
         INBEV_ID = inbev.getId();
@@ -355,10 +356,10 @@ class InvoicingApplicationTests {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
                         .andExpect(jsonPath("$._links.curies").value(curies()))
-                        .andExpect(jsonPath("$.createdBy").value("John"))
-                        .andExpect(jsonPath("$.createdDate").exists())
-                        .andExpect(jsonPath("$.lastModifiedBy").value("John"))
-                        .andExpect(jsonPath("$.lastModifiedDate").exists())
+                        .andExpect(jsonPath("$.audit_metadata.created_by").value("John"))
+                        .andExpect(jsonPath("$.audit_metadata.created_date").exists())
+                        .andExpect(jsonPath("$.audit_metadata.last_modified_by").value("John"))
+                        .andExpect(jsonPath("$.audit_metadata.last_modified_date").exists())
                         .andExpect(headers().exists(HttpHeaders.LAST_MODIFIED))
                         .andExpect(headers().etag().isEqualTo(invoice.getVersion()));
             }
@@ -393,10 +394,10 @@ class InvoicingApplicationTests {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
                         .andExpect(jsonPath("$._links.curies").value(curies()))
-                        .andExpect(jsonPath("$.createdBy").value("Bob"))
-                        .andExpect(jsonPath("$.createdDate").exists())
-                        .andExpect(jsonPath("$.lastModifiedBy").value("Bob"))
-                        .andExpect(jsonPath("$.lastModifiedDate").exists())
+                        .andExpect(jsonPath("$.audit_metadata.created_by").value("Bob"))
+                        .andExpect(jsonPath("$.audit_metadata.created_date").exists())
+                        .andExpect(jsonPath("$.audit_metadata.last_modified_by").value("Bob"))
+                        .andExpect(jsonPath("$.audit_metadata.last_modified_date").exists())
                         .andExpect(headers().exists(HttpHeaders.LAST_MODIFIED));
             }
 
@@ -408,10 +409,10 @@ class InvoicingApplicationTests {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
                         .andExpect(jsonPath("$._links.curies").value(curies()))
-                        .andExpect(jsonPath("$.createdBy").value(nullValue()))
-                        .andExpect(jsonPath("$.createdDate").exists())
-                        .andExpect(jsonPath("$.lastModifiedBy").value(nullValue()))
-                        .andExpect(jsonPath("$.lastModifiedDate").exists())
+                        .andExpect(jsonPath("$.audit_metadata.created_by").value(nullValue()))
+                        .andExpect(jsonPath("$.audit_metadata.created_date").exists())
+                        .andExpect(jsonPath("$.audit_metadata.last_modified_by").value(nullValue()))
+                        .andExpect(jsonPath("$.audit_metadata.last_modified_date").exists())
                         .andExpect(headers().exists(HttpHeaders.LAST_MODIFIED));
             }
 
@@ -490,8 +491,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
@@ -512,8 +513,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
@@ -534,8 +535,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isFalse();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isEqualTo(invoice.getCreatedDate());
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
             }
 
             @Test
@@ -555,8 +556,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
@@ -579,8 +580,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isFalse();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isEqualTo(invoice.getCreatedDate());
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
             }
 
         }
@@ -604,8 +605,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
@@ -625,8 +626,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
@@ -645,8 +646,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isFalse();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isEqualTo(invoice.getCreatedDate());
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
             }
 
             @Test
@@ -665,8 +666,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
@@ -687,8 +688,8 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isFalse();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getLastModifiedDate()).isEqualTo(invoice.getCreatedDate());
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
             }
 
         }
@@ -1948,8 +1949,8 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -2070,8 +2071,8 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -2097,8 +2098,8 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getLastModifiedDate()).isEqualTo(invoice.getCreatedDate());
+                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -2129,7 +2130,7 @@ class InvoicingApplicationTests {
                             .hasContent(EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2160,7 +2161,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -2183,8 +2184,8 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -2205,7 +2206,7 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getLastModifiedDate()).isEqualTo(invoice.getCreatedDate());
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -2232,7 +2233,7 @@ class InvoicingApplicationTests {
                             EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2260,7 +2261,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -2406,8 +2407,8 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -2528,8 +2529,8 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -2555,8 +2556,8 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getLastModifiedDate()).isEqualTo(invoice.getCreatedDate());
+                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -2587,7 +2588,7 @@ class InvoicingApplicationTests {
                             .hasContent(EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2619,7 +2620,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -2642,8 +2643,8 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -2664,7 +2665,7 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getLastModifiedDate()).isEqualTo(invoice.getCreatedDate());
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -2691,7 +2692,7 @@ class InvoicingApplicationTests {
                             EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2719,7 +2720,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -2820,7 +2821,7 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2847,7 +2848,7 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2875,7 +2876,7 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -2898,7 +2899,7 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2923,7 +2924,7 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -3141,8 +3142,8 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isNull();
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -3204,8 +3205,8 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isNull();
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -3227,8 +3228,8 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customer.getContent()).isNull();
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isEqualTo(customer.getCreatedDate());
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isEqualTo(customer.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -3264,7 +3265,7 @@ class InvoicingApplicationTests {
                             .hasContent(EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3300,7 +3301,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -3322,8 +3323,8 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent()).isNotNull();
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -3341,8 +3342,8 @@ class InvoicingApplicationTests {
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customer.getContent()).isNull();
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isEqualTo(customer.getCreatedDate());
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isEqualTo(customer.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -3369,7 +3370,7 @@ class InvoicingApplicationTests {
                             EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3397,7 +3398,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -3481,8 +3482,8 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isNull();
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -3510,8 +3511,8 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isNull();
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -3533,8 +3534,8 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customer.getContent()).isNull();
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isEqualTo(customer.getCreatedDate());
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isEqualTo(customer.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -3570,7 +3571,7 @@ class InvoicingApplicationTests {
                             .hasContent(EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3606,7 +3607,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -3628,8 +3629,8 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent()).isNotNull();
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
@@ -3647,8 +3648,8 @@ class InvoicingApplicationTests {
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customer.getContent()).isNull();
-                    assertThat(customer.getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getLastModifiedDate()).isEqualTo(customer.getCreatedDate());
+                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isEqualTo(customer.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -3675,7 +3676,7 @@ class InvoicingApplicationTests {
                             EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3703,7 +3704,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -3746,7 +3747,7 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3771,7 +3772,7 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3798,7 +3799,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -3818,7 +3819,7 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
-                    assertThat(customer.getLastModifiedDate()).isAfter(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3842,7 +3843,7 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(customer.getLastModifiedDate()).isBefore(dateContentCreated);
+                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test

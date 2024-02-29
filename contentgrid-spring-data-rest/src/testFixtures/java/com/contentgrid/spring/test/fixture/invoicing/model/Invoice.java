@@ -5,15 +5,17 @@ import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
 import com.contentgrid.spring.querydsl.predicate.None;
+import com.contentgrid.spring.test.fixture.invoicing.model.support.AuditMetadata;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -34,10 +36,6 @@ import org.springframework.content.commons.annotations.ContentLength;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.content.rest.RestResource;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
@@ -54,21 +52,15 @@ public class Invoice {
     @Version
     private int version;
 
-    @CreatedBy
-    @JsonProperty(access = Access.READ_ONLY)
-    private String createdBy;
-
-    @CreatedDate
-    @JsonProperty(access = Access.READ_ONLY)
-    private Instant createdDate;
-
-    @LastModifiedBy
-    @JsonProperty(access = Access.READ_ONLY)
-    private String lastModifiedBy;
-
-    @LastModifiedDate
-    @JsonProperty(access = Access.READ_ONLY)
-    private Instant lastModifiedDate;
+    @JsonProperty(value = "audit_metadata", access = Access.READ_ONLY)
+    @Embedded
+    @AttributeOverride(name = "createdBy.id", column = @Column(name = "audit_metadata__created_by__id"))
+    @AttributeOverride(name = "createdBy.name", column = @Column(name = "audit_metadata__created_by__name"))
+    @AttributeOverride(name = "createdDate", column = @Column(name = "audit_metadata__created_date"))
+    @AttributeOverride(name = "lastModifiedBy.id", column = @Column(name = "audit_metadata__last_modified_by__id"))
+    @AttributeOverride(name = "lastModifiedBy.name", column = @Column(name = "audit_metadata__last_modified_by__name"))
+    @AttributeOverride(name = "lastModifiedDate", column = @Column(name = "audit_metadata__last_modified_date"))
+    private AuditMetadata auditMetadata = new AuditMetadata();
 
     @Column(nullable = false)
     @CollectionFilterParam(predicate = EqualsIgnoreCase.class)

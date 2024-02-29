@@ -3,6 +3,7 @@ package com.contentgrid.spring.data.rest.messages;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
+import com.contentgrid.spring.test.fixture.invoicing.model.support.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
@@ -40,7 +41,7 @@ class HalLinkTitlesAndFormPromptsTest {
 
     @BeforeEach
     void setup() {
-        customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, null, null, null, null, "Abc", "ABC", null, null, null, Set.of(), Set.of()));
+        customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, new AuditMetadata(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
         invoice = invoiceRepository.save(new Invoice("12345678", true, true, customer, Set.of()));
     }
 
