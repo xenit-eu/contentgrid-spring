@@ -71,6 +71,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -152,6 +155,13 @@ class InvoicingApplicationTests {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
                 .withZone(ZoneId.of("GMT"));
         return formatter.format(date);
+    }
+
+    public static void loginUser(String username) {
+        var user = new User(username, "password", Set.of());
+        var authentication = new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities());
+        var context = SecurityContextHolder.getContext();
+        context.setAuthentication(authentication);
     }
 
     @BeforeEach
@@ -496,6 +506,29 @@ class InvoicingApplicationTests {
             }
 
             @Test
+            void putInvoice_shouldUpdateLastModified_http204_ok() throws Exception {
+                var dateAfterCreation = Instant.now();
+                loginUser("Bob");
+                mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "number": "%s",
+                                            "paid": true
+                                        }
+                                        """.formatted(INVOICE_NUMBER_1)))
+                        .andExpect(status().isNoContent());
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+
+                assertThat(invoice.isPaid()).isTrue();
+                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
+                assertThat(invoice.getAuditMetadata().getCreatedBy().getName()).isEqualTo("John");
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
+            }
+
+            @Test
             void putInvoice_withIfMatch_http204_ok() throws Exception {
                 var dateAfterCreation = Instant.now();
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
@@ -606,6 +639,28 @@ class InvoicingApplicationTests {
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
                 assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
+            }
+
+            @Test
+            void patchInvoice_shouldUpdateLastModified_http204_ok() throws Exception {
+                var dateAfterCreation = Instant.now();
+                loginUser("Bob");
+                mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "paid": true
+                                        }
+                                        """))
+                        .andExpect(status().isNoContent());
+                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+
+                assertThat(invoice.isPaid()).isTrue();
+                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
+                assertThat(invoice.getAuditMetadata().getCreatedBy().getName()).isEqualTo("John");
+                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                assertThat(invoice.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
                 assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
@@ -854,6 +909,31 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
+                void putJson_shouldUpdateLastModified_http204() throws Exception {
+                    // fictive example: fix the customer
+                    var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "customer" : {
+                                                        "href": "/customers/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(correctCustomerId)))
+                            .andExpect(status().isNoContent());
+                    assertThat(invoices.findById(invoiceId(INVOICE_NUMBER_1))).hasValueSatisfying(invoice -> {
+                        assertThat(invoice.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
+                        assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
+                    });
+                }
+
+                @Test
                 void putJson_withIfMatch_http204() throws Exception {
                     // fictive example: fix the customer
                     var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
@@ -878,7 +958,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 @Disabled("ACC-1188")
-                void putJson_withIfBadMatch_http412() throws Exception {
+                void putJson_withBadIfMatch_http412() throws Exception {
                     // fictive example: fix the customer
                     var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
                     var prevVersion = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow().getVersion();
@@ -898,6 +978,54 @@ class InvoicingApplicationTests {
                             .andExpect(status().isPreconditionFailed());
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     assertThat(invoice.getVersion()).isEqualTo(prevVersion);
+                }
+
+                @Test
+                void putJson_withIfUnmodifiedSince_http204() throws Exception {
+                    // fictive example: fix the customer
+                    var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
+                    var dateAfterCreation = Instant.now();
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(dateAfterCreation))
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "customer" : {
+                                                        "href": "/customers/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(correctCustomerId)))
+                            .andExpect(status().isNoContent());
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
+                }
+
+                @Test
+                @Disabled("ACC-1220")
+                void putJson_withOutdatedIfUnmodifiedSince_http412() throws Exception {
+                    // fictive example: fix the customer
+                    var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
+                    var dateAfterCreation = Instant.now();
+                    var dateBeforeCreation = dateAfterCreation.minus(1, ChronoUnit.HOURS);
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(dateBeforeCreation))
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "customer" : {
+                                                        "href": "/customers/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(correctCustomerId)))
+                            .andExpect(status().isPreconditionFailed());
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateAfterCreation);
                 }
 
             }
@@ -935,6 +1063,44 @@ class InvoicingApplicationTests {
                             assertThat(invoice.getOrders()).singleElement().satisfies(order -> {
                                 assertThat(order.getId()).isEqualTo(newOrderId.get());
                             });
+                        });
+                    });
+                }
+
+                @Test
+                void putJson_shouldUpdateLastModified_http204_noContent() throws Exception {
+                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
+                    doInTransaction(() -> {
+                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                        newOrderId.set(orders.save(new Order(xenit)).getId());
+                    });
+                    var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+
+                    // set the orders using PUT, using single-link object syntax
+                    mockMvc.perform(put("/invoices/%s/orders".formatted(invoiceNumber))
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "orders" : {
+                                                        "href": "/orders/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(newOrderId)))
+                            .andExpect(status().isNoContent());
+
+                    // assert orders collection has been replaced
+                    doInTransaction(() -> {
+                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
+                            assertThat(invoice.getOrders()).singleElement().satisfies(order -> {
+                                assertThat(order.getId()).isEqualTo(newOrderId.get());
+                            });
+                            assertThat(invoice.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
+                            assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                         });
                     });
                 }
@@ -1069,6 +1235,32 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
+                void putShippingAddress_forOrder_shouldUpdateLastModified_http204_noContent() throws Exception {
+                    var addressId = shippingAddresses.save(new ShippingAddress()).getId();
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+
+                    mockMvc.perform(put("/orders/{id}/shippingAddress", ORDER_2_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "shippingAddress" : {
+                                                        "href": "/shipping-addresses/%s"
+                                                    }
+                                                }
+                                            }
+                                            """.formatted(addressId)))
+                            .andExpect(status().isNoContent());
+
+                    var order = orders.findById(ORDER_2_ID).orElseThrow();
+                    assertThat(order.getShippingAddress()).isNotNull();
+                    assertThat(order.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
+                    assertThat(order.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
+                }
+
+                @Test
                 void putShippingAddress_forOrderWithIfMatch_http204_noContent() throws Exception {
 
                     var addressId = shippingAddresses.save(new ShippingAddress()).getId();
@@ -1166,6 +1358,35 @@ class InvoicingApplicationTests {
                     doInTransaction(() -> {
                         var order = orders.findById(ORDER_1_ID).orElseThrow();
                         assertThat(order.getPromos()).hasSize(2);
+                    });
+                }
+
+                @Test
+                void putJsonPromos_forOrder_shouldUpdateLastModified_http204_noContent() throws Exception {
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+                    mockMvc.perform(put("/orders/{id}/promos", ORDER_1_ID)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            {
+                                                "_links": {
+                                                    "promos" : [
+                                                        { "href": "/promotions/XMAS-2022" },
+                                                        { "href": "/promotions/FREE-SHIP" }
+                                                    ]
+                                                }
+                                            }
+                                            """)
+
+                            )
+                            .andExpect(status().isNoContent());
+
+                    doInTransaction(() -> {
+                        var order = orders.findById(ORDER_1_ID).orElseThrow();
+                        assertThat(order.getPromos()).hasSize(2);
+                        assertThat(order.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
+                        assertThat(order.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                     });
                 }
 
@@ -1512,6 +1733,22 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
+                void deleteOrderCustomer_shouldUpdateLastModified_http204() throws Exception {
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+
+                    mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isNoContent());
+
+                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
+                        assertThat(order.getCustomer()).isNull();
+                        assertThat(order.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
+                        assertThat(order.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
+                    });
+                }
+
+                @Test
                 void deleteOrderCustomer_withIfMatch_http204() throws Exception {
                     var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
                     mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
@@ -1570,6 +1807,25 @@ class InvoicingApplicationTests {
 
                     assertThat(orders.findById(ORDER_1_ID))
                             .hasValueSatisfying(order -> assertThat(order.getShippingAddress()).isNull());
+                }
+
+                @Test
+                void deleteShippingAddress_fromOrder_shouldUpdateLastModified_http204() throws Exception {
+                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
+                        assertThat(order.getShippingAddress()).isNotNull();
+                    });
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+
+                    mockMvc.perform(delete("/orders/{orderId}/shippingAddress", ORDER_1_ID)
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isNoContent());
+
+                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
+                        assertThat(order.getShippingAddress()).isNull();
+                        assertThat(order.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
+                        assertThat(order.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
+                    });
                 }
 
                 @Test
@@ -1934,7 +2190,6 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postInvoiceContent_textPlainUtf8_http201() throws Exception {
-                    var dateAfterCreation = Instant.now();
                     mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
@@ -1949,7 +2204,27 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                }
+
+                @Test
+                void postInvoiceContent_shouldUpdateLastModified_http201() throws Exception {
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+                    mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
                     assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
@@ -2051,7 +2326,6 @@ class InvoicingApplicationTests {
                 void postInvoiceContent_createWithIfMatch_http201() throws Exception {
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateAfterCreation = Instant.now();
 
                     mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -2071,15 +2345,12 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
                 void postInvoiceContent_createWithBadIfMatch_http412() throws Exception {
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateAfterCreation = Instant.now();
 
                     mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -2098,8 +2369,6 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -2111,7 +2380,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     // update content, ONLY changing the charset
                     mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
@@ -2130,7 +2398,6 @@ class InvoicingApplicationTests {
                             .hasContent(EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2142,7 +2409,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     // update content, ONLY changing the charset
                     mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
@@ -2161,7 +2427,6 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -2392,7 +2657,6 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putInvoiceContent_textPlainUtf8_http201() throws Exception {
-                    var dateAfterCreation = Instant.now();
                     mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
@@ -2407,7 +2671,27 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                }
+
+                @Test
+                void putInvoiceContent_shouldUpdateLastModified_http201() throws Exception {
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+                    mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(invoice.getContentId()).isNotBlank();
+                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
                     assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
@@ -2509,7 +2793,6 @@ class InvoicingApplicationTests {
                 void putInvoiceContent_createWithIfMatch_http201() throws Exception {
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateAfterCreation = Instant.now();
 
                     mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -2529,15 +2812,12 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
                 void putInvoiceContent_createWithBadIfMatch_http412() throws Exception {
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateAfterCreation = Instant.now();
 
                     mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -2556,8 +2836,6 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -2569,7 +2847,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     // update content, ONLY changing the charset
                     mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
@@ -2588,7 +2865,6 @@ class InvoicingApplicationTests {
                             .hasContent(EXT_ASCII_TEXT);
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2600,7 +2876,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     // update content, ONLY changing the charset
                     mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
@@ -2620,7 +2895,6 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -2808,7 +3082,6 @@ class InvoicingApplicationTests {
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
                     invoice.setContentFilename("content.txt");
                     invoices.save(invoice);
-                    var dateContentCreated = Instant.now();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(status().isNoContent());
@@ -2821,6 +3094,31 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
+                }
+
+                @Test
+                void deleteContent_shouldUpdateLastModified_http204() throws Exception {
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
+                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    invoice.setContentFilename("content.txt");
+                    invoices.save(invoice);
+                    var dateContentCreated = Instant.now();
+                    loginUser("Bob");
+
+                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
+                            .andExpect(status().isNoContent());
+
+                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    var content = invoicesContent.getResource(invoice, PropertyPath.from("content"));
+                    assertThat(content).isNull();
+
+                    assertThat(invoice.getContentId()).isNull();
+                    assertThat(invoice.getContentLength()).isNull();
+                    assertThat(invoice.getContentMimetype()).isNull();
+                    assertThat(invoice.getContentFilename()).isNull();
+                    assertThat(invoice.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
                     assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
@@ -2833,7 +3131,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
@@ -2848,7 +3145,6 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentLength()).isNull();
                     assertThat(invoice.getContentMimetype()).isNull();
                     assertThat(invoice.getContentFilename()).isNull();
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -2860,7 +3156,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var prevVersion = invoice.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
@@ -2876,7 +3171,6 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentId()).isNotBlank();
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -3126,7 +3420,6 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postCustomerContent_textPlainUtf8_http201() throws Exception {
-                    var dateAfterCreation = Instant.now();
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
@@ -3142,7 +3435,28 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isNull();
-                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                }
+
+                @Test
+                void postCustomerContent_shouldUpdateLastModified_http201() throws Exception {
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
+
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isNull();
+                    assertThat(customer.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
                     assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
@@ -3184,7 +3498,6 @@ class InvoicingApplicationTests {
                 void postCustomerContent_createWithIfMatch_http201() throws Exception {
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateAfterCreation = Instant.now();
 
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -3205,15 +3518,12 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isNull();
-                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
                 void postCustomerContent_createWithBadIfMatch_http412() throws Exception {
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateAfterCreation = Instant.now();
 
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -3228,8 +3538,6 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customer.getContent()).isNull();
-                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isEqualTo(customer.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -3241,7 +3549,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -3265,7 +3572,6 @@ class InvoicingApplicationTests {
                             .hasContent(EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3277,7 +3583,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -3301,7 +3606,6 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -3466,7 +3770,6 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putCustomerContent_textPlainUtf8_http201() throws Exception {
-                    var dateAfterCreation = Instant.now();
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
@@ -3482,7 +3785,28 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isNull();
-                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
+                }
+
+                @Test
+                void putCustomerContent_shouldUpdateLastModified_http201() throws Exception {
+                    var dateAfterCreation = Instant.now();
+                    loginUser("Bob");
+                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .contentType(MediaType.TEXT_PLAIN)
+                                    .characterEncoding(StandardCharsets.UTF_8)
+                                    .content(UNICODE_TEXT))
+                            .andExpect(status().isCreated());
+
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+
+                    assertThat(customersContent.getContent(customer, PropertyPath.from("content"))).hasContent(
+                            UNICODE_TEXT);
+                    assertThat(customer.getContent()).isNotNull();
+                    assertThat(customer.getContent().getId()).isNotBlank();
+                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(customer.getContent().getFilename()).isNull();
+                    assertThat(customer.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
                     assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
@@ -3490,7 +3814,6 @@ class InvoicingApplicationTests {
                 void putCustomerContent_createWithIfMatch_http201() throws Exception {
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateAfterCreation = Instant.now();
 
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -3511,15 +3834,12 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isNull();
-                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
                 }
 
                 @Test
                 void putCustomerContent_createWithBadIfMatch_http412() throws Exception {
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateAfterCreation = Instant.now();
 
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -3534,8 +3854,6 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
 
                     assertThat(customer.getContent()).isNull();
-                    assertThat(customer.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isEqualTo(customer.getAuditMetadata().getCreatedDate());
                 }
 
                 @Test
@@ -3547,7 +3865,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -3571,7 +3888,6 @@ class InvoicingApplicationTests {
                             .hasContent(EXT_ASCII_TEXT);
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3583,7 +3899,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
@@ -3607,7 +3922,6 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
@@ -3739,7 +4053,6 @@ class InvoicingApplicationTests {
                     customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_LATIN1);
                     customer.getContent().setFilename("content.txt");
                     customers.save(customer);
-                    var dateContentCreated = Instant.now();
 
                     mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
                             .andExpect(status().isNoContent());
@@ -3747,6 +4060,26 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
+                }
+
+                @Test
+                void deleteContent_shouldUpdateLastModified_http204() throws Exception {
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+                    var bytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
+                    customersContent.setContent(customer, PropertyPath.from("content"), new ByteArrayInputStream(bytes));
+                    customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    customer.getContent().setFilename("content.txt");
+                    customers.save(customer);
+                    var dateContentCreated = Instant.now();
+                    loginUser("Bob");
+
+                    mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(status().isNoContent());
+
+                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+                    var content = customersContent.getResource(customer, PropertyPath.from("content"));
+                    assertThat(content).isNull();
+                    assertThat(customer.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
                     assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
@@ -3759,7 +4092,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
@@ -3772,7 +4104,6 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isAfter(dateContentCreated);
                 }
 
                 @Test
@@ -3784,7 +4115,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isCreated());
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var prevVersion = customer.getVersion();
-                    var dateContentCreated = Instant.now();
 
                     mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
@@ -3799,7 +4129,6 @@ class InvoicingApplicationTests {
                             .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
                     assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(customer.getAuditMetadata().getLastModifiedDate()).isBefore(dateContentCreated);
                 }
 
                 @Test
