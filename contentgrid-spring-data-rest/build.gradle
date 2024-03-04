@@ -52,6 +52,7 @@ dependencies {
     testFixturesImplementation platform(project(':contentgrid-spring-boot-platform'))
     testFixturesImplementation project(':contentgrid-spring-boot-starter')
     testFixturesImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testFixturesImplementation 'org.springframework.boot:spring-boot-starter-security'
 
     testFixturesApi 'org.springframework.data:spring-data-jpa'
 

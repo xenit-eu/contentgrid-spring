@@ -5,6 +5,7 @@ import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
@@ -71,9 +72,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -155,13 +153,6 @@ class InvoicingApplicationTests {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
                 .withZone(ZoneId.of("GMT"));
         return formatter.format(date);
-    }
-
-    public static void loginUser(String username) {
-        var user = new User(username, "password", Set.of());
-        var authentication = new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities());
-        var context = SecurityContextHolder.getContext();
-        context.setAuthentication(authentication);
     }
 
     @BeforeEach
@@ -508,7 +499,6 @@ class InvoicingApplicationTests {
             @Test
             void putInvoice_shouldUpdateLastModified_http204_ok() throws Exception {
                 var dateAfterCreation = Instant.now();
-                loginUser("Bob");
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
@@ -516,7 +506,8 @@ class InvoicingApplicationTests {
                                             "number": "%s",
                                             "paid": true
                                         }
-                                        """.formatted(INVOICE_NUMBER_1)))
+                                        """.formatted(INVOICE_NUMBER_1))
+                                .with(user("Bob")))
                         .andExpect(status().isNoContent());
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
@@ -645,14 +636,14 @@ class InvoicingApplicationTests {
             @Test
             void patchInvoice_shouldUpdateLastModified_http204_ok() throws Exception {
                 var dateAfterCreation = Instant.now();
-                loginUser("Bob");
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
                                             "paid": true
                                         }
-                                        """))
+                                        """)
+                                .with(user("Bob")))
                         .andExpect(status().isNoContent());
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
@@ -913,7 +904,6 @@ class InvoicingApplicationTests {
                     // fictive example: fix the customer
                     var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
                     mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .accept(MediaType.APPLICATION_JSON)
@@ -925,7 +915,8 @@ class InvoicingApplicationTests {
                                                     }
                                                 }
                                             }
-                                            """.formatted(correctCustomerId)))
+                                            """.formatted(correctCustomerId))
+                                    .with(user("Bob")))
                             .andExpect(status().isNoContent());
                     assertThat(invoices.findById(invoiceId(INVOICE_NUMBER_1))).hasValueSatisfying(invoice -> {
                         assertThat(invoice.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
@@ -1076,7 +1067,6 @@ class InvoicingApplicationTests {
                     });
                     var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
 
                     // set the orders using PUT, using single-link object syntax
                     mockMvc.perform(put("/invoices/%s/orders".formatted(invoiceNumber))
@@ -1090,7 +1080,8 @@ class InvoicingApplicationTests {
                                                     }
                                                 }
                                             }
-                                            """.formatted(newOrderId)))
+                                            """.formatted(newOrderId))
+                                    .with(user("Bob")))
                             .andExpect(status().isNoContent());
 
                     // assert orders collection has been replaced
@@ -1238,7 +1229,6 @@ class InvoicingApplicationTests {
                 void putShippingAddress_forOrder_shouldUpdateLastModified_http204_noContent() throws Exception {
                     var addressId = shippingAddresses.save(new ShippingAddress()).getId();
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
 
                     mockMvc.perform(put("/orders/{id}/shippingAddress", ORDER_2_ID)
                                     .accept(MediaType.APPLICATION_JSON)
@@ -1251,7 +1241,8 @@ class InvoicingApplicationTests {
                                                     }
                                                 }
                                             }
-                                            """.formatted(addressId)))
+                                            """.formatted(addressId))
+                                    .with(user("Bob")))
                             .andExpect(status().isNoContent());
 
                     var order = orders.findById(ORDER_2_ID).orElseThrow();
@@ -1364,7 +1355,6 @@ class InvoicingApplicationTests {
                 @Test
                 void putJsonPromos_forOrder_shouldUpdateLastModified_http204_noContent() throws Exception {
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
                     mockMvc.perform(put("/orders/{id}/promos", ORDER_1_ID)
                                     .accept(MediaType.APPLICATION_JSON)
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -1378,7 +1368,7 @@ class InvoicingApplicationTests {
                                                 }
                                             }
                                             """)
-
+                                    .with(user("Bob"))
                             )
                             .andExpect(status().isNoContent());
 
@@ -1735,10 +1725,10 @@ class InvoicingApplicationTests {
                 @Test
                 void deleteOrderCustomer_shouldUpdateLastModified_http204() throws Exception {
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
 
                     mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
-                                    .accept(MediaType.APPLICATION_JSON))
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .with(user("Bob")))
                             .andExpect(status().isNoContent());
 
                     assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
@@ -1815,10 +1805,10 @@ class InvoicingApplicationTests {
                         assertThat(order.getShippingAddress()).isNotNull();
                     });
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
 
                     mockMvc.perform(delete("/orders/{orderId}/shippingAddress", ORDER_1_ID)
-                                    .accept(MediaType.APPLICATION_JSON))
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .with(user("Bob")))
                             .andExpect(status().isNoContent());
 
                     assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
@@ -2209,11 +2199,11 @@ class InvoicingApplicationTests {
                 @Test
                 void postInvoiceContent_shouldUpdateLastModified_http201() throws Exception {
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
                     mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT))
+                                    .content(UNICODE_TEXT)
+                                    .with(user("Bob")))
                             .andExpect(status().isCreated());
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
@@ -2676,11 +2666,11 @@ class InvoicingApplicationTests {
                 @Test
                 void putInvoiceContent_shouldUpdateLastModified_http201() throws Exception {
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
                     mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT))
+                                    .content(UNICODE_TEXT)
+                                    .with(user("Bob")))
                             .andExpect(status().isCreated());
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
@@ -3105,9 +3095,9 @@ class InvoicingApplicationTests {
                     invoice.setContentFilename("content.txt");
                     invoices.save(invoice);
                     var dateContentCreated = Instant.now();
-                    loginUser("Bob");
 
-                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
+                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .with(user("Bob")))
                             .andExpect(status().isNoContent());
 
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
@@ -3440,11 +3430,11 @@ class InvoicingApplicationTests {
                 @Test
                 void postCustomerContent_shouldUpdateLastModified_http201() throws Exception {
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
                     mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT))
+                                    .content(UNICODE_TEXT)
+                                    .with(user("Bob")))
                             .andExpect(status().isCreated());
 
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
@@ -3790,11 +3780,11 @@ class InvoicingApplicationTests {
                 @Test
                 void putCustomerContent_shouldUpdateLastModified_http201() throws Exception {
                     var dateAfterCreation = Instant.now();
-                    loginUser("Bob");
                     mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT))
+                                    .content(UNICODE_TEXT)
+                                    .with(user("Bob")))
                             .andExpect(status().isCreated());
 
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
@@ -4071,9 +4061,9 @@ class InvoicingApplicationTests {
                     customer.getContent().setFilename("content.txt");
                     customers.save(customer);
                     var dateContentCreated = Instant.now();
-                    loginUser("Bob");
 
-                    mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
+                    mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .with(user("Bob")))
                             .andExpect(status().isNoContent());
 
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
