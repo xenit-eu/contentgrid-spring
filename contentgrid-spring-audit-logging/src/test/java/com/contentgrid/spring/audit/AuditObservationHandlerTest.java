@@ -54,6 +54,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.servlet.HandlerMapping;
 
 @SpringBootTest(
         classes = {
@@ -434,9 +435,13 @@ class AuditObservationHandlerTest {
     @Nested
     class HandlesThrownExceptions {
 
-        private static final ServerRequestObservationContext SERVER_REQUEST_OBSERVATION_CONTEXT = new ServerRequestObservationContext(
-                new MockHttpServletRequest(),
-                new MockHttpServletResponse());
+        private static final ServerRequestObservationContext SERVER_REQUEST_OBSERVATION_CONTEXT = createContext();
+
+        private static ServerRequestObservationContext createContext() {
+            var request = new MockHttpServletRequest();
+            request.setAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE, "true");
+            return new ServerRequestObservationContext(request, new MockHttpServletResponse());
+        }
 
 
         @Test
@@ -527,7 +532,6 @@ class AuditObservationHandlerTest {
     @ParameterizedTest
     @CsvSource({
             "GET,/",
-            "get,/",
             "GET,/profile/customers",
             "GET,/customers",
             "GET,/customers/abc",
@@ -571,9 +575,11 @@ class AuditObservationHandlerTest {
             "DELETE,/customers",
             "PUT,/customers",
             "PATCH,/customers",
+            "POST,/xyz",
+            // Invalid methods
+            "get,/",
             "XYZ,/customers",
-            "xyz,/customers",
-            "POST,/xyz"
+            "xyz,/customers"
     })
     void noAuditEvents(HttpMethod method, String uri) throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.request(method, uri))
