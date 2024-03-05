@@ -3,6 +3,7 @@ package com.contentgrid.spring.boot.autoconfigure.data.web;
 import com.contentgrid.spring.data.rest.affordances.ContentGridSpringDataRestAffordancesConfiguration;
 import com.contentgrid.spring.data.rest.hal.ContentGridCurieConfiguration;
 import com.contentgrid.spring.data.rest.hal.CurieProviderCustomizer;
+import com.contentgrid.spring.data.rest.hal.forms.ContentGridHalFormsConfiguration;
 import com.contentgrid.spring.data.rest.links.ContentGridSpringContentRestLinksConfiguration;
 import com.contentgrid.spring.data.rest.links.ContentGridSpringDataLinksConfiguration;
 import com.contentgrid.spring.data.rest.problem.ContentGridProblemDetailsConfiguration;
@@ -30,6 +31,7 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguratio
         ContentGridSpringDataRestProfileConfiguration.class,
         ContentGridSpringDataRestAffordancesConfiguration.class,
         ContentGridSpringDataRestValidationConfiguration.class,
+        ContentGridHalFormsConfiguration.class,
         ContentGridProblemDetailsConfiguration.class
 })
 @AutoConfigureAfter(

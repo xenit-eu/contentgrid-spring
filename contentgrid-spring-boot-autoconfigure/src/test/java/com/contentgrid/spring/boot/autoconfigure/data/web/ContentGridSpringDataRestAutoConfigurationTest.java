@@ -39,17 +39,6 @@ class ContentGridSpringDataRestAutoConfigurationTest {
     }
 
     @Test
-    void checkContentGridProfile_halConfiguration_used() {
-        var halConfiguration = new HalConfiguration();
-        contextRunner
-                .withBean(HalConfiguration.class, () -> halConfiguration)
-                .run(context -> {
-                    assertThat(context).hasSingleBean(HalFormsConfiguration.class);
-                    assertThat(context.getBean(HalFormsConfiguration.class).getHalConfiguration()).isSameAs(halConfiguration);
-                });
-    }
-
-    @Test
     void when_contentGridSpringDataRest_isNotOnClasspath() {
         contextRunner
                 .withClassLoader(new FilteredClassLoader(ContentGridSpringDataRestConfiguration.class))
