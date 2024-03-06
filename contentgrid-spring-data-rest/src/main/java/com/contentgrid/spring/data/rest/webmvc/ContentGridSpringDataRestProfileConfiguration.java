@@ -1,24 +1,18 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
 import com.contentgrid.spring.data.rest.mapping.ContentGridDomainTypeMappingConfiguration;
-import com.contentgrid.spring.data.rest.mapping.DomainTypeMapping;
-import com.contentgrid.spring.data.rest.mapping.FormMapping;
-import java.util.concurrent.atomic.AtomicReference;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
-import org.springframework.hateoas.mediatype.hal.HalConfiguration;
-import org.springframework.hateoas.mediatype.hal.forms.HalFormsConfiguration;
-import org.springframework.hateoas.mediatype.hal.forms.HalFormsOptions;
 import org.springframework.hateoas.server.EntityLinks;
 import org.springframework.hateoas.server.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
 
 @Configuration(proxyBeanMethods = false)
 @Import(ContentGridDomainTypeMappingConfiguration.class)
 public class ContentGridSpringDataRestProfileConfiguration {
+
     @Bean
     HalFormsProfileController halFormsProfileController(
             RepositoryRestConfiguration repositoryRestConfiguration,
@@ -27,28 +21,9 @@ public class ContentGridSpringDataRestProfileConfiguration {
             @Qualifier("halFormsJacksonHttpMessageConverter") TypeConstrainedMappingJackson2HttpMessageConverter messageConverter
     ) {
         var objectMapper = messageConverter.getObjectMapper().copy();
-        return new HalFormsProfileController(repositoryRestConfiguration, entityLinks, domainTypeToHalFormsPayloadMetadataConverter, objectMapper);
+        return new HalFormsProfileController(repositoryRestConfiguration, entityLinks,
+                domainTypeToHalFormsPayloadMetadataConverter, objectMapper);
     }
 
-    @Bean
-    HalFormsConfiguration halFormsConfiguration(ObjectProvider<HalConfiguration> halConfiguration, @FormMapping DomainTypeMapping domainTypeMapping, EntityLinks entityLinks) {
-        var halFormsConfiguration = new AtomicReference<>(new HalFormsConfiguration(halConfiguration.getIfAvailable(HalConfiguration::new)));
-        for (Class<?> domainType : domainTypeMapping) {
-            var container = domainTypeMapping.forDomainType(domainType);
-
-            container.doWithAssociations(property -> {
-                halFormsConfiguration.updateAndGet(config -> config.withOptions(domainType, property.getName(), metadata -> {
-                    var collectionLink = entityLinks.linkToCollectionResource(property.getTypeInformation().getRequiredActualType().getType()).expand();
-                    return HalFormsOptions.remote(collectionLink)
-                            .withMinItems(property.isRequired()?1L:0L)
-                            .withMaxItems(property.getTypeInformation().isCollectionLike()?null:1L)
-                            // This is a JSON pointer into the item
-                            .withValueField("/_links/self/href");
-                }));
-            });
-        }
-
-        return halFormsConfiguration.get();
-    }
 
 }
