@@ -7,7 +7,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.JwtClaimAccessor;
 
-public class AuditorAwareImpl implements AuditorAware<UserMetadata> {
+public class JwtAuditorAware implements AuditorAware<UserMetadata> {
 
     @Override
     public Optional<UserMetadata> getCurrentAuditor() {

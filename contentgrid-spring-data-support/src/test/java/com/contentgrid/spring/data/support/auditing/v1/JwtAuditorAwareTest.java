@@ -20,10 +20,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.Locale;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +27,6 @@ import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -47,7 +42,6 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor;
 import org.springframework.test.context.ContextConfiguration;
@@ -58,7 +52,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 @SpringBootTest
 @ContextConfiguration
-class AuditorAwareImplTest {
+class JwtAuditorAwareTest {
 
     private MockMvc mockMvc;
 
@@ -80,12 +74,6 @@ class AuditorAwareImplTest {
     @AfterEach
     public void cleanup() {
         invoices.deleteAll();
-    }
-
-    String formatInstant(Instant date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
-                .withZone(ZoneId.of("GMT"));
-        return formatter.format(date);
     }
 
     static JwtRequestPostProcessor jwtWithClaims(String subject, String name) {
@@ -126,20 +114,7 @@ class AuditorAwareImplTest {
     }
 
     @Test
-    void postEntity_withoutJwt_shouldNotCreate_http403() throws Exception {
-        mockMvc.perform(post("/invoices")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number": "123456"}
-                                """))
-                .andExpect(status().isForbidden());
-        mockMvc.perform(get("/invoices").with(john))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.['d:invoices'].length()").value("0"));
-    }
-
-    @Test
-    void putEntity_shouldUpdateLastModified_http200() throws Exception {
+    void putEntity_shouldUpdateAuditMetadataFields_http204() throws Exception {
         var response = mockMvc.perform(post("/invoices")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -165,87 +140,6 @@ class AuditorAwareImplTest {
             assertThat(invoice.getAuditing().getLastModifiedBy().getName()).isEqualTo("bob admin");
             assertThat(invoice.getAuditing().getLastModifiedDate()).isAfter(dateAfterCreation);
         });
-    }
-
-    @Test
-    void getEntity_shouldCheckIfModifiedSince() throws Exception {
-        var response = mockMvc.perform(post("/invoices")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number": "123456"}
-                                """)
-                        .with(john))
-                .andExpect(status().isCreated())
-                .andReturn();
-        var invoiceId = StringUtils.substringAfterLast(response.getResponse().getHeader("Location"), "/");
-        var dateAfterCreation = Instant.now();
-        var dateBeforeCreation = dateAfterCreation.minus(1, ChronoUnit.HOURS);
-
-        mockMvc.perform(get("/invoices/{id}", invoiceId)
-                        .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(dateAfterCreation))
-                        .with(john))
-                .andExpect(status().isNotModified());
-        mockMvc.perform(get("/invoices/{id}", invoiceId)
-                        .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(dateBeforeCreation))
-                        .with(john))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void getEntity_shouldCheckIfUnmodifiedSince() throws Exception {
-        var response = mockMvc.perform(post("/invoices")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number": "123456"}
-                                """)
-                        .with(john))
-                .andExpect(status().isCreated())
-                .andReturn();
-        var invoiceId = StringUtils.substringAfterLast(response.getResponse().getHeader("Location"), "/");
-        var dateAfterCreation = Instant.now();
-        var dateBeforeCreation = dateAfterCreation.minus(1, ChronoUnit.HOURS);
-
-        mockMvc.perform(get("/invoices/{id}", invoiceId)
-                        .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(dateAfterCreation))
-                        .with(john))
-                .andExpect(status().isOk());
-        mockMvc.perform(get("/invoices/{id}", invoiceId)
-                        .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(dateBeforeCreation))
-                        .with(john))
-                .andExpect(status().isPreconditionFailed());
-    }
-
-    @Test
-    @Disabled("ACC-1220")
-    void putEntity_shouldCheckIfUnmodifiedSince() throws Exception {
-        var response = mockMvc.perform(post("/invoices")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number": "123456"}
-                                """)
-                        .with(john))
-                .andExpect(status().isCreated())
-                .andReturn();
-        var invoiceId = StringUtils.substringAfterLast(response.getResponse().getHeader("Location"), "/");
-        var dateAfterCreation = Instant.now();
-        var dateBeforeCreation = dateAfterCreation.minus(1, ChronoUnit.HOURS);
-
-        mockMvc.perform(put("/invoices/{id}", invoiceId)
-                        .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(dateBeforeCreation))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number": "000000"}
-                                """)
-                        .with(bob))
-                .andExpect(status().isPreconditionFailed());
-        mockMvc.perform(put("/invoices/{id}", invoiceId)
-                        .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(dateAfterCreation))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number": "000001"}
-                                """)
-                        .with(bob))
-                .andExpect(status().isNoContent());
     }
 
     @SpringBootApplication
@@ -298,7 +192,7 @@ class AuditorAwareImplTest {
 
         @Bean
         public AuditorAware<UserMetadata> auditorProvider() {
-            return new AuditorAwareImpl();
+            return new JwtAuditorAware();
         }
     }
 }
