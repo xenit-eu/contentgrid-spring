@@ -1,4 +1,4 @@
-package com.contentgrid.data.support.auditing.v1;
+package com.contentgrid.spring.data.support.auditing.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;

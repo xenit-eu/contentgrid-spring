@@ -1,4 +1,4 @@
-package com.contentgrid.data.support.auditing.v1;
+package com.contentgrid.spring.data.support.auditing.v1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;

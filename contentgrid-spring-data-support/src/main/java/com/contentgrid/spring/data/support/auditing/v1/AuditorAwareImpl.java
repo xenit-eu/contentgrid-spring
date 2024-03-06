@@ -1,4 +1,4 @@
-package com.contentgrid.data.support.auditing.v1;
+package com.contentgrid.spring.data.support.auditing.v1;
 
 import java.util.Optional;
 import org.springframework.data.domain.AuditorAware;
