@@ -15,14 +15,18 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.data.rest.webmvc.mapping.Associations;
 import org.springframework.data.rest.webmvc.mapping.LinkCollector;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.mediatype.MediaTypeConfigurationCustomizer;
 import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.hateoas.mediatype.hal.CurieProvider;
+import org.springframework.hateoas.mediatype.hal.HalConfiguration;
+import org.springframework.hateoas.mediatype.hal.HalConfiguration.RenderSingleLinks;
 import org.springframework.hateoas.server.EntityLinks;
 import org.springframework.hateoas.server.LinkRelationProvider;
 import org.springframework.hateoas.server.RepresentationModelProcessor;
 
 @Configuration(proxyBeanMethods = false)
 public class ContentGridSpringDataLinksConfiguration {
+
     @Bean
     RepositoryRestConfigurer contentGridLinkCollectorConfigurer(
             ObjectProvider<ContentGridLinkCollector> collectors
@@ -43,6 +47,14 @@ public class ContentGridSpringDataLinksConfiguration {
     @Bean
     CurieProviderCustomizer contentGridCurieProviderCustomizer() {
         return CurieProviderCustomizer.register(ContentGridLinkRelations.CURIE, ContentGridLinkRelations.TEMPLATE);
+    }
+
+    @Bean
+    MediaTypeConfigurationCustomizer<HalConfiguration> contentGridLinksMediaTypeConfigurationCustomizer() {
+        return halConfiguration -> halConfiguration
+                .withRenderSingleLinksFor(ContentGridLinkRelations.CONTENT, RenderSingleLinks.AS_ARRAY)
+                .withRenderSingleLinksFor(ContentGridLinkRelations.RELATION, RenderSingleLinks.AS_ARRAY)
+                .withRenderSingleLinksFor(ContentGridLinkRelations.ENTITY, RenderSingleLinks.AS_ARRAY);
     }
 
     @Bean
