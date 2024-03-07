@@ -2,12 +2,10 @@ package com.contentgrid.spring.data.support.auditing.v1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,10 +24,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,32 +42,18 @@ import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
-@SpringBootTest
-@ContextConfiguration
+@SpringBootTest(properties = {"spring.content.storage.type.default = fs"})
+@AutoConfigureMockMvc(printOnlyOnFailure = false)
 class JwtAuditorAwareTest {
 
+    @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     InvoiceRepository invoices;
-
-    @Autowired
-    WebApplicationContext context;
-
-    @BeforeEach
-    public void setup() {
-        mockMvc = MockMvcBuilders
-                .webAppContextSetup(context)
-                .apply(springSecurity())
-                .alwaysDo(print())
-                .build();
-    }
 
     @AfterEach
     public void cleanup() {
@@ -99,12 +83,15 @@ class JwtAuditorAwareTest {
 
         mockMvc.perform(get("/invoices/{id}", invoiceId).with(john))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.number").value("123456"))
-                .andExpect(jsonPath("$.auditing").exists())
-                .andExpect(jsonPath("$.auditing.created_by").value("john smith"))
-                .andExpect(jsonPath("$.auditing.created_date").exists())
-                .andExpect(jsonPath("$.auditing.last_modified_by").value("john smith"))
-                .andExpect(jsonPath("$.auditing.last_modified_date").exists());
+                .andExpect(content().json("""
+                        {
+                            "number": "123456",
+                            "auditing": {
+                                "created_by": "john smith",
+                                "last_modified_by": "john smith"
+                            }
+                        }
+                        """));
 
         assertThat(invoices.findAll()).singleElement().satisfies(invoice -> {
             assertThat(invoice.getNumber()).isEqualTo("123456");
