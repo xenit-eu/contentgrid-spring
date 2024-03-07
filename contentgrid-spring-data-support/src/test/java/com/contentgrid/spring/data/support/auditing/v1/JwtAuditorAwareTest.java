@@ -86,23 +86,25 @@ class JwtAuditorAwareTest {
 
     @Test
     void postEntity_shouldSetAuditMetadataFields_http201() throws Exception {
-        mockMvc.perform(post("/invoices")
+        var response = mockMvc.perform(post("/invoices")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"number": "123456"}
                                 """)
                         .with(john))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn();
+        var invoiceId = StringUtils.substringAfterLast(response.getResponse().getHeader("Location"), "/");
         var dateAfterCreation = Instant.now();
 
-        mockMvc.perform(get("/invoices").with(john))
+        mockMvc.perform(get("/invoices/{id}", invoiceId).with(john))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.['d:invoices'][0].number").value("123456"))
-                .andExpect(jsonPath("$._embedded.['d:invoices'][0].auditing").exists())
-                .andExpect(jsonPath("$._embedded.['d:invoices'][0].auditing.created_by").value("john smith"))
-                .andExpect(jsonPath("$._embedded.['d:invoices'][0].auditing.created_date").exists())
-                .andExpect(jsonPath("$._embedded.['d:invoices'][0].auditing.last_modified_by").value("john smith"))
-                .andExpect(jsonPath("$._embedded.['d:invoices'][0].auditing.last_modified_date").exists());
+                .andExpect(jsonPath("$.number").value("123456"))
+                .andExpect(jsonPath("$.auditing").exists())
+                .andExpect(jsonPath("$.auditing.created_by").value("john smith"))
+                .andExpect(jsonPath("$.auditing.created_date").exists())
+                .andExpect(jsonPath("$.auditing.last_modified_by").value("john smith"))
+                .andExpect(jsonPath("$.auditing.last_modified_date").exists());
 
         assertThat(invoices.findAll()).singleElement().satisfies(invoice -> {
             assertThat(invoice.getNumber()).isEqualTo("123456");
