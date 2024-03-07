@@ -65,6 +65,10 @@ class JwtAuditorAwareTest {
                 .issuer("http://localhost/realms/cg-invalid"));
     }
 
+    static JwtRequestPostProcessor jwtWithSubject(String subject) {
+        return jwt().jwt(jwt -> jwt.subject(subject).issuer("http://localhost/realms/cg-invalid"));
+    }
+
     static JwtRequestPostProcessor john = jwtWithClaims("123456", "john smith");
     static JwtRequestPostProcessor bob = jwtWithClaims("abcdef", "bob admin");
 
@@ -100,6 +104,31 @@ class JwtAuditorAwareTest {
             assertThat(invoice.getAuditing().getLastModifiedBy().getNamespace()).isEqualTo("http://localhost/realms/cg-invalid");
             assertThat(invoice.getAuditing().getLastModifiedDate()).isBefore(dateAfterCreation);
         });
+    }
+
+    @Test
+    void postEntity_missingNameClaim_shouldSetAuditMetadataFields_http201() throws Exception {
+        var response = mockMvc.perform(post("/invoices")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"number": "123456"}
+                                """)
+                        .with(jwtWithSubject("123456")))
+                .andExpect(status().isCreated())
+                .andReturn();
+        var invoiceId = StringUtils.substringAfterLast(response.getResponse().getHeader("Location"), "/");
+
+        mockMvc.perform(get("/invoices/{id}", invoiceId).with(john))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {
+                            "number": "123456",
+                            "auditing": {
+                                "created_by": "123456",
+                                "last_modified_by": "123456"
+                            }
+                        }
+                        """));
     }
 
     @Test

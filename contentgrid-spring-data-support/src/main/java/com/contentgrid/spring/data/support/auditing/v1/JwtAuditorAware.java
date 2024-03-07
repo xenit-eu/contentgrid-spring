@@ -17,6 +17,9 @@ public class JwtAuditorAware implements AuditorAware<UserMetadata> {
                 .map(Authentication::getPrincipal)
                 .filter(user -> user instanceof JwtClaimAccessor)
                 .map(JwtClaimAccessor.class::cast)
-                .map(jwt -> new UserMetadata(jwt.getSubject(), jwt.getIssuer().toString(), jwt.getClaimAsString("name")));
+                .filter(jwt -> jwt.getSubject() != null)
+                .filter(jwt -> jwt.getIssuer() != null)
+                .map(jwt -> new UserMetadata(jwt.getSubject(), jwt.getIssuer().toString(),
+                        jwt.hasClaim("name") ? jwt.getClaimAsString("name") : jwt.getSubject()));
     }
 }
