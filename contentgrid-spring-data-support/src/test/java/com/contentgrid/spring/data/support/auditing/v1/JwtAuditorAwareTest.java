@@ -25,6 +25,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +33,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
-import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
@@ -64,6 +64,14 @@ class JwtAuditorAwareTest {
 
     @MockBean(name = "mockedDateTimeProvider")
     DateTimeProvider mockedDateTimeProvider;
+
+    @SpyBean
+    private AuditingHandler auditingHandler;
+
+    @BeforeEach
+    void setup() {
+        auditingHandler.setDateTimeProvider(mockedDateTimeProvider);
+    }
 
     @AfterEach
     public void cleanup() {
@@ -284,18 +292,12 @@ class JwtAuditorAwareTest {
     }
 
     @Configuration
-    @EnableJpaAuditing(dateTimeProviderRef = "mockedDateTimeProvider")
     static class RestConfiguration implements RepositoryRestConfigurer {
 
         @Override
         public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config,
                 CorsRegistry cors) {
             config.exposeIdsFor(Invoice.class);
-        }
-
-        @Bean
-        public AuditorAware<UserMetadata> auditorProvider() {
-            return new JwtAuditorAware();
         }
     }
 }
