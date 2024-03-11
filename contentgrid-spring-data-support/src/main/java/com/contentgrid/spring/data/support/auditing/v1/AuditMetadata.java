@@ -1,7 +1,6 @@
 package com.contentgrid.spring.data.support.auditing.v1;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.Embeddable;
 import java.time.Instant;
 import lombok.EqualsAndHashCode;
