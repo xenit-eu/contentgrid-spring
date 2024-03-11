@@ -1,4 +1,5 @@
 com.contentgrid.spring.boot.autoconfigure.actuator.ActuatorAutoConfiguration
+com.contentgrid.spring.boot.autoconfigure.data.audit.JpaAuditingAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.data.web.ContentGridSpringDataRestAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.s3.S3RegionAutoConfiguration
