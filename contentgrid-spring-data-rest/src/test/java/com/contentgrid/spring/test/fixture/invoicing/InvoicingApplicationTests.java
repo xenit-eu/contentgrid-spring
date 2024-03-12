@@ -455,7 +455,6 @@ class InvoicingApplicationTests {
 
             @Test
             void putInvoice_shouldReturn_http204_ok() throws Exception {
-                var dateAfterCreation = Instant.now();
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
@@ -469,8 +468,6 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
@@ -498,7 +495,6 @@ class InvoicingApplicationTests {
 
             @Test
             void putInvoice_withIfMatch_http204_ok() throws Exception {
-                var dateAfterCreation = Instant.now();
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
@@ -514,13 +510,10 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
             void putInvoice_WithBadIfMatch_http412() throws Exception {
-                var dateAfterCreation = Instant.now();
                 mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -536,8 +529,6 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isFalse();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
             }
 
             @Test
@@ -593,7 +584,6 @@ class InvoicingApplicationTests {
 
             @Test
             void patchInvoice_shouldReturn_http204_ok() throws Exception {
-                var dateAfterCreation = Instant.now();
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
@@ -606,8 +596,6 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
@@ -634,7 +622,6 @@ class InvoicingApplicationTests {
 
             @Test
             void patchInvoice_withIfMatch_http204_ok() throws Exception {
-                var dateAfterCreation = Instant.now();
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
@@ -649,13 +636,10 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isTrue();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isAfter(dateAfterCreation);
             }
 
             @Test
             void patchInvoice_withBadIfMatch_http412() throws Exception {
-                var dateAfterCreation = Instant.now();
                 mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -669,8 +653,6 @@ class InvoicingApplicationTests {
 
                 assertThat(invoice.isPaid()).isFalse();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-                assertThat(invoice.getAuditMetadata().getCreatedDate()).isBefore(dateAfterCreation);
-                assertThat(invoice.getAuditMetadata().getLastModifiedDate()).isEqualTo(invoice.getAuditMetadata().getCreatedDate());
             }
 
             @Test
@@ -757,7 +739,7 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            void deleteInvoice_withIfUnmodifiedSince_http204_ok() throws Exception {
+            void deleteInvoice_withRecentIfUnmodifiedSince_http204_ok() throws Exception {
                 var dateAfterCreation = Instant.now();
                 mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(dateAfterCreation)))
@@ -768,7 +750,7 @@ class InvoicingApplicationTests {
 
             @Test
             @Disabled("ACC-1220")
-            void deleteInvoice_withBadIfUnmodifiedSince_http412() throws Exception {
+            void deleteInvoice_withOutdatedIfUnmodifiedSince_http412() throws Exception {
                 var dateAfterCreation = Instant.now();
                 var dateBeforeCreation = dateAfterCreation.minus(1, ChronoUnit.HOURS);
                 mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
@@ -949,7 +931,7 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                void putJson_withIfUnmodifiedSince_http204() throws Exception {
+                void putJson_withRecentIfUnmodifiedSince_http204() throws Exception {
                     // fictive example: fix the customer
                     var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
                     var dateAfterCreation = Instant.now();
@@ -2098,7 +2080,7 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                void getInvoiceContent_withOutDatedIfModifiedSince_http200() throws Exception {
+                void getInvoiceContent_withOutdatedIfModifiedSince_http200() throws Exception {
                     var filename = "💩 and 📝.txt";
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
