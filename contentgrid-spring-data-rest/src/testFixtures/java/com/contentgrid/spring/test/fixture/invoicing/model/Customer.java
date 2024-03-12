@@ -1,13 +1,14 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
 import com.contentgrid.spring.data.rest.validation.OnEntityDelete;
+import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
-import com.contentgrid.spring.test.fixture.invoicing.model.support.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.model.support.Content;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.EntityListeners;
 import jakarta.validation.constraints.NotNull;
 import java.time.Instant;
@@ -49,13 +50,22 @@ public class Customer {
 
     @JsonProperty(value = "audit_metadata", access = Access.READ_ONLY)
     @Embedded
+    @jakarta.persistence.Access(AccessType.PROPERTY)
     @AttributeOverride(name = "createdBy.id", column = @Column(name = "audit_metadata__created_by__id"))
+    @AttributeOverride(name = "createdBy.namespace", column = @Column(name = "audit_metadata__created_by__namespace"))
     @AttributeOverride(name = "createdBy.name", column = @Column(name = "audit_metadata__created_by__name"))
     @AttributeOverride(name = "createdDate", column = @Column(name = "audit_metadata__created_date"))
     @AttributeOverride(name = "lastModifiedBy.id", column = @Column(name = "audit_metadata__last_modified_by__id"))
+    @AttributeOverride(name = "lastModifiedBy.namespace", column = @Column(name = "audit_metadata__last_modified_by__namespace"))
     @AttributeOverride(name = "lastModifiedBy.name", column = @Column(name = "audit_metadata__last_modified_by__name"))
     @AttributeOverride(name = "lastModifiedDate", column = @Column(name = "audit_metadata__last_modified_date"))
     private AuditMetadata auditMetadata = new AuditMetadata();
+
+    public void setAuditMetadata(AuditMetadata auditMetadata) {
+        if (auditMetadata != null) {
+            this.auditMetadata = auditMetadata;
+        }
+    }
 
     private String name;
 

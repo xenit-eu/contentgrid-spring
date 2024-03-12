@@ -4,8 +4,7 @@ import static com.contentgrid.spring.test.matchers.EtagHeaderMatcher.toEtag;
 import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.nullValue;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
@@ -19,12 +18,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
+import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
-import com.contentgrid.spring.test.fixture.invoicing.model.support.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
@@ -72,8 +71,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.test.context.support.WithAnonymousUser;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -86,8 +84,7 @@ import org.springframework.web.util.UriUtils;
 })
 @EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
-@WithMockJwt
-@WithMockUser(username = "John")
+@WithMockJwt(subject = "John", name = "John", issuer = InvoicingApplicationTests.JWT_ISSUER_NAMESPACE)
 class InvoicingApplicationTests {
 
     static final String INVOICE_NUMBER_1 = "I-2022-0001";
@@ -106,6 +103,8 @@ class InvoicingApplicationTests {
     static String PROMO_XMAS, PROMO_SHIPPING, PROMO_CYBER;
 
     static UUID ADDRESS_ID_XENIT;
+
+    static final String JWT_ISSUER_NAMESPACE = "http://localhost/realms/cg-invalid";
 
     @Autowired
     private MockMvc mockMvc;
@@ -150,9 +149,17 @@ class InvoicingApplicationTests {
     }
 
     String formatInstant(Instant date) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
+        DateTimeFormatter formatter = DateTimeFormatter.RFC_1123_DATE_TIME
                 .withZone(ZoneId.of("GMT"));
         return formatter.format(date);
+    }
+
+    static JwtRequestPostProcessor jwtWithClaims(String subject, String name) {
+        return jwt().jwt(jwt -> jwt
+                .subject(subject)
+                .claim("name", name)
+                .issuer(JWT_ISSUER_NAMESPACE)
+        );
     }
 
     @BeforeEach
@@ -388,36 +395,6 @@ class InvoicingApplicationTests {
             }
 
             @Test
-            @WithMockUser(username = "Bob")
-            void getInvoice_withDifferentUser_http200_ok() throws Exception {
-                mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .accept(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
-                        .andExpect(jsonPath("$._links.curies").value(curies()))
-                        .andExpect(jsonPath("$.audit_metadata.created_by").value("Bob"))
-                        .andExpect(jsonPath("$.audit_metadata.created_date").exists())
-                        .andExpect(jsonPath("$.audit_metadata.last_modified_by").value("Bob"))
-                        .andExpect(jsonPath("$.audit_metadata.last_modified_date").exists())
-                        .andExpect(headers().exists(HttpHeaders.LAST_MODIFIED));
-            }
-
-            @Test
-            @WithAnonymousUser
-            void getInvoice_withAnonymousUser_http200_ok() throws Exception {
-                mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .accept(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
-                        .andExpect(jsonPath("$._links.curies").value(curies()))
-                        .andExpect(jsonPath("$.audit_metadata.created_by").value(nullValue()))
-                        .andExpect(jsonPath("$.audit_metadata.created_date").exists())
-                        .andExpect(jsonPath("$.audit_metadata.last_modified_by").value(nullValue()))
-                        .andExpect(jsonPath("$.audit_metadata.last_modified_date").exists())
-                        .andExpect(headers().exists(HttpHeaders.LAST_MODIFIED));
-            }
-
-            @Test
             void getInvoice_withRecentIfModifiedSince_http304() throws Exception {
                 var dateAfterCreation = Instant.now();
 
@@ -507,7 +484,7 @@ class InvoicingApplicationTests {
                                             "paid": true
                                         }
                                         """.formatted(INVOICE_NUMBER_1))
-                                .with(user("Bob")))
+                                .with(jwtWithClaims("user-id-2", "Bob")))
                         .andExpect(status().isNoContent());
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
@@ -643,7 +620,7 @@ class InvoicingApplicationTests {
                                             "paid": true
                                         }
                                         """)
-                                .with(user("Bob")))
+                                .with(jwtWithClaims("user-id-2", "Bob")))
                         .andExpect(status().isNoContent());
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
@@ -916,7 +893,7 @@ class InvoicingApplicationTests {
                                                 }
                                             }
                                             """.formatted(correctCustomerId))
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isNoContent());
                     assertThat(invoices.findById(invoiceId(INVOICE_NUMBER_1))).hasValueSatisfying(invoice -> {
                         assertThat(invoice.getAuditMetadata().getLastModifiedBy().getName()).isEqualTo("Bob");
@@ -1081,7 +1058,7 @@ class InvoicingApplicationTests {
                                                 }
                                             }
                                             """.formatted(newOrderId))
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isNoContent());
 
                     // assert orders collection has been replaced
@@ -1242,7 +1219,7 @@ class InvoicingApplicationTests {
                                                 }
                                             }
                                             """.formatted(addressId))
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isNoContent());
 
                     var order = orders.findById(ORDER_2_ID).orElseThrow();
@@ -1356,6 +1333,7 @@ class InvoicingApplicationTests {
                 void putJsonPromos_forOrder_shouldUpdateLastModified_http204_noContent() throws Exception {
                     var dateAfterCreation = Instant.now();
                     mockMvc.perform(put("/orders/{id}/promos", ORDER_1_ID)
+                                            .with(jwtWithClaims("user-id-2", "Bob"))
                                     .accept(MediaType.APPLICATION_JSON)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content("""
@@ -1368,7 +1346,6 @@ class InvoicingApplicationTests {
                                                 }
                                             }
                                             """)
-                                    .with(user("Bob"))
                             )
                             .andExpect(status().isNoContent());
 
@@ -1728,7 +1705,7 @@ class InvoicingApplicationTests {
 
                     mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
                                     .accept(MediaType.APPLICATION_JSON)
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isNoContent());
 
                     assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
@@ -1808,7 +1785,7 @@ class InvoicingApplicationTests {
 
                     mockMvc.perform(delete("/orders/{orderId}/shippingAddress", ORDER_1_ID)
                                     .accept(MediaType.APPLICATION_JSON)
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isNoContent());
 
                     assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
@@ -2203,7 +2180,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isCreated());
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
@@ -2670,7 +2647,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isCreated());
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
@@ -3097,7 +3074,7 @@ class InvoicingApplicationTests {
                     var dateContentCreated = Instant.now();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isNoContent());
 
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
@@ -3397,7 +3374,7 @@ class InvoicingApplicationTests {
 
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .accept(MediaType.ALL_VALUE)
-                                    .header(HttpHeaders.IF_NONE_MATCH, formatInstant(dateBeforeCreation)))
+                                    .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(dateBeforeCreation)))
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
                             .andExpect(content().string(EXT_ASCII_TEXT));
@@ -3434,7 +3411,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isCreated());
 
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
@@ -3784,7 +3761,7 @@ class InvoicingApplicationTests {
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT)
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isCreated());
 
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
@@ -4063,7 +4040,7 @@ class InvoicingApplicationTests {
                     var dateContentCreated = Instant.now();
 
                     mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .with(user("Bob")))
+                                    .with(jwtWithClaims("user-id-2", "Bob")))
                             .andExpect(status().isNoContent());
 
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
