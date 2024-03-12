@@ -1,8 +1,8 @@
 package com.contentgrid.spring.data.rest.affordances;
 
+import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
-import com.contentgrid.spring.test.fixture.invoicing.model.support.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
 import java.util.Set;
