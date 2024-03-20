@@ -43,6 +43,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'jakarta.transaction:jakarta.transaction-api'
     testImplementation project(':contentgrid-spring-boot-autoconfigure')
+    testImplementation project(':contentgrid-spring-data-support')
 
     testFixturesAnnotationProcessor project(':contentgrid-spring-boot-starter-annotations')
 
