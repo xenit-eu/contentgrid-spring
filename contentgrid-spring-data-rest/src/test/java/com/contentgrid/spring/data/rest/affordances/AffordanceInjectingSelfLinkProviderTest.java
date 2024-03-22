@@ -3,6 +3,7 @@ package com.contentgrid.spring.data.rest.affordances;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
+import com.contentgrid.spring.test.security.WithMockJwt;
 import java.util.Set;
 import java.util.UUID;
 import org.hamcrest.Matchers;
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
         InvoicingApplication.class,
 })
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
+@WithMockJwt
 class AffordanceInjectingSelfLinkProviderTest {
     @Autowired
     MockMvc mockMvc;

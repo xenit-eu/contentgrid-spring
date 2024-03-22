@@ -1,6 +1,7 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
+import com.contentgrid.spring.test.security.WithMockJwt;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
         InvoicingApplication.class,
 })
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
+@WithMockJwt
 class HalFormsProfileControllerTest {
 
     @Autowired

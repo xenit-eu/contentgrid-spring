@@ -5,6 +5,7 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
+import com.contentgrid.spring.test.security.WithMockJwt;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
         InvoicingApplication.class,
 })
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
+@WithMockJwt
 class HalLinkTitlesAndFormPromptsTest {
     @Autowired
     MockMvc mockMvc;

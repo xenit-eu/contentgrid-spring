@@ -527,6 +527,7 @@ class AuditObservationHandlerTest {
     @ParameterizedTest
     @CsvSource({
             "GET,/",
+            "get,/",
             "GET,/profile/customers",
             "GET,/customers",
             "GET,/customers/abc",
@@ -570,11 +571,9 @@ class AuditObservationHandlerTest {
             "DELETE,/customers",
             "PUT,/customers",
             "PATCH,/customers",
-            "POST,/xyz",
-            // Invalid methods
-            "get,/",
             "XYZ,/customers",
-            "xyz,/customers"
+            "xyz,/customers",
+            "POST,/xyz"
     })
     void noAuditEvents(HttpMethod method, String uri) throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.request(method, uri))

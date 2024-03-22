@@ -17,6 +17,7 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Refund;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.RefundRepository;
+import com.contentgrid.spring.test.security.WithMockJwt;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
@@ -49,6 +50,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@WithMockJwt
 class ContentGridProblemDetailsConfigurationIntegrationTest {
 
     private static final String CUSTOMER_ID_CREATE = "bd5ef028-52fb-11ee-a531-b3ff1a44e992";

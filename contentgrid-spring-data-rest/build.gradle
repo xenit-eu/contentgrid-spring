@@ -42,6 +42,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'jakarta.transaction:jakarta.transaction-api'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     testImplementation project(':contentgrid-spring-boot-autoconfigure')
     testImplementation project(':contentgrid-spring-data-support')
 
