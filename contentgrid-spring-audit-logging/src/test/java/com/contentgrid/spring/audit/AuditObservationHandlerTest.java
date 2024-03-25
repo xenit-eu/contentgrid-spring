@@ -24,6 +24,7 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerReposito
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
+import com.contentgrid.spring.test.security.WithMockJwt;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -67,6 +68,7 @@ import org.springframework.web.servlet.HandlerMapping;
         }
 )
 @AutoConfigureMockMvc
+@WithMockJwt
 class AuditObservationHandlerTest {
 
     @TestConfiguration

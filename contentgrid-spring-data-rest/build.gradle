@@ -46,6 +46,7 @@ dependencies {
     testImplementation 'jakarta.transaction:jakarta.transaction-api'
     testImplementation project(':contentgrid-spring-boot-autoconfigure')
     testImplementation project(':contentgrid-spring-data-support')
+    testImplementation project(':contentgrid-spring-test')
 
     testFixturesAnnotationProcessor project(':contentgrid-spring-boot-starter-annotations')
 

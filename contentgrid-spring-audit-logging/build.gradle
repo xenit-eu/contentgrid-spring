@@ -20,8 +20,10 @@ dependencies {
     implementation 'jakarta.servlet:jakarta.servlet-api'
     implementation 'org.slf4j:slf4j-api'
 
+    testRuntimeOnly 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation project(':contentgrid-spring-test')
 
     testImplementation 'org.springframework:spring-messaging'
     testImplementation 'io.cloudevents:cloudevents-spring'
