@@ -6,7 +6,6 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;
@@ -26,7 +25,7 @@ import org.springframework.util.StringUtils;
 @Inherited
 @Documented
 @WithSecurityContext(factory = WithMockJwt.WithMockJwtSecurityContextFactory.class)
-@Import({SkipCsrfConfiguration.class})
+@Import(SkipCsrfConfiguration.class)
 public @interface WithMockJwt {
     @AliasFor("subject")
     String value() default "user";
