@@ -1,5 +1,6 @@
 package com.contentgrid.spring.data.rest.affordances;
 
+import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
@@ -36,7 +37,7 @@ class AffordanceInjectingSelfLinkProviderTest {
 
     @BeforeEach
     void setup() {
-        customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, "Abc", "ABC", null, null, null, Set.of(), Set.of()));
+        customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, new AuditMetadata(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
     }
 
     @AfterEach
