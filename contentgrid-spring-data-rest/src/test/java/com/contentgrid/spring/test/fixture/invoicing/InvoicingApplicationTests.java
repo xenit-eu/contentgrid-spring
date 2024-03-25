@@ -1,7 +1,7 @@
 package com.contentgrid.spring.test.fixture.invoicing;
 
-import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
 import static com.contentgrid.spring.test.matchers.EtagHeaderMatcher.toEtag;
+import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.endsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -29,6 +29,7 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.PromotionCampaig
 import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingAddressRepository;
 import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
 import com.contentgrid.spring.test.fixture.invoicing.store.InvoiceContentStore;
+import com.contentgrid.spring.test.security.WithMockJwt;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -39,7 +40,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.hamcrest.BaseMatcher;
@@ -77,6 +77,7 @@ import org.springframework.web.util.UriUtils;
 })
 @EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
+@WithMockJwt
 class InvoicingApplicationTests {
 
     static final String INVOICE_NUMBER_1 = "I-2022-0001";

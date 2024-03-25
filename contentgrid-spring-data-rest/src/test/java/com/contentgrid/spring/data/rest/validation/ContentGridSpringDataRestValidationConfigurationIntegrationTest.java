@@ -9,10 +9,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
-import com.contentgrid.spring.test.fixture.invoicing.model.Refund;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.RefundRepository;
+import com.contentgrid.spring.test.security.WithMockJwt;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(classes = InvoicingApplication.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @DirtiesContext(classMode = ClassMode.AFTER_CLASS)
+@WithMockJwt
 class ContentGridSpringDataRestValidationConfigurationIntegrationTest {
 
     @Autowired

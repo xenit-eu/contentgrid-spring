@@ -35,6 +35,7 @@ dependencies {
 
     compileOnly 'org.springframework.security:spring-security-web'
     compileOnly 'org.springframework.security:spring-security-config'
+    compileOnly 'org.springframework.security:spring-security-oauth2-jose'
     compileOnly 'org.springframework.security:spring-security-oauth2-resource-server'
     compileOnly 'org.springframework.integration:spring-integration-core'
     compileOnly 'org.springframework.boot:spring-boot-actuator-autoconfigure'
