@@ -28,6 +28,11 @@ public class BasicAuditEventExtractor implements AuditEventExtractor {
     public Optional<AbstractAuditEventBuilder<?, ?>> createEventBuilder(ServerRequestObservationContext context) {
         var handler = context.getCarrier().getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE);
 
+        if (handler == null) {
+            // handler is null when SpringSecurity detects the use of an invalid HTTP method
+            return Optional.empty();
+        }
+
         if (handler instanceof ResourceHttpRequestHandler) {
             // Don't log static resources
             return Optional.empty();

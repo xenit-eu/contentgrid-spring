@@ -22,6 +22,7 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation project(':contentgrid-spring-test')
 
     testImplementation 'org.springframework:spring-messaging'
     testImplementation 'io.cloudevents:cloudevents-spring'
