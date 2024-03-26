@@ -1,0 +1,32 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom(annotationProcessor)
+    }
+
+    testAnnotationProcessor {
+        extendsFrom(annotationProcessor)
+    }
+}
+
+dependencies {
+
+    annotationProcessor platform(project(':contentgrid-spring-boot-platform'))
+    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor project(':contentgrid-spring-boot-starter-annotations')
+
+    implementation platform(project(':contentgrid-spring-boot-platform'))
+
+    implementation 'jakarta.servlet:jakarta.servlet-api'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.springframework.security:spring-security-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
