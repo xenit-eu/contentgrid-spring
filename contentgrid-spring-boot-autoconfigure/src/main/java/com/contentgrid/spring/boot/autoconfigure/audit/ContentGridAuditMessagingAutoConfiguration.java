@@ -20,10 +20,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.core.annotation.Order;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.messaging.converter.MessageConverter;
-import org.springframework.messaging.core.AbstractMessageSendingTemplate;
 import org.springframework.messaging.core.MessageSendingOperations;
 
 @AutoConfiguration(
@@ -61,12 +60,14 @@ public class ContentGridAuditMessagingAutoConfiguration {
     @Order(10)
     MessageConverter auditEventToCloudEventMessageConverter(
             ObjectMapper objectMapper,
-            ContentGridAuditMessagingProperties auditProperties
+            ContentGridAuditMessagingProperties auditProperties,
+            ExpressionParser expressionParser
     ) {
+        var parsedSource = expressionParser.parseExpression(auditProperties.getSource()).getValue(URI.class);
         return new AuditEventToCloudEventMessageConverter(
                 new CloudEventMessageConverter(),
                 objectMapper::writeValueAsBytes,
-                auditProperties.getSource()
+                parsedSource != null ? parsedSource : URI.create(auditProperties.getSource())
         );
     }
 
@@ -82,7 +83,7 @@ public class ContentGridAuditMessagingAutoConfiguration {
     @Data
     static class ContentGridAuditMessagingProperties {
 
-        private URI source;
+        private String source;
 
         private String destination;
     }
