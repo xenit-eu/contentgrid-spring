@@ -12,6 +12,7 @@ dependencies {
     api project(':contentgrid-spring-data-rest')
     api project(':contentgrid-spring-data-support')
     api project(':contentgrid-spring-querydsl')
+    api project(':contentgrid-spring-common')
 
     implementation project(':contentgrid-spring-swagger-ui')
     implementation project(':contentgrid-spring-audit-logging')

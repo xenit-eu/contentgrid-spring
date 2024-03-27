@@ -1,4 +1,4 @@
-package com.contentgrid.spring.boot.actuator;
+package com.contentgrid.spring.common;
 
 import java.util.Map;
 
