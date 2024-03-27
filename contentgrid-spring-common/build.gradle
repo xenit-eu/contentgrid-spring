@@ -10,9 +10,6 @@ configurations {
     testAnnotationProcessor {
         extendsFrom(annotationProcessor)
     }
-    testImplementation {
-        extendsFrom(compileOnly)
-    }
 }
 
 dependencies {
@@ -22,7 +19,6 @@ dependencies {
     implementation platform(project(':contentgrid-spring-boot-platform'))
     implementation 'org.springframework.boot:spring-boot'
 
-    testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
