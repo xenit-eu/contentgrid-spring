@@ -1,6 +1,6 @@
 package com.contentgrid.spring.boot.actuator.webhooks;
 
-import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties.SystemProperties;
+import com.contentgrid.spring.common.ContentGridApplicationProperties.SystemProperties;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;

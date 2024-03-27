@@ -7,7 +7,6 @@ configurations {
     compileOnly {
         extendsFrom(annotationProcessor)
     }
-
     testAnnotationProcessor {
         extendsFrom(annotationProcessor)
     }
@@ -18,18 +17,11 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     implementation platform(project(':contentgrid-spring-boot-platform'))
-    implementation 'org.springframework.boot:spring-boot-autoconfigure'
-
-    compileOnly project(':contentgrid-spring-common')
-
-    api 'org.springframework.boot:spring-boot-actuator'
+    implementation 'org.springframework.boot:spring-boot'
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-    testCompileOnly 'org.projectlombok:lombok'
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
 }

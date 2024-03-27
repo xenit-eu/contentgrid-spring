@@ -1,5 +1,6 @@
 package com.contentgrid.spring.boot.autoconfigure.actuator;
 
+import com.contentgrid.spring.common.ContentGridApplicationPropertiesConfiguration;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -11,16 +12,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 import com.contentgrid.spring.boot.actuator.ContentGridApplicationInfoContributor;
-import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties;
-import com.contentgrid.spring.boot.actuator.ContentGridApplicationProperties.SystemProperties;
+import com.contentgrid.spring.common.ContentGridApplicationProperties;
+import com.contentgrid.spring.common.ContentGridApplicationProperties.SystemProperties;
 import com.contentgrid.spring.boot.actuator.policy.PolicyActuator;
 import com.contentgrid.spring.boot.actuator.policy.PolicyVariables;
 import com.contentgrid.spring.boot.actuator.webhooks.WebHooksConfigActuator;
@@ -29,7 +30,8 @@ import com.contentgrid.spring.boot.actuator.webhooks.WebhookVariables;
 import lombok.extern.slf4j.Slf4j;
 
 @AutoConfiguration
-@ConditionalOnClass({PolicyActuator.class, WebHooksConfigActuator.class, ConditionalOnAvailableEndpoint.class})
+@ConditionalOnClass({PolicyActuator.class, WebHooksConfigActuator.class, ConditionalOnAvailableEndpoint.class, ContentGridApplicationProperties.class})
+@Import(ContentGridApplicationPropertiesConfiguration.class)
 @Slf4j
 public class ActuatorAutoConfiguration {
 
@@ -74,12 +76,6 @@ public class ActuatorAutoConfiguration {
                     .userVariables(applicationProperties.getVariables())
                     .build();
         }
-    }
-
-    @Bean
-    @ConfigurationProperties(prefix = "contentgrid")
-    ContentGridApplicationProperties contentgridApplicationProperties() {
-        return new ContentGridApplicationProperties();
     }
 
     @Bean
