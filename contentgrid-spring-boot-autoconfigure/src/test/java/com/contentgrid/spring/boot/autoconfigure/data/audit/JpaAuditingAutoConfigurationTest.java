@@ -2,8 +2,8 @@ package com.contentgrid.spring.boot.autoconfigure.data.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.data.support.auditing.v1.JwtAuditorAware;
+import com.contentgrid.spring.data.support.auditing.v1.UserMetadata;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -35,13 +35,13 @@ class JpaAuditingAutoConfigurationTest {
     }
 
     @Test
-    void checkWithoutDependency() {
+    void checkWithoutUserMetadata() {
         contextRunner.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
-                .withClassLoader(new FilteredClassLoader(AuditMetadata.class))
+                .withClassLoader(new FilteredClassLoader(UserMetadata.class))
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).doesNotHaveBean(JwtAuditorAware.class);
-                    assertThat(context).doesNotHaveBean(AuditingEntityListener.class);
+                    assertThat(context).hasSingleBean(AuditingEntityListener.class);
                 });
     }
 
