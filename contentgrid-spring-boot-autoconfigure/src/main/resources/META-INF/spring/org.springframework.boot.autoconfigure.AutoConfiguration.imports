@@ -6,7 +6,6 @@ com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.s3.S3RegionAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.flyway.FlywayPostgresAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.security.ActuatorEndpointsWebSecurityAutoConfiguration
-com.contentgrid.spring.boot.autoconfigure.security.AnonymousTestAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.security.MultiTenantOAuth2ResourceServerAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.swagger.ui.SwaggerUIRestAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.audit.ContentGridAuditLoggingAutoConfiguration
