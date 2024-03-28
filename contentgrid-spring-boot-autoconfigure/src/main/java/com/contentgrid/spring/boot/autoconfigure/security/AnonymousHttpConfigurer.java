@@ -34,7 +34,7 @@ public class AnonymousHttpConfigurer extends AbstractHttpConfigurer<AnonymousHtt
 
         @Override
         protected Authentication createAuthentication(HttpServletRequest request) {
-            return new UsernamePasswordAuthenticationToken(getPrincipal(), "password", getAuthorities());
+            return new UsernamePasswordAuthenticationToken(getPrincipal(), null, getAuthorities());
         }
 
         private static String getKey() {
