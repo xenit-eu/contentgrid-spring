@@ -2,7 +2,6 @@ package com.contentgrid.spring.boot.autoconfigure.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.contentgrid.spring.boot.autoconfigure.security.AnonymousHttpConfigurer.AnonymousJwtAuthenticationFilter;
 import com.contentgrid.spring.boot.autoconfigure.security.AnonymousHttpConfigurer.AnonymousUsernamePasswordAuthenticationFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -29,8 +28,7 @@ class AnonymousHttpConfigurerTest {
                     assertThat(context).hasNotFailed();
                     assertThat(context).hasSingleBean(SecurityFilterChain.class);
                     assertThat(context.getBean(SecurityFilterChain.class).getFilters()).noneMatch(filter ->
-                        filter instanceof AnonymousJwtAuthenticationFilter ||
-                                filter instanceof AnonymousUsernamePasswordAuthenticationFilter
+                            filter instanceof AnonymousUsernamePasswordAuthenticationFilter
                     );
                 });
     }
@@ -46,7 +44,7 @@ class AnonymousHttpConfigurerTest {
                     assertThat(context).hasNotFailed();
                     assertThat(context).hasSingleBean(SecurityFilterChain.class);
                     assertThat(context.getBean(SecurityFilterChain.class).getFilters()).anyMatch(filter ->
-                        filter instanceof AnonymousJwtAuthenticationFilter
+                            filter instanceof AnonymousUsernamePasswordAuthenticationFilter
                     );
                 });
     }
