@@ -2,7 +2,7 @@ package com.contentgrid.spring.boot.autoconfigure.data.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.contentgrid.spring.data.support.auditing.v1.JpaAuditingConfiguration;
+import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.data.support.auditing.v1.JwtAuditorAware;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -14,6 +14,7 @@ import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.security.oauth2.jwt.JwtClaimAccessor;
 
 class JpaAuditingAutoConfigurationTest {
 
@@ -28,7 +29,6 @@ class JpaAuditingAutoConfigurationTest {
         contextRunner.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
                 .run(context -> {
                     assertThat(context).hasNotFailed();
-                    assertThat(context).hasSingleBean(JpaAuditingConfiguration.class);
                     assertThat(context).hasSingleBean(JwtAuditorAware.class);
                     assertThat(context).hasSingleBean(AuditingEntityListener.class);
                 });
@@ -37,12 +37,22 @@ class JpaAuditingAutoConfigurationTest {
     @Test
     void checkWithoutDependency() {
         contextRunner.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
-                .withClassLoader(new FilteredClassLoader(JpaAuditingConfiguration.class))
+                .withClassLoader(new FilteredClassLoader(AuditMetadata.class))
                 .run(context -> {
                     assertThat(context).hasNotFailed();
-                    assertThat(context).doesNotHaveBean(JpaAuditingConfiguration.class);
                     assertThat(context).doesNotHaveBean(JwtAuditorAware.class);
                     assertThat(context).doesNotHaveBean(AuditingEntityListener.class);
+                });
+    }
+
+    @Test
+    void checkWithoutJwtClaimAccessor() {
+        contextRunner.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
+                .withClassLoader(new FilteredClassLoader(JwtClaimAccessor.class))
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).doesNotHaveBean(JwtAuditorAware.class);
+                    assertThat(context).hasSingleBean(AuditingEntityListener.class);
                 });
     }
 }
