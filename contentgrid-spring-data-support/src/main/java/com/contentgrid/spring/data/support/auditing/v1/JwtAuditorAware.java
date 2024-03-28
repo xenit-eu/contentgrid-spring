@@ -14,18 +14,15 @@ public class JwtAuditorAware implements AuditorAware<UserMetadata> {
         return Optional.ofNullable(SecurityContextHolder.getContext())
                 .map(SecurityContext::getAuthentication)
                 .filter(Authentication::isAuthenticated)
-                .map(Authentication::getPrincipal)
-                .map(principal -> {
-                    if (principal instanceof JwtClaimAccessor jwt) {
+                .map(authentication -> {
+                    if (authentication.getPrincipal() instanceof JwtClaimAccessor jwt) {
                         if (jwt.getSubject() != null && jwt.getIssuer() != null) {
                             return new UserMetadata(jwt.getSubject(), jwt.getIssuer().toString(),
                                     jwt.hasClaim("name") ? jwt.getClaimAsString("name") : jwt.getSubject());
                         }
-                    } else if (principal instanceof String name) {
-                        // Anonymous user when 'contentgrid.security.unauthenticated.allow' is true
-                        return new UserMetadata(null, null, name);
+                        return null;
                     }
-                    return null;
+                    return new UserMetadata(authentication.getName(), null, authentication.getName());
                 });
     }
 }
