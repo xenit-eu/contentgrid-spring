@@ -63,13 +63,13 @@ public class AnonymousTestAutoConfiguration {
         @Override
         protected Authentication createAuthentication(HttpServletRequest request) {
             var username = getPrincipal().toString();
-            Jwt.Builder builder = Jwt.withTokenValue("token")
+            Jwt jwt = Jwt.withTokenValue("token")
                     .header("alg", "none")
                     .subject(username)
                     .issuer(this.issuer)
                     .claim("scope", "anonymous")
-                    .claim("name", username);
-            Jwt jwt = builder.build();
+                    .claim("name", username)
+                    .build();
 
             return new JwtAuthenticationToken(jwt, getAuthorities());
         }
