@@ -61,4 +61,15 @@ class AnonymousTestAutoConfigurationTest {
                     );
                 });
     }
+
+    @Test
+    void checkWithoutSecurityFilterChain() {
+        contextRunner.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
+                .withClassLoader(new FilteredClassLoader(SecurityFilterChain.class))
+                .withPropertyValues("contentgrid.spring.security.allow-anonymous", "true")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).doesNotHaveBean(SecurityFilterChain.class);
+                });
+    }
 }
