@@ -5,6 +5,8 @@ import com.contentgrid.spring.data.support.auditing.v1.DefaultAuditorAware;
 import com.contentgrid.spring.data.support.auditing.v1.JwtAuditorAware;
 import com.contentgrid.spring.data.support.auditing.v1.UserMetadata;
 import jakarta.persistence.EntityManagerFactory;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -22,6 +24,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimAccessor;
 @ConditionalOnBean(EntityManagerFactory.class)
 @EnableJpaAuditing
 @Import(AuditorAwareConfiguration.class)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class JpaAuditingAutoConfiguration {
 
     @Configuration
