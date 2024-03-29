@@ -1,0 +1,2 @@
+org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer = \
+com.contentgrid.spring.boot.autoconfigure.security.AnonymousHttpConfigurer

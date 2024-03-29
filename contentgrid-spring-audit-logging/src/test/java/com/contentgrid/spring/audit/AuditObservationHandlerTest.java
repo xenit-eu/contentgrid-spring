@@ -24,6 +24,7 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerReposito
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
+import com.contentgrid.spring.test.security.WithMockJwt;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -54,6 +55,10 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.function.HandlerFunction;
+import org.springframework.web.servlet.function.ServerRequest;
+import org.springframework.web.servlet.function.ServerResponse;
 
 @SpringBootTest(
         classes = {
@@ -66,6 +71,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
         }
 )
 @AutoConfigureMockMvc
+@WithMockJwt
 class AuditObservationHandlerTest {
 
     @TestConfiguration
@@ -434,10 +440,14 @@ class AuditObservationHandlerTest {
     @Nested
     class HandlesThrownExceptions {
 
-        private static final ServerRequestObservationContext SERVER_REQUEST_OBSERVATION_CONTEXT = new ServerRequestObservationContext(
-                new MockHttpServletRequest(),
-                new MockHttpServletResponse());
+        private static final ServerRequestObservationContext SERVER_REQUEST_OBSERVATION_CONTEXT = createContext();
 
+        private static ServerRequestObservationContext createContext() {
+            var request = new MockHttpServletRequest();
+            request.setAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE,
+                    (HandlerFunction) serverRequest -> ServerResponse.ok().build());
+            return new ServerRequestObservationContext(request, new MockHttpServletResponse());
+        }
 
         @Test
         void handlesExceptionsDuringExtraction() {
@@ -527,7 +537,6 @@ class AuditObservationHandlerTest {
     @ParameterizedTest
     @CsvSource({
             "GET,/",
-            "get,/",
             "GET,/profile/customers",
             "GET,/customers",
             "GET,/customers/abc",
@@ -571,9 +580,11 @@ class AuditObservationHandlerTest {
             "DELETE,/customers",
             "PUT,/customers",
             "PATCH,/customers",
+            "POST,/xyz",
+            // Invalid methods
+            "get,/",
             "XYZ,/customers",
-            "xyz,/customers",
-            "POST,/xyz"
+            "xyz,/customers"
     })
     void noAuditEvents(HttpMethod method, String uri) throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.request(method, uri))

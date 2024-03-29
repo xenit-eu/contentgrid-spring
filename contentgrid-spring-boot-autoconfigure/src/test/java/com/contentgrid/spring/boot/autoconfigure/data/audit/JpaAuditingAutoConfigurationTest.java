@@ -31,7 +31,7 @@ class JpaAuditingAutoConfigurationTest {
         contextRunner.run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).hasSingleBean(JwtAuditorAware.class);
-                    assertThat(context).doesNotHaveBean(DefaultAuditorAware.class);
+                    assertThat(context).doesNotHaveBean("defaultAuditorAware");
                     assertThat(context).hasSingleBean(AuditingEntityListener.class);
                 });
     }
