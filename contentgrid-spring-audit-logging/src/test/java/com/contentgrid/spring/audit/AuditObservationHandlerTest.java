@@ -56,6 +56,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.function.HandlerFunction;
+import org.springframework.web.servlet.function.ServerRequest;
+import org.springframework.web.servlet.function.ServerResponse;
 
 @SpringBootTest(
         classes = {
@@ -441,7 +444,8 @@ class AuditObservationHandlerTest {
 
         private static ServerRequestObservationContext createContext() {
             var request = new MockHttpServletRequest();
-            request.setAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE, "true");
+            request.setAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE,
+                    (HandlerFunction) serverRequest -> ServerResponse.ok().build());
             return new ServerRequestObservationContext(request, new MockHttpServletResponse());
         }
 
