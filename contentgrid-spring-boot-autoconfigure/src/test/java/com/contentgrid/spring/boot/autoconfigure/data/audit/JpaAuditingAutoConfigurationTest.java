@@ -2,6 +2,7 @@ package com.contentgrid.spring.boot.autoconfigure.data.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.contentgrid.spring.data.support.auditing.v1.DefaultAuditorAware;
 import com.contentgrid.spring.data.support.auditing.v1.JwtAuditorAware;
 import com.contentgrid.spring.data.support.auditing.v1.UserMetadata;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,7 @@ class JpaAuditingAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).hasSingleBean(JwtAuditorAware.class);
+                    assertThat(context).doesNotHaveBean(DefaultAuditorAware.class);
                     assertThat(context).hasSingleBean(AuditingEntityListener.class);
                 });
     }
@@ -41,6 +43,7 @@ class JpaAuditingAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).doesNotHaveBean(JwtAuditorAware.class);
+                    assertThat(context).doesNotHaveBean(DefaultAuditorAware.class);
                     assertThat(context).hasSingleBean(AuditingEntityListener.class);
                 });
     }
@@ -52,6 +55,7 @@ class JpaAuditingAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).doesNotHaveBean(JwtAuditorAware.class);
+                    assertThat(context).hasSingleBean(DefaultAuditorAware.class);
                     assertThat(context).hasSingleBean(AuditingEntityListener.class);
                 });
     }
