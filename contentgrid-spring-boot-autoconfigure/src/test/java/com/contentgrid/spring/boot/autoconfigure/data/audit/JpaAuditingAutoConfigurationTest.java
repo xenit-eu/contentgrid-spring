@@ -22,7 +22,7 @@ class JpaAuditingAutoConfigurationTest {
     private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
                     TransactionAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
-                    JpaAuditingAutoConfiguration.class
+                    JpaAuditingAutoConfiguration.class, JwtJpaAuditingAutoConfiguration.class
             ));
 
     @Test
