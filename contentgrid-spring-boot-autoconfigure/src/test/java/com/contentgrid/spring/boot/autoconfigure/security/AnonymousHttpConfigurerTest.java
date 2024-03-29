@@ -50,7 +50,7 @@ class AnonymousHttpConfigurerTest {
     }
 
     @Test
-    void checkWithoutOauth2ResourceServer() {
+    void checkWithoutOAuth2ResourceServer() {
         contextRunner.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
                 .withClassLoader(new FilteredClassLoader(BearerTokenAuthenticationToken.class))
                 .withPropertyValues(

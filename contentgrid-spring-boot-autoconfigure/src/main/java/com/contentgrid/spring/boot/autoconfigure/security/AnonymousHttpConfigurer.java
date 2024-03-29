@@ -15,11 +15,13 @@ public class AnonymousHttpConfigurer extends AbstractHttpConfigurer<AnonymousHtt
     @Override
     public void init(HttpSecurity http) throws Exception {
         ApplicationContext context = http.getSharedObject(ApplicationContext.class);
+
         var disableCsrf = context.getEnvironment().getProperty("contentgrid.security.csrf.disabled", Boolean.class);
-        var allowUnauthenticated = context.getEnvironment().getProperty("contentgrid.security.unauthenticated.allow", Boolean.class);
         if (Boolean.TRUE.equals(disableCsrf)) {
             http.csrf(AbstractHttpConfigurer::disable);
         }
+
+        var allowUnauthenticated = context.getEnvironment().getProperty("contentgrid.security.unauthenticated.allow", Boolean.class);
         if (Boolean.TRUE.equals(allowUnauthenticated)) {
             http.anonymous(
                     anonymous -> anonymous.authenticationFilter(new AnonymousUsernamePasswordAuthenticationFilter()));
