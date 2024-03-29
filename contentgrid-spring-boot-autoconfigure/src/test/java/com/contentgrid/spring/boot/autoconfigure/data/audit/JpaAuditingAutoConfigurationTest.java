@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimAccessor;
 class JpaAuditingAutoConfigurationTest {
 
     private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
+            .withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
             .withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
                     TransactionAutoConfiguration.class, HibernateJpaAutoConfiguration.class,
                     JpaAuditingAutoConfiguration.class, JwtAuditorAwareAutoConfiguration.class
@@ -27,8 +28,7 @@ class JpaAuditingAutoConfigurationTest {
 
     @Test
     void checkDefaults() {
-        contextRunner.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
-                .run(context -> {
+        contextRunner.run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).hasSingleBean(JwtAuditorAware.class);
                     assertThat(context).doesNotHaveBean(DefaultAuditorAware.class);
@@ -38,8 +38,7 @@ class JpaAuditingAutoConfigurationTest {
 
     @Test
     void checkWithoutUserMetadata() {
-        contextRunner.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
-                .withClassLoader(new FilteredClassLoader(UserMetadata.class))
+        contextRunner.withClassLoader(new FilteredClassLoader(UserMetadata.class))
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).doesNotHaveBean(JwtAuditorAware.class);
@@ -50,8 +49,7 @@ class JpaAuditingAutoConfigurationTest {
 
     @Test
     void checkWithoutJwtClaimAccessor() {
-        contextRunner.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
-                .withClassLoader(new FilteredClassLoader(JwtClaimAccessor.class))
+        contextRunner.withClassLoader(new FilteredClassLoader(JwtClaimAccessor.class))
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertThat(context).doesNotHaveBean(JwtAuditorAware.class);
