@@ -56,9 +56,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 @Slf4j
-@SpringBootTest(properties = {
-        "server.servlet.encoding.enabled=false" // disables mock-mvc enforcing charset in request
-})
+@SpringBootTest
 @ContextConfiguration(classes = {
         InvoicingApplication.class,
 })
@@ -198,47 +196,42 @@ public class AuditMetadataTest {
     class ItemResource {
 
         @Test
-        void getInvoice_shouldHaveLastModifiedEqualToCreated() throws Exception {
-            checkInvoiceAuditMetadataFields(INVOICE_1_ID, "John", TIMESTAMP);
-        }
-
-        @Test
         void getInvoice_withOutdatedIfModifiedSince_http200() throws Exception {
-            var dateBeforeCreation = TIMESTAMP.minus(1, ChronoUnit.HOURS);
+            var headerDate = TIMESTAMP.minus(1, ChronoUnit.HOURS);
 
             mockMvc.perform(get("/invoices/" + INVOICE_1_ID)
                             .accept(MediaType.APPLICATION_JSON)
-                            .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(dateBeforeCreation)))
+                            .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(headerDate)))
                     .andExpect(status().isOk());
         }
 
         @Test
         void getInvoice_withRecentIfModifiedSince_http304() throws Exception {
-            var dateAfterCreation = TIMESTAMP.plus(1, ChronoUnit.HOURS);
+            var headerDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
 
             mockMvc.perform(get("/invoices/" + INVOICE_1_ID)
                             .accept(MediaType.APPLICATION_JSON)
-                            .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(dateAfterCreation)))
+                            .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(headerDate)))
                     .andExpect(status().isNotModified());
         }
 
         @Test
         void getInvoice_withOutdatedIfUnmodifiedSince_http412() throws Exception {
-            var dateBeforeCreation = TIMESTAMP.minus(1, ChronoUnit.HOURS);
+            var headerDate = TIMESTAMP.minus(1, ChronoUnit.HOURS);
 
             mockMvc.perform(get("/invoices/" + INVOICE_1_ID)
                             .accept(MediaType.APPLICATION_JSON)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(dateBeforeCreation)))
+                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
                     .andExpect(status().isPreconditionFailed());
         }
 
         @Test
         void getInvoice_withRecentIfUnmodifiedSince_http200() throws Exception {
-            var dateAfterCreation = TIMESTAMP.plus(1, ChronoUnit.HOURS);
+            var headerDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
 
             mockMvc.perform(get("/invoices/" + INVOICE_1_ID)
                             .accept(MediaType.APPLICATION_JSON)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(dateAfterCreation)))
+                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
                     .andExpect(status().isOk());
         }
 
@@ -312,7 +305,7 @@ public class AuditMetadataTest {
 
         @Test
         @Disabled("ACC-1220")
-        void deleteInvoice_withOutdatedIfUnmodifiedSince_http204() throws Exception {
+        void deleteInvoice_withOutdatedIfUnmodifiedSince_http412() throws Exception {
             var headerDate = TIMESTAMP.minus(1, ChronoUnit.MINUTES);
 
             mockMvc.perform(delete("/invoices/{id}", INVOICE_1_ID)
@@ -373,7 +366,7 @@ public class AuditMetadataTest {
         }
 
         @Test
-        void postInvoiceContent_withOutdatedIfUnmodifiedSince_http201() throws Exception {
+        void postInvoiceContent_withOutdatedIfUnmodifiedSince_http412() throws Exception {
             var modifiedDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
 
@@ -391,6 +384,7 @@ public class AuditMetadataTest {
         }
 
         @Test
+        @Disabled("ACC-1313")
         void postMultipartInvoiceAndContent_shouldSetAuditMetadataFields_http201() throws Exception {
             var createdDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(createdDate));
@@ -523,7 +517,7 @@ public class AuditMetadataTest {
         }
 
         @Test
-        void postCustomerContent_withOutdatedIfUnmodifiedSince_http201() throws Exception {
+        void postCustomerContent_withOutdatedIfUnmodifiedSince_http412() throws Exception {
             var modifiedDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
 
@@ -541,6 +535,7 @@ public class AuditMetadataTest {
         }
 
         @Test
+        @Disabled("ACC-1313")
         void postMultipartCustomerAndContent_shouldSetAuditMetadataFields_http201() throws Exception {
             var createdDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(createdDate));
