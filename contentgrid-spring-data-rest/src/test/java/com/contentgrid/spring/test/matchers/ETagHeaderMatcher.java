@@ -19,12 +19,12 @@ public class ETagHeaderMatcher {
         return header().exists(HttpHeaders.ETAG);
     }
 
-    public ResultMatcher isEqualTo(int expected) {
-        return header().string(HttpHeaders.ETAG, toETag(expected));
+    public ResultMatcher isEqualTo(String expected) {
+        return header().string(HttpHeaders.ETAG, expected);
     }
 
-    public ResultMatcher isNotEqualTo(int notExpected) {
-        var matcher = not(toETag(notExpected));
+    public ResultMatcher isNotEqualTo(String notExpected) {
+        var matcher = not(notExpected);
         return header().string(HttpHeaders.ETAG, matcher);
     }
 }

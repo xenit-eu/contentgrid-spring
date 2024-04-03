@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
+import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
@@ -84,7 +85,7 @@ public class OptimisticLockingTest {
     @BeforeEach
     void setupTestData() {
         var xenit = customers.save(
-                new Customer(null, 0, "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(),
+                new Customer(null, 0, new AuditMetadata(), "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(),
                         new HashSet<>()));
 
         XENIT_ID = xenit.getId();
@@ -126,13 +127,13 @@ public class OptimisticLockingTest {
     void checkETagUnchanged(String url, int original) throws Exception {
         mockMvc.perform(get(url))
                 .andExpect(status().isOk())
-                .andExpect(headers().etag().isEqualTo(original));
+                .andExpect(headers().etag().isEqualTo(toETag(original)));
     }
 
     void checkETagChanged(String url, int original) throws Exception {
         mockMvc.perform(get(url))
                 .andExpect(status().isOk())
-                .andExpect(headers().etag().isNotEqualTo(original));
+                .andExpect(headers().etag().isNotEqualTo(toETag(original)));
     }
 
     @AfterEach
@@ -150,7 +151,7 @@ public class OptimisticLockingTest {
                             .accept(MediaType.APPLICATION_JSON)
                             .header(HttpHeaders.IF_NONE_MATCH, INVALID_VERSION))
                     .andExpect(status().isOk())
-                    .andExpect(headers().etag().isEqualTo(INVOICE_1_VERSION));
+                    .andExpect(headers().etag().isEqualTo(toETag(INVOICE_1_VERSION)));
         }
 
         @Test
