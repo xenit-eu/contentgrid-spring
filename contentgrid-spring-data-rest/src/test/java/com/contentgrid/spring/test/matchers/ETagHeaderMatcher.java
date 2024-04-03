@@ -9,9 +9,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.ResultMatcher;
 
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class EtagHeaderMatcher {
+public class ETagHeaderMatcher {
 
-    public static String toEtag(int version) {
+    public static String toETag(int version) {
         return "\"%d\"".formatted(version);
     }
 
@@ -20,11 +20,11 @@ public class EtagHeaderMatcher {
     }
 
     public ResultMatcher isEqualTo(int expected) {
-        return header().string(HttpHeaders.ETAG, toEtag(expected));
+        return header().string(HttpHeaders.ETAG, toETag(expected));
     }
 
     public ResultMatcher isNotEqualTo(int notExpected) {
-        var matcher = not(toEtag(notExpected));
+        var matcher = not(toETag(notExpected));
         return header().string(HttpHeaders.ETAG, matcher);
     }
 }

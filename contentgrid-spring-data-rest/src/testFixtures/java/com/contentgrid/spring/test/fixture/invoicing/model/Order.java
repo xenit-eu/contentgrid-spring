@@ -13,7 +13,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Version;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
@@ -34,9 +33,6 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @JsonProperty(access = Access.READ_ONLY)
     private UUID id;
-
-    @Version
-    private int version;
 
     @ManyToOne
     @JoinColumn(name = "customer")

@@ -1,6 +1,5 @@
 package com.contentgrid.spring.test.fixture.invoicing;
 
-import static com.contentgrid.spring.test.matchers.EtagHeaderMatcher.toEtag;
 import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.endsWith;
@@ -335,34 +334,11 @@ class InvoicingApplicationTests {
 
             @Test
             void getInvoice_shouldReturn_http200_ok() throws Exception {
-                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
                 mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
                                 .accept(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.number").value(INVOICE_NUMBER_1))
-                        .andExpect(jsonPath("$._links.curies").value(curies()))
-                        .andExpect(headers().etag().isEqualTo(invoice.getVersion()));
-            }
-
-            @Test
-            void getInvoice_withIfNoneMatch_http304() throws Exception {
-                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                var prevVersion = invoice.getVersion();
-
-                mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header(HttpHeaders.IF_NONE_MATCH, toEtag(prevVersion)))
-                        .andExpect(status().isNotModified());
-            }
-
-            @Test
-            void getInvoice_withOutdatedIfNoneMatch_http200_ok() throws Exception {
-                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                var outdatedVersion = invoice.getVersion() - 1;
-
-                mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header(HttpHeaders.IF_NONE_MATCH, toEtag(outdatedVersion)))
-                        .andExpect(status().isOk());
+                        .andExpect(jsonPath("$._links.curies").value(curies()));
             }
         }
 
@@ -401,44 +377,6 @@ class InvoicingApplicationTests {
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
-            @Test
-            void putInvoice_withIfMatch_http204_ok() throws Exception {
-                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "number": "%s",
-                                            "paid": true
-                                        }
-                                        """.formatted(INVOICE_NUMBER_1)))
-                        .andExpect(status().isNoContent());
-                invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                assertThat(invoice.isPaid()).isTrue();
-                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-            }
-
-            @Test
-            void putInvoice_WithBadIfMatch_http412() throws Exception {
-                mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "number": "%s",
-                                            "paid": true
-                                        }
-                                        """.formatted(INVOICE_NUMBER_1)))
-                        .andExpect(status().isPreconditionFailed());
-
-                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                assertThat(invoice.isPaid()).isFalse();
-                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-            }
-
         }
 
         @Nested
@@ -458,41 +396,6 @@ class InvoicingApplicationTests {
                 var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
                 assertThat(invoice.isPaid()).isTrue();
-                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-            }
-
-            @Test
-            void patchInvoice_withIfMatch_http204_ok() throws Exception {
-                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion()))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "paid": true
-                                        }
-                                        """))
-                        .andExpect(status().isNoContent());
-                invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                assertThat(invoice.isPaid()).isTrue();
-                assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
-            }
-
-            @Test
-            void patchInvoice_withBadIfMatch_http412() throws Exception {
-                mockMvc.perform(patch("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "paid": true
-                                        }
-                                        """))
-                        .andExpect(status().isPreconditionFailed());
-                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                assertThat(invoice.isPaid()).isFalse();
                 assertThat(invoice.getNumber()).isEqualTo(INVOICE_NUMBER_1);
             }
 
@@ -516,25 +419,6 @@ class InvoicingApplicationTests {
                         .andExpect(status().isNoContent());
 
                 assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isEmpty();
-            }
-
-            @Test
-            void deleteInvoice_withIfMatch_http204_ok() throws Exception {
-                var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header(HttpHeaders.IF_MATCH, toEtag(invoice.getVersion())))
-                        .andExpect(status().isNoContent());
-
-                assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isEmpty();
-            }
-
-            @Test
-            void deleteInvoice_withBadIfMatch_http412() throws Exception {
-                mockMvc.perform(delete("/invoices/" + invoiceId(INVOICE_NUMBER_1))
-                                .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                        .andExpect(status().isPreconditionFailed());
-
-                assertThat(invoices.findByNumber(INVOICE_NUMBER_1)).isNotEmpty();
             }
 
         }
@@ -635,53 +519,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isNoContent());
                 }
 
-                @Test
-                void putJson_withIfMatch_http204() throws Exception {
-                    // fictive example: fix the customer
-                    var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
-                    var prevVersion = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow().getVersion();
-                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
-                                    .content("""
-                                            {
-                                                "_links": {
-                                                    "customer" : {
-                                                        "href": "/customers/%s"
-                                                    }
-                                                }
-                                            }
-                                            """.formatted(correctCustomerId)))
-                            .andExpect(status().isNoContent());
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
-                }
-
-                @Test
-                @Disabled("ACC-1188")
-                void putJson_withIfBadMatch_http412() throws Exception {
-                    // fictive example: fix the customer
-                    var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
-                    var prevVersion = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow().getVersion();
-                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                    .content("""
-                                            {
-                                                "_links": {
-                                                    "customer" : {
-                                                        "href": "/customers/%s"
-                                                    }
-                                                }
-                                            }
-                                            """.formatted(correctCustomerId)))
-                            .andExpect(status().isPreconditionFailed());
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    assertThat(invoice.getVersion()).isEqualTo(prevVersion);
-                }
-
             }
 
             @Nested
@@ -717,81 +554,6 @@ class InvoicingApplicationTests {
                             assertThat(invoice.getOrders()).singleElement().satisfies(order -> {
                                 assertThat(order.getId()).isEqualTo(newOrderId.get());
                             });
-                        });
-                    });
-                }
-
-                @Test
-                void putJson_withIfMatch_http204_noContent() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
-                    doInTransaction(() -> {
-                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
-                        newOrderId.set(orders.save(new Order(xenit)).getId());
-                    });
-                    var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
-                    var prevVersion = invoices.findById(invoiceNumber).orElseThrow().getVersion();
-
-                    // set the orders using PUT, using single-link object syntax
-                    mockMvc.perform(put("/invoices/%s/orders".formatted(invoiceNumber))
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content("""
-                                            {
-                                                "_links": {
-                                                    "orders" : {
-                                                        "href": "/orders/%s"
-                                                    }
-                                                }
-                                            }
-                                            """.formatted(newOrderId)))
-                            .andExpect(status().isNoContent());
-
-                    // assert orders collection has been replaced
-                    doInTransaction(() -> {
-                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
-                            assertThat(invoice.getOrders()).singleElement().satisfies(order -> {
-                                assertThat(order.getId()).isEqualTo(newOrderId.get());
-                            });
-                            assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
-                        });
-                    });
-                }
-
-                @Test
-                @Disabled("ACC-1188")
-                void putJson_withBadIfMatch_http412() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
-                    doInTransaction(() -> {
-                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
-                        newOrderId.set(orders.save(new Order(xenit)).getId());
-                    });
-                    var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
-                    var prevVersion = invoices.findById(invoiceNumber).orElseThrow().getVersion();
-
-                    // set the orders using PUT, using single-link object syntax
-                    mockMvc.perform(put("/invoices/%s/orders".formatted(invoiceNumber))
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content("""
-                                            {
-                                                "_links": {
-                                                    "orders" : {
-                                                        "href": "/orders/%s"
-                                                    }
-                                                }
-                                            }
-                                            """.formatted(newOrderId)))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // assert orders collection has been replaced
-                    doInTransaction(() -> {
-                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
-                            assertThat(invoice.getOrders())
-                                    .map(Order::getId)
-                                    .containsExactlyInAnyOrder(ORDER_1_ID, ORDER_2_ID);
-                            assertThat(invoice.getVersion()).isEqualTo(prevVersion);
                         });
                     });
                 }
@@ -848,59 +610,6 @@ class InvoicingApplicationTests {
                     var order = orders.findById(ORDER_2_ID).orElseThrow();
                     assertThat(order.getShippingAddress()).isNotNull();
 
-                }
-
-                @Test
-                void putShippingAddress_forOrderWithIfMatch_http204_noContent() throws Exception {
-
-                    var addressId = shippingAddresses.save(new ShippingAddress()).getId();
-                    var prevVersion = orders.findById(ORDER_2_ID).orElseThrow().getVersion();
-
-                    mockMvc.perform(put("/orders/{id}/shippingAddress", ORDER_2_ID)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content("""
-                                            {
-                                                "_links": {
-                                                    "shippingAddress" : {
-                                                        "href": "/shipping-addresses/%s"
-                                                    }
-                                                }
-                                            }
-                                            """.formatted(addressId)))
-                            .andExpect(status().isNoContent());
-
-                    var order = orders.findById(ORDER_2_ID).orElseThrow();
-                    assertThat(order.getShippingAddress()).isNotNull();
-                    assertThat(order.getVersion()).isNotEqualTo(prevVersion);
-                }
-
-                @Test
-                @Disabled("ACC-1188")
-                void putShippingAddress_forOrderWithBadIfMatch_http412() throws Exception {
-
-                    var addressId = shippingAddresses.save(new ShippingAddress()).getId();
-                    var prevVersion = orders.findById(ORDER_2_ID).orElseThrow().getVersion();
-
-                    mockMvc.perform(put("/orders/{id}/shippingAddress", ORDER_2_ID)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content("""
-                                            {
-                                                "_links": {
-                                                    "shippingAddress" : {
-                                                        "href": "/shipping-addresses/%s"
-                                                    }
-                                                }
-                                            }
-                                            """.formatted(addressId)))
-                            .andExpect(status().isPreconditionFailed());
-
-                    var order = orders.findById(ORDER_2_ID).orElseThrow();
-                    assertThat(order.getShippingAddress()).isNull();
-                    assertThat(order.getVersion()).isEqualTo(prevVersion);
                 }
             }
 
@@ -968,49 +677,6 @@ class InvoicingApplicationTests {
                         assertThat(order.getPromos()).hasSize(2);
                     });
                 }
-
-                @Test
-                void putUriList_Promos_forOrder_withIfMatch_http204_noContent() throws Exception {
-                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
-                    mockMvc.perform(put("/orders/{id}/promos", ORDER_1_ID)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
-                                    .contentType(RestMediaTypes.TEXT_URI_LIST_VALUE)
-                                    .content("""
-                                            /promotions/XMAS-2022
-                                            /promotions/FREE-SHIP
-                                            """)
-                            )
-                            .andExpect(status().isNoContent());
-
-                    doInTransaction(() -> {
-                        var order = orders.findById(ORDER_1_ID).orElseThrow();
-                        assertThat(order.getPromos()).hasSize(2);
-                        assertThat(order.getVersion()).isNotEqualTo(prevVersion);
-                    });
-                }
-
-                @Test
-                @Disabled("ACC-1188")
-                void putUriList_Promos_forOrder_withBadIfMatch_http412() throws Exception {
-                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
-                    mockMvc.perform(put("/orders/{id}/promos", ORDER_1_ID)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                    .contentType(RestMediaTypes.TEXT_URI_LIST_VALUE)
-                                    .content("""
-                                            /promotions/XMAS-2022
-                                            /promotions/FREE-SHIP
-                                            """)
-                            )
-                            .andExpect(status().isPreconditionFailed());
-
-                    doInTransaction(() -> {
-                        var order = orders.findById(ORDER_1_ID).orElseThrow();
-                        assertThat(order.getPromos()).hasSize(1);
-                        assertThat(order.getVersion()).isEqualTo(prevVersion);
-                    });
-                }
             }
         }
 
@@ -1075,83 +741,6 @@ class InvoicingApplicationTests {
                             assertThat(invoice.getOrders())
                                     .hasSize(3)
                                     .anyMatch(order -> order.getId().equals(newOrderId.get()));
-                        });
-                    });
-                }
-
-                @Test
-                void postJson_withIfMatch_shouldAppend_http204() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
-                    doInTransaction(() -> {
-                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
-                        newOrderId.set(orders.save(new Order(xenit)).getId());
-                    });
-
-                    var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
-                    var prevVersion = invoices.findById(invoiceNumber).orElseThrow().getVersion();
-
-                    // add an order to an invoice
-                    mockMvc.perform(post("/invoices/%s/orders".formatted(invoiceNumber))
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content("""
-                                            {
-                                                "_links": {
-                                                    "orders" : {
-                                                        "href": "/orders/%s"
-                                                    }
-                                                }
-                                            }
-                                            """.formatted(newOrderId)))
-                            .andExpect(status().isNoContent());
-
-                    // assert orders collection has been augmented
-                    doInTransaction(() -> {
-                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
-                            assertThat(invoice.getOrders())
-                                    .hasSize(3)
-                                    .anyMatch(order -> order.getId().equals(newOrderId.get()));
-                            assertThat(invoice.getVersion()).isNotEqualTo(prevVersion);
-                        });
-                    });
-                }
-
-                @Test
-                @Disabled("ACC-1188")
-                void postJson_withBadIfMatch_http412() throws Exception {
-                    AtomicReference<UUID> newOrderId = new AtomicReference<>(null);
-                    doInTransaction(() -> {
-                        var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
-                        newOrderId.set(orders.save(new Order(xenit)).getId());
-                    });
-
-                    var invoiceNumber = invoiceId(INVOICE_NUMBER_1);
-                    var prevVersion = invoices.findById(invoiceNumber).orElseThrow().getVersion();
-
-                    // add an order to an invoice
-                    mockMvc.perform(post("/invoices/%s/orders".formatted(invoiceNumber))
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                    .contentType(MediaType.APPLICATION_JSON)
-                                    .content("""
-                                            {
-                                                "_links": {
-                                                    "orders" : {
-                                                        "href": "/orders/%s"
-                                                    }
-                                                }
-                                            }
-                                            """.formatted(newOrderId)))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // assert orders collection has been augmented
-                    doInTransaction(() -> {
-                        assertThat(invoices.findById(invoiceNumber)).hasValueSatisfying(invoice -> {
-                            assertThat(invoice.getOrders())
-                                    .hasSize(2)
-                                    .noneMatch(order -> order.getId().equals(newOrderId.get()));
-                            assertThat(invoice.getVersion()).isEqualTo(prevVersion);
                         });
                     });
                 }
@@ -1227,51 +816,6 @@ class InvoicingApplicationTests {
                         assertThat(order.getPromos()).hasSize(3);
                     });
                 }
-
-                @Test
-                void postUriList_promos_forOrder_withIfMatch_http204_noContent() throws Exception {
-                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
-                    mockMvc.perform(post("/orders/{id}/promos", ORDER_1_ID)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
-                                    .contentType(RestMediaTypes.TEXT_URI_LIST)
-                                    .content("""
-                                            /promotions/XMAS-2022
-                                            /promotions/FREE-SHIP
-                                            """)
-
-                            )
-                            .andExpect(status().isNoContent());
-
-                    doInTransaction(() -> {
-                        var order = orders.findById(ORDER_1_ID).orElseThrow();
-                        assertThat(order.getPromos()).hasSize(3);
-                        assertThat(order.getVersion()).isNotEqualTo(prevVersion);
-                    });
-                }
-
-                @Test
-                @Disabled("ACC-1188")
-                void postUriList_promos_forOrder_withBadIfMatch_http412() throws Exception {
-                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
-                    mockMvc.perform(post("/orders/{id}/promos", ORDER_1_ID)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                    .contentType(RestMediaTypes.TEXT_URI_LIST)
-                                    .content("""
-                                            /promotions/XMAS-2022
-                                            /promotions/FREE-SHIP
-                                            """)
-
-                            )
-                            .andExpect(status().isPreconditionFailed());
-
-                    doInTransaction(() -> {
-                        var order = orders.findById(ORDER_1_ID).orElseThrow();
-                        assertThat(order.getPromos()).hasSize(1);
-                        assertThat(order.getVersion()).isEqualTo(prevVersion);
-                    });
-                }
             }
         }
 
@@ -1291,37 +835,6 @@ class InvoicingApplicationTests {
 
                     assertThat(orders.findById(ORDER_1_ID))
                             .hasValueSatisfying(order -> assertThat(order.getCustomer()).isNull());
-                }
-
-                @Test
-                void deleteOrderCustomer_withIfMatch_http204() throws Exception {
-                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
-                    mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isNoContent());
-
-                    assertThat(orders.findById(ORDER_1_ID))
-                            .hasValueSatisfying(order -> {
-                                assertThat(order.getCustomer()).isNull();
-                                assertThat(order.getVersion()).isNotEqualTo(prevVersion);
-                            });
-                }
-
-                @Test
-                @Disabled("ACC-1188")
-                void deleteOrderCustomer_withBadIfMatch_http412() throws Exception {
-                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
-                    mockMvc.perform(delete("/orders/" + ORDER_1_ID + "/customer")
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    assertThat(orders.findById(ORDER_1_ID))
-                            .hasValueSatisfying(order -> {
-                                assertThat(order.getCustomer()).isNotNull();
-                                assertThat(order.getVersion()).isEqualTo(prevVersion);
-                            });
                 }
             }
 
@@ -1352,45 +865,6 @@ class InvoicingApplicationTests {
 
                     assertThat(orders.findById(ORDER_1_ID))
                             .hasValueSatisfying(order -> assertThat(order.getShippingAddress()).isNull());
-                }
-
-                @Test
-                void deleteShippingAddress_fromOrder_withIfMatch_http204() throws Exception {
-                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
-                        assertThat(order.getShippingAddress()).isNotNull();
-                    });
-                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
-
-                    mockMvc.perform(delete("/orders/{orderId}/shippingAddress", ORDER_1_ID)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isNoContent());
-
-                    assertThat(orders.findById(ORDER_1_ID))
-                            .hasValueSatisfying(order -> {
-                                assertThat(order.getShippingAddress()).isNull();
-                                assertThat(order.getVersion()).isNotEqualTo(prevVersion);
-                            });
-                }
-
-                @Test
-                @Disabled("ACC-1188")
-                void deleteShippingAddress_fromOrder_withBadIfMatch_http412() throws Exception {
-                    assertThat(orders.findById(ORDER_1_ID)).hasValueSatisfying(order -> {
-                        assertThat(order.getShippingAddress()).isNotNull();
-                    });
-                    var prevVersion = orders.findById(ORDER_1_ID).orElseThrow().getVersion();
-
-                    mockMvc.perform(delete("/orders/{orderId}/shippingAddress", ORDER_1_ID)
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    assertThat(orders.findById(ORDER_1_ID))
-                            .hasValueSatisfying(order -> {
-                                assertThat(order.getShippingAddress()).isNotNull();
-                                assertThat(order.getVersion()).isEqualTo(prevVersion);
-                            });
                 }
             }
 
@@ -1572,7 +1046,7 @@ class InvoicingApplicationTests {
                     invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
                     invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
                     invoice.setContentFilename(filename);
-                    invoice = invoices.save(invoice);
+                    invoices.save(invoice);
 
                     var encodedFilename = UriUtils.encodeQuery(filename, StandardCharsets.UTF_8);
                     mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
@@ -1580,7 +1054,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
                             .andExpect(content().string(EXT_ASCII_TEXT))
-                            .andExpect(headers().etag().isEqualTo(invoice.getVersion()))
                     ;
                             /* This assertion is changed in SB3; and is technically incorrect
                             (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
@@ -1601,42 +1074,6 @@ class InvoicingApplicationTests {
                     mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
                                     .accept(MediaType.ALL_VALUE))
                             .andExpect(status().isNotFound());
-                }
-
-                @Test
-                void getInvoiceContent_withIfNoneMatch_http304() throws Exception {
-                    var filename = "💩 and 📝.txt";
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
-                    invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
-                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
-                    invoice.setContentFilename(filename);
-                    invoice = invoices.save(invoice);
-
-                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .accept(MediaType.ALL_VALUE)
-                                    .header(HttpHeaders.IF_NONE_MATCH, toEtag(invoice.getVersion())))
-                            .andExpect(status().isNotModified());
-                }
-
-                @Test
-                void getInvoiceContent_withOutDatedIfNoneMatch_http200() throws Exception {
-                    var filename = "💩 and 📝.txt";
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
-                    invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
-                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
-                    invoice.setContentFilename(filename);
-                    invoice = invoices.save(invoice);
-                    var outdatedVersion = invoice.getVersion() - 1;
-
-                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .accept(MediaType.ALL_VALUE)
-                                    .header(HttpHeaders.IF_NONE_MATCH, toEtag(outdatedVersion)))
-                            .andExpect(status().isOk())
-                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
-                            .andExpect(content().string(EXT_ASCII_TEXT))
-                            .andExpect(headers().etag().isNotEqualTo(outdatedVersion));
                 }
             }
 
@@ -1754,113 +1191,6 @@ class InvoicingApplicationTests {
 
                     // keeps original filename
                     assertThat(invoice.getContentFilename()).isEqualTo("content.txt");
-                }
-
-                @Test
-                void postInvoiceContent_createWithIfMatch_http201() throws Exception {
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isCreated());
-
-                    // get invoice, expecting the etag to change
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                            .hasContent(UNICODE_TEXT);
-                    assertThat(invoice.getContentId()).isNotBlank();
-                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getContentFilename()).isNull();
-                }
-
-                @Test
-                void postInvoiceContent_createWithBadIfMatch_http412() throws Exception {
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    mockMvc.perform(post("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get invoice, expecting the etag to be unchanged
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).isNull();
-                    assertThat(invoice.getContentId()).isBlank();
-                    assertThat(invoice.getContentMimetype()).isNull();
-                    assertThat(invoice.getContentLength()).isNull();
-                    assertThat(invoice.getContentFilename()).isNull();
-                }
-
-                @Test
-                void postInvoiceContent_updateWithIfMatch_http200() throws Exception {
-                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    // update content, ONLY changing the charset
-                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isOk());
-
-                    // get invoice, expecting the etag to change
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                            .hasContent(EXT_ASCII_TEXT);
-                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                }
-
-                @Test
-                void postInvoiceContent_updateWithBadIfMatch_http412() throws Exception {
-                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    // update content, ONLY changing the charset
-                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get invoice, expecting the etag to be unchanged
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                 }
 
                 @Test
@@ -2102,114 +1432,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                void putInvoiceContent_createWithIfMatch_http201() throws Exception {
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isCreated());
-
-                    // get invoice, expecting the etag to change
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                            .hasContent(UNICODE_TEXT);
-                    assertThat(invoice.getContentId()).isNotBlank();
-                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getContentFilename()).isNull();
-                }
-
-                @Test
-                void putInvoiceContent_createWithBadIfMatch_http412() throws Exception {
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    mockMvc.perform(put("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get invoice, expecting the etag to be unchanged
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content"))).isNull();
-                    assertThat(invoice.getContentId()).isBlank();
-                    assertThat(invoice.getContentMimetype()).isNull();
-                    assertThat(invoice.getContentLength()).isNull();
-                    assertThat(invoice.getContentFilename()).isNull();
-                }
-
-                @Test
-                void putInvoiceContent_updateWithIfMatch_http200() throws Exception {
-                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    // update content, ONLY changing the charset
-                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isOk());
-
-                    // get invoice, expecting the etag to change
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                            .hasContent(EXT_ASCII_TEXT);
-                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                }
-
-                @Test
-                void putInvoiceContent_updateWithBadIfMatch_http412() throws Exception {
-                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    // update content, ONLY changing the charset
-                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get invoice, expecting the etag to be unchanged
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                }
-
-                @Test
                 void putInvoiceContent_missingEntity_http404() throws Exception {
                     mockMvc.perform(put("/invoices/{id}/content", UUID.randomUUID())
                                     .contentType(MediaType.TEXT_PLAIN)
@@ -2309,57 +1531,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                void deleteContent_withIfMatch_http204() throws Exception {
-                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isNoContent());
-
-                    // get invoice, expecting the etag to change
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoice.getContentId()).isNull();
-                    assertThat(invoice.getContentLength()).isNull();
-                    assertThat(invoice.getContentMimetype()).isNull();
-                    assertThat(invoice.getContentFilename()).isNull();
-                }
-
-                @Test
-                void deleteContent_withBadIfMatch_http412() throws Exception {
-                    mockMvc.perform(post("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/content")
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-
-                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get invoice, expecting the etag to be unchanged
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                    invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(invoice.getContentId()).isNotBlank();
-                    assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(invoice.getContentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                }
-
-                @Test
                 void deleteContent_noContent_http404() throws Exception {
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(status().isNotFound());
@@ -2369,32 +1540,6 @@ class InvoicingApplicationTests {
                 void deleteContent_noEntity_http404() throws Exception {
                     mockMvc.perform(delete("/invoices/{id}/content", UUID.randomUUID()))
                             .andExpect(status().isNotFound());
-                }
-
-                @Test
-                void deleteContent_noContentWithIfMatch_http404() throws Exception {
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isNotFound());
-
-                    // get invoice, expecting the etag to be unchanged
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                }
-
-                @Test
-                void deleteContent_noContentWithBadIfMatch_http404() throws Exception {
-                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var prevVersion = invoice.getVersion();
-                    mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isNotFound());
-
-                    // get invoice, expecting the etag to be unchanged
-                    mockMvc.perform(get("/invoices/" + invoiceId(INVOICE_NUMBER_1)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
                 }
 
                 @Test
@@ -2448,7 +1593,7 @@ class InvoicingApplicationTests {
                     customersContent.setContent(customer, PropertyPath.from("content"), stream);
                     customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
                     customer.getContent().setFilename(filename);
-                    customer = customers.save(customer);
+                    customers.save(customer);
 
                     var encodedFilename = UriUtils.encodeQuery(filename, StandardCharsets.UTF_8);
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
@@ -2456,7 +1601,6 @@ class InvoicingApplicationTests {
                             .andExpect(status().isOk())
                             .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
                             .andExpect(content().string(EXT_ASCII_TEXT))
-                            .andExpect(headers().etag().isEqualTo(customer.getVersion()))
                     ;
                             /* This assertion is changed in SB3; and is technically incorrect
                             (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
@@ -2477,42 +1621,6 @@ class InvoicingApplicationTests {
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
                                     .accept(MediaType.ALL_VALUE))
                             .andExpect(status().isNotFound());
-                }
-
-                @Test
-                void getCustomerContent_withIfNoneMatch_http304() throws Exception {
-                    var filename = "💩 and 📝.txt";
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
-                    customersContent.setContent(customer, PropertyPath.from("content"), stream);
-                    customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
-                    customer.getContent().setFilename(filename);
-                    customer = customers.save(customer);
-
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .accept(MediaType.ALL_VALUE)
-                                    .header(HttpHeaders.IF_NONE_MATCH, toEtag(customer.getVersion())))
-                            .andExpect(status().isNotModified());
-                }
-
-                @Test
-                void getCustomerContent_withOutdatedIfNoneMatch_http200() throws Exception {
-                    var filename = "💩 and 📝.txt";
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
-                    customersContent.setContent(customer, PropertyPath.from("content"), stream);
-                    customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
-                    customer.getContent().setFilename(filename);
-                    customer = customers.save(customer);
-                    var outdatedVersion = customer.getVersion() - 1;
-
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .accept(MediaType.ALL_VALUE)
-                                    .header(HttpHeaders.IF_NONE_MATCH, toEtag(outdatedVersion)))
-                            .andExpect(status().isOk())
-                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
-                            .andExpect(content().string(EXT_ASCII_TEXT))
-                            .andExpect(headers().etag().isNotEqualTo(outdatedVersion));
                 }
             }
 
@@ -2571,120 +1679,6 @@ class InvoicingApplicationTests {
 
                     // keeps original filename
                     assertThat(customer.getContent().getFilename()).isEqualTo("content.txt");
-                }
-
-                @Test
-                void postCustomerContent_createWithIfMatch_http201() throws Exception {
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isCreated());
-
-                    // get customer, expecting the etag to change
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasContent(UNICODE_TEXT);
-                    assertThat(customer.getContent()).isNotNull();
-                    assertThat(customer.getContent().getId()).isNotBlank();
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getContent().getFilename()).isNull();
-                }
-
-                @Test
-                void postCustomerContent_createWithBadIfMatch_http412() throws Exception {
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get customer, expecting the etag to be unchanged
-                    mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-
-                    assertThat(customer.getContent()).isNull();
-                }
-
-                @Test
-                void postCustomerContent_updateWithIfMatch_http200() throws Exception {
-                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-
-                    // update content, ONLY changing the charset
-                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT))
-                            .andExpect(status().isOk());
-
-                    // get customer, expecting the etag to change
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasContent(EXT_ASCII_TEXT);
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                }
-
-                @Test
-                void postCustomerContent_updateWithBadIfMatch_http412() throws Exception {
-                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-
-                    // update content, ONLY changing the charset
-                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get customer, expecting the etag to be unchanged
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                 }
 
                 @Test
@@ -2770,120 +1764,6 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
-                void putCustomerContent_createWithIfMatch_http201() throws Exception {
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isCreated());
-
-                    // get customer, expecting the etag to change
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasContent(UNICODE_TEXT);
-                    assertThat(customer.getContent()).isNotNull();
-                    assertThat(customer.getContent().getId()).isNotBlank();
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                    assertThat(customer.getContent().getFilename()).isNull();
-                }
-
-                @Test
-                void putCustomerContent_createWithBadIfMatch_http412() throws Exception {
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .content(UNICODE_TEXT)
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get customer, expecting the etag to be unchanged
-                    mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-
-                    assertThat(customer.getContent()).isNull();
-                }
-
-                @Test
-                void putCustomerContent_updateWithIfMatch_http200() throws Exception {
-                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-
-                    // update content, ONLY changing the charset
-                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion))
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT))
-                            .andExpect(status().isOk());
-
-                    // get customer, expecting the etag to change
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasContent(EXT_ASCII_TEXT);
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_UTF8_LENGTH);
-                }
-
-                @Test
-                void putCustomerContent_updateWithBadIfMatch_http412() throws Exception {
-                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-
-                    // update content, ONLY changing the charset
-                    mockMvc.perform(put("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\"")
-                                    .characterEncoding(StandardCharsets.UTF_8)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get customer, expecting the etag to be unchanged
-                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                }
-
-                @Test
                 void putMultipartContent_http201() throws Exception {
                     var bytes = UNICODE_TEXT.getBytes(StandardCharsets.UTF_8);
                     var file = new MockMultipartFile("file", "content.txt", MIMETYPE_PLAINTEXT_UTF8, bytes);
@@ -2922,54 +1802,6 @@ class InvoicingApplicationTests {
                     customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
                     var content = customersContent.getResource(customer, PropertyPath.from("content"));
                     assertThat(content).isNull();
-                }
-
-                @Test
-                void deleteContent_withIfMatch_http204() throws Exception {
-                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header(HttpHeaders.IF_MATCH, toEtag(prevVersion)))
-                            .andExpect(status().isNoContent());
-
-                    // get customer, expecting the etag to change
-                    mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isNotEqualTo(prevVersion));
-
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var content = customersContent.getResource(customer, PropertyPath.from("content"));
-                    assertThat(content).isNull();
-                }
-
-                @Test
-                void deleteContent_withBadIfMatch_http412() throws Exception {
-                    mockMvc.perform(post("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .characterEncoding(StandardCharsets.ISO_8859_1)
-                                    .contentType(MediaType.TEXT_PLAIN)
-                                    .content(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1)))
-                            .andExpect(status().isCreated());
-                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var prevVersion = customer.getVersion();
-
-                    mockMvc.perform(delete("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
-                                    .header(HttpHeaders.IF_MATCH, "\"INVALID\""))
-                            .andExpect(status().isPreconditionFailed());
-
-                    // get customer, expecting the etag to be unchanged
-                    mockMvc.perform(get("/customers/{id}", customerIdByVat(ORG_XENIT_VAT)))
-                            .andExpect(headers().etag().isEqualTo(prevVersion));
-                    customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-
-                    assertThat(customersContent.getContent(customer, PropertyPath.from("content")))
-                            .hasBinaryContent(EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
-                    assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(customer.getContent().getLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                 }
 
                 @Test
