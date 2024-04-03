@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
+import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
@@ -146,8 +147,8 @@ class InvoicingApplicationTests {
         var promoCyber = promos.save(new PromotionCampaign("CYBER-MON", "Cyber Monday"));
         PROMO_CYBER = promoCyber.getPromoCode();
 
-        var xenit = customers.save(new Customer(null, 0, "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
-        var inbev = customers.save(new Customer(null, 0, "AB InBev", ORG_INBEV_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
+        var xenit = customers.save(new Customer(null, 0, new AuditMetadata(), "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
+        var inbev = customers.save(new Customer(null, 0, new AuditMetadata(), "AB InBev", ORG_INBEV_VAT, null, null, null, new HashSet<>(), new HashSet<>()));
 
         XENIT_ID = xenit.getId();
         INBEV_ID = inbev.getId();

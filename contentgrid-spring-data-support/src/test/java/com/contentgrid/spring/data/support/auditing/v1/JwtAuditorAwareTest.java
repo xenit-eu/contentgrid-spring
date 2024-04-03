@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -274,6 +276,7 @@ class JwtAuditorAwareTest {
         private String number;
 
         @Embedded
+        @Access(AccessType.PROPERTY)
         @JsonProperty(access = JsonProperty.Access.READ_ONLY)
         @AttributeOverride(name = "createdBy.id", column = @Column(name = "auditing__created_by__id"))
         @AttributeOverride(name = "createdBy.namespace", column = @Column(name = "auditing__created_by__namespace"))
@@ -284,6 +287,12 @@ class JwtAuditorAwareTest {
         @AttributeOverride(name = "lastModifiedBy.name", column = @Column(name = "auditing__last_modified_by__name"))
         @AttributeOverride(name = "lastModifiedDate", column = @Column(name = "auditing__last_modified_date"))
         private AuditMetadata auditing = new AuditMetadata();
+
+        public void setAuditing(AuditMetadata auditing) {
+            if (auditing != null) {
+                this.auditing = auditing;
+            }
+        }
     }
 
     @RepositoryRestResource(collectionResourceRel = "d:invoices", itemResourceRel = "d:invoice")
