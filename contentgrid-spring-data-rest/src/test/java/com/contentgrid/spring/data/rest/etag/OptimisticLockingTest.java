@@ -124,16 +124,16 @@ public class OptimisticLockingTest {
                 .andExpect(headers().etag().exists());
     }
 
-    void checkETagUnchanged(String url, int original) throws Exception {
+    void checkETagUnchanged(String url, String original) throws Exception {
         mockMvc.perform(get(url))
                 .andExpect(status().isOk())
-                .andExpect(headers().etag().isEqualTo(toETag(original)));
+                .andExpect(headers().etag().isEqualTo(original));
     }
 
-    void checkETagChanged(String url, int original) throws Exception {
+    void checkETagChanged(String url, String original) throws Exception {
         mockMvc.perform(get(url))
                 .andExpect(status().isOk())
-                .andExpect(headers().etag().isNotEqualTo(toETag(original)));
+                .andExpect(headers().etag().isNotEqualTo(original));
     }
 
     @AfterEach
@@ -194,7 +194,7 @@ public class OptimisticLockingTest {
                                     """.formatted(INVOICE_NUMBER_1)))
                     .andExpect(status().isPreconditionFailed());
 
-            checkETagUnchanged("/invoices/" + INVOICE_1_ID, INVOICE_1_VERSION);
+            checkETagUnchanged("/invoices/" + INVOICE_1_ID, toETag(INVOICE_1_VERSION));
         }
 
         @Test
@@ -210,7 +210,7 @@ public class OptimisticLockingTest {
                                     """.formatted(INVOICE_NUMBER_1)))
                     .andExpect(status().isNoContent());
 
-            checkETagChanged("/invoices/" + INVOICE_1_ID, INVOICE_1_VERSION);
+            checkETagChanged("/invoices/" + INVOICE_1_ID, toETag(INVOICE_1_VERSION));
         }
 
         @Test
@@ -219,7 +219,7 @@ public class OptimisticLockingTest {
                             .header(HttpHeaders.IF_MATCH, INVALID_VERSION))
                     .andExpect(status().isPreconditionFailed());
 
-            checkETagUnchanged("/invoices/" + INVOICE_1_ID, INVOICE_1_VERSION);
+            checkETagUnchanged("/invoices/" + INVOICE_1_ID, toETag(INVOICE_1_VERSION));
         }
 
         @Test
@@ -245,7 +245,7 @@ public class OptimisticLockingTest {
                             .content(UNICODE_TEXT))
                     .andExpect(status().isCreated());
 
-            checkETagChanged("/invoices/" + INVOICE_1_ID, INVOICE_1_VERSION);
+            checkETagChanged("/invoices/" + INVOICE_1_ID, toETag(INVOICE_1_VERSION));
         }
 
         @Test
@@ -257,7 +257,7 @@ public class OptimisticLockingTest {
                             .content(UNICODE_TEXT))
                     .andExpect(status().isPreconditionFailed());
 
-            checkETagUnchanged("/invoices/" + INVOICE_1_ID, INVOICE_1_VERSION);
+            checkETagUnchanged("/invoices/" + INVOICE_1_ID, toETag(INVOICE_1_VERSION));
         }
 
         @Test
@@ -291,7 +291,7 @@ public class OptimisticLockingTest {
                             .content(EXT_ASCII_TEXT))
                     .andExpect(status().isOk());
 
-            checkETagChanged("/invoices/" + INVOICE_1_ID, INVOICE_1_VERSION);
+            checkETagChanged("/invoices/" + INVOICE_1_ID, toETag(INVOICE_1_VERSION));
         }
 
         @Test
@@ -306,7 +306,7 @@ public class OptimisticLockingTest {
                             .content(EXT_ASCII_TEXT))
                     .andExpect(status().isPreconditionFailed());
 
-            checkETagUnchanged("/invoices/" + INVOICE_1_ID, INVOICE_1_VERSION);
+            checkETagUnchanged("/invoices/" + INVOICE_1_ID, toETag(INVOICE_1_VERSION));
         }
 
         @Test
@@ -317,7 +317,7 @@ public class OptimisticLockingTest {
                             .header(HttpHeaders.IF_MATCH, toETag(INVOICE_1_VERSION)))
                     .andExpect(status().isNoContent());
 
-            checkETagChanged("/invoices/" + INVOICE_1_ID, INVOICE_1_VERSION);
+            checkETagChanged("/invoices/" + INVOICE_1_ID, toETag(INVOICE_1_VERSION));
         }
 
         @Test
@@ -328,7 +328,7 @@ public class OptimisticLockingTest {
                             .header(HttpHeaders.IF_MATCH, INVALID_VERSION))
                     .andExpect(status().isPreconditionFailed());
 
-            checkETagUnchanged("/invoices/" + INVOICE_1_ID, INVOICE_1_VERSION);
+            checkETagUnchanged("/invoices/" + INVOICE_1_ID, toETag(INVOICE_1_VERSION));
         }
     }
 
@@ -344,7 +344,7 @@ public class OptimisticLockingTest {
                             .content(UNICODE_TEXT))
                     .andExpect(status().isCreated());
 
-            checkETagChanged("/customers/" + XENIT_ID, XENIT_VERSION);
+            checkETagChanged("/customers/" + XENIT_ID, toETag(XENIT_VERSION));
         }
 
         @Test
@@ -356,7 +356,7 @@ public class OptimisticLockingTest {
                             .content(UNICODE_TEXT))
                     .andExpect(status().isPreconditionFailed());
 
-            checkETagUnchanged("/customers/" + XENIT_ID, XENIT_VERSION);
+            checkETagUnchanged("/customers/" + XENIT_ID, toETag(XENIT_VERSION));
         }
 
         @Test
@@ -390,7 +390,7 @@ public class OptimisticLockingTest {
                             .content(EXT_ASCII_TEXT))
                     .andExpect(status().isOk());
 
-            checkETagChanged("/customers/" + XENIT_ID, XENIT_VERSION);
+            checkETagChanged("/customers/" + XENIT_ID, toETag(XENIT_VERSION));
         }
 
         @Test
@@ -405,7 +405,7 @@ public class OptimisticLockingTest {
                             .content(EXT_ASCII_TEXT))
                     .andExpect(status().isPreconditionFailed());
 
-            checkETagUnchanged("/customers/" + XENIT_ID, XENIT_VERSION);
+            checkETagUnchanged("/customers/" + XENIT_ID, toETag(XENIT_VERSION));
         }
 
         @Test
@@ -416,7 +416,7 @@ public class OptimisticLockingTest {
                             .header(HttpHeaders.IF_MATCH, toETag(XENIT_VERSION)))
                     .andExpect(status().isNoContent());
 
-            checkETagChanged("/customers/" + XENIT_ID, XENIT_VERSION);
+            checkETagChanged("/customers/" + XENIT_ID, toETag(XENIT_VERSION));
         }
 
         @Test
@@ -427,7 +427,7 @@ public class OptimisticLockingTest {
                             .header(HttpHeaders.IF_MATCH, INVALID_VERSION))
                     .andExpect(status().isPreconditionFailed());
 
-            checkETagUnchanged("/customers/" + XENIT_ID, XENIT_VERSION);
+            checkETagUnchanged("/customers/" + XENIT_ID, toETag(XENIT_VERSION));
         }
     }
 }
