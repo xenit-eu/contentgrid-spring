@@ -12,7 +12,7 @@ public class ExtendedHeaderResultMatchers extends HeaderResultMatchers {
         return new LocationHeaderMatcher();
     }
 
-    public EtagHeaderMatcher etag() {
-        return new EtagHeaderMatcher();
+    public ETagHeaderMatcher etag() {
+        return new ETagHeaderMatcher();
     }
 }

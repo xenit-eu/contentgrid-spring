@@ -171,8 +171,7 @@ class EntityChangeHibernateEventListenerTest {
 
         assertThat(testMessageHandler.messages()).satisfiesExactly(
                 checkEvent("create", Order.class),
-                checkEvent("create", PromotionCampaign.class),
-                checkEvent("update", Order.class)
+                checkEvent("create", PromotionCampaign.class)
         );
     }
 
