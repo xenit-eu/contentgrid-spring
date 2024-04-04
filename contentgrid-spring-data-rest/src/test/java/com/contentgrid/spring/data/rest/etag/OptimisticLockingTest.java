@@ -36,6 +36,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.content.commons.property.PropertyPath;
+import org.springframework.data.rest.webmvc.support.ETag;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -60,7 +61,7 @@ public class OptimisticLockingTest {
 
     static int INVOICE_1_VERSION;
     static int XENIT_VERSION;
-    static final String INVALID_VERSION = "\"INVALID\"";
+    static final ETag INVALID_VERSION = ETag.from("INVALID");
 
     private static final String EXT_ASCII_TEXT = "L'éducation doit être gratuite.";
     private static final String UNICODE_TEXT = "Some unicode text 💩";
@@ -124,13 +125,13 @@ public class OptimisticLockingTest {
                 .andExpect(headers().etag().exists());
     }
 
-    void checkETagUnchanged(String url, String original) throws Exception {
+    void checkETagUnchanged(String url, ETag original) throws Exception {
         mockMvc.perform(get(url))
                 .andExpect(status().isOk())
                 .andExpect(headers().etag().isEqualTo(original));
     }
 
-    void checkETagChanged(String url, String original) throws Exception {
+    void checkETagChanged(String url, ETag original) throws Exception {
         mockMvc.perform(get(url))
                 .andExpect(status().isOk())
                 .andExpect(headers().etag().isNotEqualTo(original));
