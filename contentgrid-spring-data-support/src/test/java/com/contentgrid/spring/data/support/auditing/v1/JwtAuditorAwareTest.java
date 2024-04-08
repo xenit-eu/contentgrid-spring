@@ -289,9 +289,10 @@ class JwtAuditorAwareTest {
         private AuditMetadata auditing = new AuditMetadata();
 
         public void setAuditing(AuditMetadata auditing) {
-            if (auditing != null) {
-                this.auditing = auditing;
+            if (auditing == null) {
+                auditing = new AuditMetadata();
             }
+            this.auditing = auditing;
         }
     }
 

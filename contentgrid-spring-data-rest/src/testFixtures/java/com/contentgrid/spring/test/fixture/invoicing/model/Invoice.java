@@ -67,9 +67,10 @@ public class Invoice {
     private AuditMetadata auditMetadata = new AuditMetadata();
 
     public void setAuditMetadata(AuditMetadata auditMetadata) {
-        if (auditMetadata != null) {
-            this.auditMetadata = auditMetadata;
+        if (auditMetadata == null) {
+            auditMetadata = new AuditMetadata();
         }
+        this.auditMetadata = auditMetadata;
     }
 
     @Column(nullable = false)
