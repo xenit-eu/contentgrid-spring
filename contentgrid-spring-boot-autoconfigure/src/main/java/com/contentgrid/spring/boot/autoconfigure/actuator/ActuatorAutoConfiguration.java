@@ -84,6 +84,7 @@ public class ActuatorAutoConfiguration {
         }
 
         @Bean
+        @ConditionalOnBean(WebHooksConfigActuator.class)
         ContentGridExposedActuatorEndpoint webhooksActuatorExposedEndpoint() {
             return new ContentGridExposedActuatorEndpoint(WebHooksConfigActuator.class);
         }
