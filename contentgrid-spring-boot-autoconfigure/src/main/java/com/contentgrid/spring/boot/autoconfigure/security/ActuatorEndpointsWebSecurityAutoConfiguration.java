@@ -1,8 +1,11 @@
 package com.contentgrid.spring.boot.autoconfigure.security;
 
+import com.contentgrid.spring.boot.autoconfigure.actuator.ContentGridExposedActuatorEndpoint;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.stream.Stream;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.info.InfoEndpointAutoConfiguration;
@@ -25,6 +28,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 
@@ -57,7 +61,8 @@ public class ActuatorEndpointsWebSecurityAutoConfiguration {
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    SecurityFilterChain actuatorEndpointsSecurityFilterChain(HttpSecurity http, Environment environment)
+    SecurityFilterChain actuatorEndpointsSecurityFilterChain(HttpSecurity http, Environment environment,
+            ObjectProvider<ContentGridExposedActuatorEndpoint> exposedEndpoints)
             throws Exception {
 
         http
@@ -71,6 +76,16 @@ public class ActuatorEndpointsWebSecurityAutoConfiguration {
                         new AndRequestMatcher(
                                 EndpointRequest.toAnyEndpoint(),
                                 new LoopbackInetAddressMatcher()
+                        ),
+                        new AndRequestMatcher(
+                                new OrRequestMatcher(
+                                        Stream.concat(
+                                            Stream.of(request -> false),
+                                            exposedEndpoints.stream()
+                                                    .map(ContentGridExposedActuatorEndpoint::toRequestMatcher))
+                                                .toList()
+                                ),
+                                request -> ManagementPortType.get(environment) == ManagementPortType.DIFFERENT
                         )
                 )
                 .permitAll());

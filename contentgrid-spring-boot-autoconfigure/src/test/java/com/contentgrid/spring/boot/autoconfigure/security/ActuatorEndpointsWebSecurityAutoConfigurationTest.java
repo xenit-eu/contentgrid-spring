@@ -3,6 +3,9 @@ package com.contentgrid.spring.boot.autoconfigure.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
+import com.contentgrid.spring.boot.actuator.policy.PolicyActuator;
+import com.contentgrid.spring.boot.actuator.webhooks.WebHooksConfigActuator;
+import com.contentgrid.spring.boot.autoconfigure.actuator.ActuatorAutoConfiguration;
 import com.contentgrid.spring.boot.autoconfigure.security.ManagementContextSupplierConfiguration.ManagementContextSupplier;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +34,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
+import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.web.context.ServerPortInfoApplicationContextInitializer;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
@@ -57,6 +61,9 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
     static final String ACTUATOR_METRICS = "/actuator/metrics";
     static final String ACTUATOR_ENV = "/actuator/env";
 
+    static final String ACTUATOR_POLICY = "/actuator/policy";
+    static final String ACTUATOR_WEBHOOK = "/actuator/webhooks";
+
     static class AutoConfigs {
 
         static final AutoConfigurations ACTUATORS = AutoConfigurations.of(
@@ -82,16 +89,22 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
                 ServletWebServerFactoryAutoConfiguration.class,
                 DispatcherServletAutoConfiguration.class
         );
+
+        static final AutoConfigurations CONTENTGRID_ACTUATORS = AutoConfigurations.of(
+                ActuatorAutoConfiguration.class
+        );
     }
 
     WebApplicationContextRunner runner = new WebApplicationContextRunner(
             AnnotationConfigServletWebServerApplicationContext::new)
             .withPropertyValues(
                     "server.port=0",
-                    "management.endpoints.web.exposure.include=*"
+                    "management.endpoints.web.exposure.include=*",
+                    "contentgrid.system.policyPackage=foobar"
             )
             .withInitializer(new ServerPortInfoApplicationContextInitializer())
             .withConfiguration(AutoConfigs.ACTUATORS)
+            .withConfiguration(AutoConfigs.CONTENTGRID_ACTUATORS)
             .withConfiguration(AutoConfigs.MANAGEMENT)
             .withConfiguration(AutoConfigurations.of(
                     SecurityAutoConfiguration.class,
@@ -105,7 +118,9 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
         runner.run(context -> {
             assertThat(context)
                     .hasNotFailed()
-                    .hasBean("actuatorEndpointsSecurityFilterChain");
+                    .hasBean("actuatorEndpointsSecurityFilterChain")
+                    .hasSingleBean(PolicyActuator.class)
+                    .hasSingleBean(WebHooksConfigActuator.class);
 
             withWebTestClient(context, remoteAddress("192.0.2.1"), assertHttp -> {
                 // public endpoints
@@ -114,6 +129,8 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
 
                 // management on primary server port
                 assertHttp.get(ACTUATOR_METRICS).isForbidden();
+                assertHttp.get(ACTUATOR_POLICY).isForbidden();
+                assertHttp.get(ACTUATOR_WEBHOOK).isForbidden();
 
                 // other endpoints fall through if not from loopback-address
                 assertHttp.get(ACTUATOR_ENV).isForbidden();
@@ -152,6 +169,8 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
 
                         // management on different port
                         assertHttp.get(ACTUATOR_METRICS).isOk();
+                        assertHttp.get(ACTUATOR_POLICY).isOk();
+                        assertHttp.get(ACTUATOR_WEBHOOK).isOk();
 
                         // other endpoints fall through if not from loopback-address
                         assertHttp.get(ACTUATOR_ENV).isForbidden();
@@ -172,7 +191,8 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
                                 assertThat(filterChain.matches(get("/api", servletContext))).isFalse();
 
                                 // management context runs on a different port
-                                var mgmtServletContext = context.getBean(ManagementContextSupplier.class).get().getServletContext();
+                                var mgmtServletContext = context.getBean(ManagementContextSupplier.class).get()
+                                        .getServletContext();
                                 assertThat(filterChain.matches(get("/actuator", mgmtServletContext))).isTrue();
                                 assertThat(filterChain.matches(get("/actuator/health", mgmtServletContext))).isTrue();
                                 assertThat(filterChain.matches(get("/api", mgmtServletContext))).isFalse();
@@ -194,6 +214,8 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
                 assertHttp.get(ACTUATOR_HEALTH).isOk();
                 assertHttp.get(ACTUATOR_INFO).isOk();
                 assertHttp.get(ACTUATOR_METRICS).isOk();
+                assertHttp.get(ACTUATOR_POLICY).isOk();
+                assertHttp.get(ACTUATOR_WEBHOOK).isOk();
                 assertHttp.get(ACTUATOR_ENV).isOk();
 
                 assertHttp.get(ACTUATOR_ROOT).isOk();
@@ -213,6 +235,44 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
         });
     }
 
+    @Test
+    void withoutContentGridActuatorsOnClasspath() {
+
+        runner
+                .withPropertyValues("management.server.port=0")
+                .withClassLoader(new FilteredClassLoader(PolicyActuator.class))
+                .run(context -> {
+            assertThat(context)
+                    .hasNotFailed()
+                    .hasBean("actuatorEndpointsSecurityFilterChain")
+                    .doesNotHaveBean(PolicyActuator.class)
+                    .doesNotHaveBean(WebHooksConfigActuator.class);
+
+            // security matcher on /actuator/** and only /actuator/** endpoints
+            // because contentgrid actuators are not loaded
+            // the contentgrid-actuators are not covered by EndpointRequest.anyEndpoint()
+            assertThat(context.getBean("actuatorEndpointsSecurityFilterChain", SecurityFilterChain.class))
+                    .isNotNull()
+                    .satisfies(filterChain -> {
+                        var servletContext = context.getServletContext();
+                        assertThat(context.getServletContext()).isNotNull();
+
+                        assertThat(filterChain.matches(get(ACTUATOR_ROOT, servletContext))).isFalse();
+                        assertThat(filterChain.matches(get(ACTUATOR_HEALTH, servletContext))).isFalse();
+                        assertThat(filterChain.matches(get(ACTUATOR_POLICY, servletContext))).isFalse();
+                        assertThat(filterChain.matches(get(ACTUATOR_WEBHOOK, servletContext))).isFalse();
+
+                        // management context runs on a different port
+                        var mgmtServletContext = context.getBean(ManagementContextSupplier.class).get()
+                                .getServletContext();
+                        assertThat(filterChain.matches(get(ACTUATOR_ROOT, mgmtServletContext))).isTrue();
+                        assertThat(filterChain.matches(get(ACTUATOR_HEALTH, mgmtServletContext))).isTrue();
+                        assertThat(filterChain.matches(get(ACTUATOR_POLICY, mgmtServletContext))).isFalse();
+                        assertThat(filterChain.matches(get(ACTUATOR_WEBHOOK, mgmtServletContext))).isFalse();
+                    });
+        });
+    }
+
     private void withWebTestClient(ApplicationContext context, MockMvcConfigurer remoteAddress,
             Consumer<HttpAssertClient> callback) {
         WebTestClient client;
@@ -224,7 +284,7 @@ class ActuatorEndpointsWebSecurityAutoConfigurationTest {
                 .build();
 
         callback.accept((@NonNull String endpoint) ->
-                client.get().uri(endpoint).accept(MediaType.APPLICATION_JSON).exchange().expectStatus());
+                client.get().uri(endpoint).accept(MediaType.APPLICATION_JSON, MediaType.ALL).exchange().expectStatus());
     }
 
     private static HttpServletRequest get(String endpoint, ServletContext servletContext) {
