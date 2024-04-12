@@ -56,6 +56,12 @@ public class ActuatorAutoConfiguration {
         PolicyActuator policyActuator(PolicyVariables policyVariables) {
             return new PolicyActuator(applicationContext.getResource("classpath:rego/policy.rego"), policyVariables);
         }
+
+        @Bean
+        @ConditionalOnBean(PolicyActuator.class)
+        ContentGridExposedActuatorEndpoint policyActuatorExposedEndpoint() {
+            return new ContentGridExposedActuatorEndpoint(PolicyActuator.class);
+        }
     }
 
 
@@ -75,6 +81,11 @@ public class ActuatorAutoConfiguration {
                     .systemProperties(applicationProperties.getSystem())
                     .userVariables(applicationProperties.getVariables())
                     .build();
+        }
+
+        @Bean
+        ContentGridExposedActuatorEndpoint webhooksActuatorExposedEndpoint() {
+            return new ContentGridExposedActuatorEndpoint(WebHooksConfigActuator.class);
         }
     }
 
