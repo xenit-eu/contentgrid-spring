@@ -20,10 +20,10 @@ import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
-class S3RegionAutoConfigurationTest {
+class S3AutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(S3RegionAutoConfiguration.class, S3ContentAutoConfiguration.class))
+            .withConfiguration(AutoConfigurations.of(S3AutoConfiguration.class, S3ContentAutoConfiguration.class))
             .withUserConfiguration(TestConfig.class);
 
     @Configuration
