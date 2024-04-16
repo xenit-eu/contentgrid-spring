@@ -47,6 +47,9 @@ dependencies {
     testImplementation project(':contentgrid-spring-boot-autoconfigure')
     testImplementation project(':contentgrid-spring-data-support')
     testImplementation project(':contentgrid-spring-test')
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:minio'
+    testImplementation 'com.github.paulcwarren:spring-content-s3'
 
     testFixturesAnnotationProcessor project(':contentgrid-spring-boot-starter-annotations')
 

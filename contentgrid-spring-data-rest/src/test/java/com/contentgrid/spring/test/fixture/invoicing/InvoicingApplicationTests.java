@@ -65,19 +65,27 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
+import org.testcontainers.containers.MinIOContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @Slf4j
 @SpringBootTest(properties = {
+        "spring.content.storage.type.default=s3", // Use s3 storage type for storing content
         "server.servlet.encoding.enabled=false" // disables mock-mvc enforcing charset in request
 })
 @EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @WithMockJwt
+@Testcontainers
 class InvoicingApplicationTests {
 
     static final String INVOICE_NUMBER_1 = "I-2022-0001";
@@ -96,6 +104,10 @@ class InvoicingApplicationTests {
     static String PROMO_XMAS, PROMO_SHIPPING, PROMO_CYBER;
 
     static UUID ADDRESS_ID_XENIT;
+
+    static final String BUCKET_NAME = "test-bucket";
+
+    static boolean BUCKET_CREATED = false;
 
     @Autowired
     private MockMvc mockMvc;
@@ -127,6 +139,21 @@ class InvoicingApplicationTests {
     @Autowired
     PlatformTransactionManager transactionManager;
 
+    @Autowired
+    S3Client client;
+
+    @Container
+    static MinIOContainer minIOContainer = new MinIOContainer("minio/minio")
+            .withUserName("test")
+            .withPassword("password");
+
+    @DynamicPropertySource
+    static void s3Properties(DynamicPropertyRegistry registry) {
+        registry.add("spring.content.s3.endpoint", () -> minIOContainer.getS3URL());
+        registry.add("spring.content.s3.accessKey", () -> minIOContainer.getUserName());
+        registry.add("spring.content.s3.secretKey", () -> minIOContainer.getPassword());
+        registry.add("spring.content.s3.bucket", () -> BUCKET_NAME);
+    }
 
     void doInTransaction(ThrowingCallable callable) {
         new TransactionTemplate(this.transactionManager).execute(status -> {
@@ -141,6 +168,11 @@ class InvoicingApplicationTests {
 
     @BeforeEach
     void setupTestData() {
+        if (!BUCKET_CREATED) {
+            // Create the bucket if it doesn't exist yet
+            client.createBucket(request -> request.bucket(BUCKET_NAME));
+            BUCKET_CREATED = true;
+        }
         PROMO_XMAS = promos.save(new PromotionCampaign("XMAS-2022", "10% off ")).getPromoCode();
         PROMO_SHIPPING = promos.save(new PromotionCampaign("FREE-SHIP", "Free Shipping")).getPromoCode();
         var promoCyber = promos.save(new PromotionCampaign("CYBER-MON", "Cyber Monday"));
