@@ -30,6 +30,8 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingAddressR
 import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
 import com.contentgrid.spring.test.fixture.invoicing.store.InvoiceContentStore;
 import com.contentgrid.spring.test.security.WithMockJwt;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -40,12 +42,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -65,19 +69,26 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.util.UriTemplate;
 import org.springframework.web.util.UriUtils;
+import org.testcontainers.containers.MinIOContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Slf4j
 @SpringBootTest(properties = {
+        "spring.content.storage.type.default=s3",
         "server.servlet.encoding.enabled=false" // disables mock-mvc enforcing charset in request
 })
 @EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @WithMockJwt
+@Testcontainers
 class InvoicingApplicationTests {
 
     static final String INVOICE_NUMBER_1 = "I-2022-0001";
@@ -96,6 +107,8 @@ class InvoicingApplicationTests {
     static String PROMO_XMAS, PROMO_SHIPPING, PROMO_CYBER;
 
     static UUID ADDRESS_ID_XENIT;
+
+    static final String BUCKET_NAME = "test-bucket";
 
     @Autowired
     private MockMvc mockMvc;
@@ -127,6 +140,30 @@ class InvoicingApplicationTests {
     @Autowired
     PlatformTransactionManager transactionManager;
 
+    @Container
+    static MinIOContainer minIOContainer = new MinIOContainer("minio/minio")
+            .withUserName("test")
+            .withPassword("password");
+
+    @DynamicPropertySource
+    static void s3Properties(DynamicPropertyRegistry registry) {
+        registry.add("spring.content.s3.endpoint", () -> minIOContainer.getS3URL());
+        registry.add("spring.content.s3.accessKey", () -> minIOContainer.getUserName());
+        registry.add("spring.content.s3.secretKey", () -> minIOContainer.getPassword());
+        registry.add("spring.content.s3.bucket", () -> BUCKET_NAME);
+    }
+
+    @BeforeAll
+    @SneakyThrows
+    static void createS3Bucket() {
+        var minioClient = new MinioClient.Builder()
+                .credentials(minIOContainer.getUserName(), minIOContainer.getPassword())
+                .endpoint(minIOContainer.getS3URL())
+                .build();
+        minioClient.makeBucket(MakeBucketArgs.builder()
+                .bucket(BUCKET_NAME)
+                .build());
+    }
 
     void doInTransaction(ThrowingCallable callable) {
         new TransactionTemplate(this.transactionManager).execute(status -> {
