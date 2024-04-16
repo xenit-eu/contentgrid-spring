@@ -4,6 +4,7 @@ import com.contentgrid.spring.boot.autoconfigure.s3.S3AutoConfiguration.S3Additi
 import internal.org.springframework.content.s3.boot.autoconfigure.S3ContentAutoConfiguration.S3Properties;
 import java.net.URI;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -35,14 +36,15 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 public class S3AutoConfiguration {
 
     @Data
+    @EqualsAndHashCode(callSuper = true)
     @ConfigurationProperties(prefix = "spring.content.s3")
-    public static class S3AdditionalProperties {
+    public static class S3AdditionalProperties extends S3Properties {
         private String region;
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public S3Client amazonS3(S3Properties props, S3AdditionalProperties additionalProps) {
+    public S3Client amazonS3(S3AdditionalProperties props) {
         S3ClientBuilder builder = S3Client.builder();
 
         if (StringUtils.hasText(props.endpoint)) {
@@ -60,8 +62,8 @@ public class S3AutoConfiguration {
             builder.serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build());
         }
 
-        if (StringUtils.hasText(additionalProps.region)) {
-            builder.region(Region.of(additionalProps.region));
+        if (StringUtils.hasText(props.region)) {
+            builder.region(Region.of(props.region));
         }
 
         return builder.build();

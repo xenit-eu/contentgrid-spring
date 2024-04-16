@@ -30,8 +30,6 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingAddressR
 import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
 import com.contentgrid.spring.test.fixture.invoicing.store.InvoiceContentStore;
 import com.contentgrid.spring.test.security.WithMockJwt;
-import io.minio.MakeBucketArgs;
-import io.minio.MinioClient;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -42,14 +40,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -79,10 +75,11 @@ import org.springframework.web.util.UriUtils;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @Slf4j
 @SpringBootTest(properties = {
-        "spring.content.storage.type.default=s3",
+        "spring.content.storage.type.default=s3", // Use s3 storage type for storing content
         "server.servlet.encoding.enabled=false" // disables mock-mvc enforcing charset in request
 })
 @EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
@@ -109,6 +106,8 @@ class InvoicingApplicationTests {
     static UUID ADDRESS_ID_XENIT;
 
     static final String BUCKET_NAME = "test-bucket";
+
+    static boolean BUCKET_CREATED = false;
 
     @Autowired
     private MockMvc mockMvc;
@@ -140,6 +139,9 @@ class InvoicingApplicationTests {
     @Autowired
     PlatformTransactionManager transactionManager;
 
+    @Autowired
+    S3Client client;
+
     @Container
     static MinIOContainer minIOContainer = new MinIOContainer("minio/minio")
             .withUserName("test")
@@ -151,18 +153,6 @@ class InvoicingApplicationTests {
         registry.add("spring.content.s3.accessKey", () -> minIOContainer.getUserName());
         registry.add("spring.content.s3.secretKey", () -> minIOContainer.getPassword());
         registry.add("spring.content.s3.bucket", () -> BUCKET_NAME);
-    }
-
-    @BeforeAll
-    @SneakyThrows
-    static void createS3Bucket() {
-        var minioClient = new MinioClient.Builder()
-                .credentials(minIOContainer.getUserName(), minIOContainer.getPassword())
-                .endpoint(minIOContainer.getS3URL())
-                .build();
-        minioClient.makeBucket(MakeBucketArgs.builder()
-                .bucket(BUCKET_NAME)
-                .build());
     }
 
     void doInTransaction(ThrowingCallable callable) {
@@ -178,6 +168,11 @@ class InvoicingApplicationTests {
 
     @BeforeEach
     void setupTestData() {
+        if (!BUCKET_CREATED) {
+            // Create the bucket if it doesn't exist yet
+            client.createBucket(request -> request.bucket(BUCKET_NAME));
+            BUCKET_CREATED = true;
+        }
         PROMO_XMAS = promos.save(new PromotionCampaign("XMAS-2022", "10% off ")).getPromoCode();
         PROMO_SHIPPING = promos.save(new PromotionCampaign("FREE-SHIP", "Free Shipping")).getPromoCode();
         var promoCyber = promos.save(new PromotionCampaign("CYBER-MON", "Cyber Monday"));
