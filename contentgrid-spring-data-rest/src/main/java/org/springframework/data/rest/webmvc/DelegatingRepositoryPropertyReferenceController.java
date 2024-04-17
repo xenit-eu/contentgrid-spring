@@ -167,15 +167,13 @@ public class DelegatingRepositoryPropertyReferenceController {
             // in case this is the primary side, we need to scan the other side to find the field
             // with annotation @ManyToMany(mappedBy=property.getName())
             // (which only exists in for bidirectional relations)
-            return Optional.ofNullable(property.getAssociationTargetType())
-                    .stream()
-                    .flatMap(targetType -> Arrays.stream(targetType.getDeclaredFields()))
-                    .filter(field -> {
-                        var m2m = field.getAnnotation(ManyToMany.class);
-                        return m2m != null && !"".equals(m2m.mappedBy());
-                    })
-                    .map(Field::getName)
-                    .findFirst();
+            var inverseSide = repositories.getPersistentEntity(property.getAssociationTargetType());
+            for (PersistentProperty<? extends PersistentProperty<?>> inverseProperty : inverseSide.getPersistentProperties(
+                    ManyToMany.class)) {
+                if(Objects.equals(property.getName(), inverseProperty.findAnnotation(ManyToMany.class).mappedBy())) {
+                    return Optional.of(inverseProperty.getName());
+                }
+            }
         }
 
         return Optional.empty();

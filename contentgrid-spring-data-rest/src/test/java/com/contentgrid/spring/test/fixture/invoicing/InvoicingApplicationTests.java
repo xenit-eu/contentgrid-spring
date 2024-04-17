@@ -522,6 +522,14 @@ class InvoicingApplicationTests {
                             .andExpect(headers().location().uri("http://localhost/promotions?orders={id}", ORDER_1_ID));
 
                 }
+
+                @Test
+                void getManualPromos_forOrder_shouldReturn_http302_redirect() throws Exception {
+                    mockMvc.perform(get("/orders/{id}/manual-promos", ORDER_1_ID)
+                                    .accept(MediaType.APPLICATION_JSON))
+                            .andExpect(status().isFound())
+                            .andExpect(headers().location().uri("http://localhost/promotions?ordersWithManualPromos={id}", ORDER_1_ID));
+                }
             }
         }
 

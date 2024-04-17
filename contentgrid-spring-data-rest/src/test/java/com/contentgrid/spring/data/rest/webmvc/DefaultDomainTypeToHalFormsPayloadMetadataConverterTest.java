@@ -87,6 +87,9 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 },
                 promos -> {
                     assertThat(promos.getName()).isEqualTo("promos");
+                },
+                manualPromos -> {
+                    assertThat(manualPromos.getName()).isEqualTo("manualPromos");
                 }
         );
     }
