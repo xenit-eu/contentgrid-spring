@@ -1,9 +1,9 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
-import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.persistence.FetchType;
 import java.util.UUID;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,7 +31,7 @@ public class ShippingAddress {
     private String zip;
     private String city;
 
-    @OneToOne(mappedBy = "shippingAddress")
+    @OneToOne(mappedBy = "shippingAddress", fetch = FetchType.LAZY)
     @RestResource(rel = "d:order")
     private Order order;
 
