@@ -51,6 +51,11 @@ public class Order {
     @CollectionFilterParam(value = "promos._id", predicate = EntityId.class, documented = false)
     private Set<PromotionCampaign> promos = new HashSet<>();
 
+    @ManyToMany
+    @RestResource(rel = "d:manual-promos", path = "manual-promos")
+    @CollectionFilterParam(value = "manual_promos._id", predicate = EntityId.class, documented = false)
+    private Set<PromotionCampaign> manualPromos = new HashSet<>();
+
     @OneToOne
     @JsonProperty("shipping_address")
     @CollectionFilterParam("shipping_address")

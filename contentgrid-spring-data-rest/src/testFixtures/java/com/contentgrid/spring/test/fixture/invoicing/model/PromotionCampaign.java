@@ -43,6 +43,11 @@ public class PromotionCampaign {
     @CollectionFilterParam(predicate = EntityId.class, documented = false)
     private Set<Order> orders = new HashSet<>();
 
+    @ManyToMany(mappedBy = "manualPromos")
+    @RestResource(exported = false)
+    @CollectionFilterParam(predicate = EntityId.class, documented = false)
+    private Set<Order> ordersWithManualPromos = new HashSet<>();
+
     public PromotionCampaign(String promoCode, String description) {
         this.promoCode = promoCode;
         this.description = description;
