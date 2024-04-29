@@ -169,7 +169,7 @@ class HalLinkTitlesAndFormPromptsTest {
                             _links: {
                                 "cg:content": [
                                     {
-                                        name: "attachment",
+                                        name: "attached_document",
                                         title: "Attached File"
                                     },
                                     { name: "content" }
@@ -192,12 +192,12 @@ class HalLinkTitlesAndFormPromptsTest {
                                     properties: [
                                         {
                                             prompt: "Attached File Filename",
-                                            name: "attachment_filename",
+                                            name: "attached_document_filename",
                                             type: "text"
                                         },
                                         {
                                             prompt: "Attached File Mimetype",
-                                            name: "attachment_mimetype",
+                                            name: "attached_document_mimetype",
                                             type: "text"
                                         },
                                         {},{},{},{},{},{},{},{}

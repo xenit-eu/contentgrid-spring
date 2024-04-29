@@ -104,20 +104,20 @@ public class Invoice {
 
     @ContentId
     @JsonIgnore
-    @RestResource(linkRel = "d:attachment")
-    private String attachmentId;
+    @RestResource(linkRel = "d:attached_document", path = "attached-document")
+    private String attachedDocumentId;
 
     @ContentLength
-    @JsonProperty(value = "attachment_length", access = Access.READ_ONLY)
-    private Long attachmentLength;
+    @JsonProperty(value = "attached_document_length", access = Access.READ_ONLY)
+    private Long attachedDocumentLength;
 
     @MimeType
-    @JsonProperty("attachment_mimetype")
-    private String attachmentMimetype;
+    @JsonProperty("attached_document_mimetype")
+    private String attachedDocumentMimetype;
 
     @OriginalFileName
-    @JsonProperty("attachment_filename")
-    private String attachmentFilename;
+    @JsonProperty("attached_document_filename")
+    private String attachedDocumentFilename;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "counterparty", nullable = false)

@@ -1178,7 +1178,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void postInvoiceAttachment_secondaryContentProperty_http201() throws Exception {
-                    mockMvc.perform(post("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1))
+                    mockMvc.perform(post("/invoices/{id}/attached-document", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT))
@@ -1186,12 +1186,12 @@ class InvoicingApplicationTests {
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment")))
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachedDocument")))
                             .hasContent(UNICODE_TEXT);
-                    assertThat(invoice.getAttachmentId()).isNotBlank();
-                    assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(invoice.getAttachmentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getAttachmentFilename()).isNull();
+                    assertThat(invoice.getAttachedDocumentId()).isNotBlank();
+                    assertThat(invoice.getAttachedDocumentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getAttachedDocumentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getAttachedDocumentFilename()).isNull();
 
                     assertThat(invoice.getContentId()).isNull();
                     assertThat(invoice.getContentMimetype()).isNull();
@@ -1330,7 +1330,7 @@ class InvoicingApplicationTests {
                 void postMultipartEntityAndContent_multipleContentProperties_http201() throws Exception {
                     var contentFile = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                             UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
-                    var attachmentFile = new MockMultipartFile("attachment", "attachment.txt",
+                    var attachmentFile = new MockMultipartFile("attached-document", "attachment.txt",
                             MIMETYPE_PLAINTEXT_LATIN1, EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1));
 
                     mockMvc.perform(multipart(HttpMethod.POST, "/invoices")
@@ -1348,10 +1348,10 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getContentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(invoice.getContentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(invoice.getContentFilename()).isEqualTo(contentFile.getOriginalFilename());
-                    assertThat(invoice.getAttachmentId()).isNotBlank();
-                    assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
-                    assertThat(invoice.getAttachmentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
-                    assertThat(invoice.getAttachmentFilename()).isEqualTo(attachmentFile.getOriginalFilename());
+                    assertThat(invoice.getAttachedDocumentId()).isNotBlank();
+                    assertThat(invoice.getAttachedDocumentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_LATIN1);
+                    assertThat(invoice.getAttachedDocumentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
+                    assertThat(invoice.getAttachedDocumentFilename()).isEqualTo(attachmentFile.getOriginalFilename());
                 }
             }
 
@@ -1416,7 +1416,7 @@ class InvoicingApplicationTests {
 
                 @Test
                 void putInvoiceAttachment_secondaryContentProperty_http201() throws Exception {
-                    mockMvc.perform(put("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1))
+                    mockMvc.perform(put("/invoices/{id}/attached-document", invoiceId(INVOICE_NUMBER_1))
                                     .contentType(MediaType.TEXT_PLAIN)
                                     .characterEncoding(StandardCharsets.UTF_8)
                                     .content(UNICODE_TEXT))
@@ -1424,12 +1424,12 @@ class InvoicingApplicationTests {
 
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
 
-                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachment")))
+                    assertThat(invoicesContent.getContent(invoice, PropertyPath.from("attachedDocument")))
                             .hasContent(UNICODE_TEXT);
-                    assertThat(invoice.getAttachmentId()).isNotBlank();
-                    assertThat(invoice.getAttachmentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(invoice.getAttachmentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                    assertThat(invoice.getAttachmentFilename()).isNull();
+                    assertThat(invoice.getAttachedDocumentId()).isNotBlank();
+                    assertThat(invoice.getAttachedDocumentMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(invoice.getAttachedDocumentLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(invoice.getAttachedDocumentFilename()).isNull();
 
                     assertThat(invoice.getContentId()).isNull();
                     assertThat(invoice.getContentMimetype()).isNull();
@@ -1592,28 +1592,28 @@ class InvoicingApplicationTests {
                     invoice.setContentFilename("content.txt");
 
                     var attachmentBytes = EXT_ASCII_TEXT.getBytes(StandardCharsets.ISO_8859_1);
-                    invoicesContent.setContent(invoice, PropertyPath.from("attachment"),
+                    invoicesContent.setContent(invoice, PropertyPath.from("attachedDocument"),
                             new ByteArrayInputStream(attachmentBytes));
-                    invoice.setAttachmentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
-                    invoice.setAttachmentFilename("attachment.txt");
+                    invoice.setAttachedDocumentMimetype(MIMETYPE_PLAINTEXT_LATIN1);
+                    invoice.setAttachedDocumentFilename("attachment.txt");
                     invoice = invoices.save(invoice);
 
                     assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNotNull();
-                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNotNull();
+                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachedDocument"))).isNotNull();
 
-                    mockMvc.perform(delete("/invoices/{id}/attachment", invoiceId(INVOICE_NUMBER_1)))
+                    mockMvc.perform(delete("/invoices/{id}/attached-document", invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(status().isNoContent());
 
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNotNull();
-                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNull();
+                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachedDocument"))).isNull();
 
                     mockMvc.perform(delete("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1)))
                             .andExpect(status().isNoContent());
 
                     invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
                     assertThat(invoicesContent.getResource(invoice, PropertyPath.from("content"))).isNull();
-                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachment"))).isNull();
+                    assertThat(invoicesContent.getResource(invoice, PropertyPath.from("attachedDocument"))).isNull();
                 }
             }
         }

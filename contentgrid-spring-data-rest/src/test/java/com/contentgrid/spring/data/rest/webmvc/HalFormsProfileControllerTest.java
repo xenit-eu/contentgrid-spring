@@ -192,11 +192,11 @@ class HalFormsProfileControllerTest {
                                             type: "text"
                                         },
                                         {
-                                            name: "attachment_mimetype",
+                                            name: "attached_document_mimetype",
                                             type: "text"
                                         },
                                         {
-                                            name: "attachment_filename",
+                                            name: "attached_document_filename",
                                             type: "text"
                                         },
                                         {

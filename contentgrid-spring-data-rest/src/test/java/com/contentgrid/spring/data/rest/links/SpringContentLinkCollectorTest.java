@@ -35,8 +35,8 @@ class SpringContentLinkCollectorTest {
                             assertThat(link.getHref()).isEqualTo("http://localhost/invoices/%s/content".formatted(entity.getId()));
                         },
                         link -> {
-                            assertThat(link.getName()).isEqualTo("attachment");
-                            assertThat(link.getHref()).isEqualTo("http://localhost/invoices/%s/attachment".formatted(entity.getId()));
+                            assertThat(link.getName()).isEqualTo("attached_document");
+                            assertThat(link.getHref()).isEqualTo("http://localhost/invoices/%s/attached-document".formatted(entity.getId()));
                         }
                 );
     }

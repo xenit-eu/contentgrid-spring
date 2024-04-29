@@ -30,7 +30,7 @@ class EntityModelAssemblerTest {
 
         assertThat(model.getLink(IanaLinkRelations.SELF)).isPresent();
         assertThat(model.getLink("d:content")).isPresent();
-        assertThat(model.getLink("d:attachment")).isPresent();
+        assertThat(model.getLink("d:attached_document")).isPresent();
     }
 
 }
