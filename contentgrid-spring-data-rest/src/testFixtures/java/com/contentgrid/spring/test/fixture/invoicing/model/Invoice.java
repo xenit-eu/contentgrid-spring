@@ -6,6 +6,7 @@ import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
 import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
 import com.contentgrid.spring.querydsl.predicate.None;
+import com.contentgrid.spring.test.fixture.invoicing.model.support.Content;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
@@ -118,6 +119,16 @@ public class Invoice {
     @OriginalFileName
     @JsonProperty("attached_document_filename")
     private String attachedDocumentFilename;
+
+    @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "qr_code__id"))
+    @AttributeOverride(name = "length", column = @Column(name = "qr_code__length"))
+    @AttributeOverride(name = "mimetype", column = @Column(name = "qr_code__mimetype"))
+    @AttributeOverride(name = "filename", column = @Column(name = "qr_code__filename"))
+    @RestResource(linkRel = "d:qr_code", path = "qr-code")
+    @JsonProperty(value = "qr_code")
+    private Content qrCode;
+
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "counterparty", nullable = false)

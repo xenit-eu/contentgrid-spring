@@ -1353,6 +1353,26 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getAttachedDocumentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                     assertThat(invoice.getAttachedDocumentFilename()).isEqualTo(attachmentFile.getOriginalFilename());
                 }
+
+                @Test
+                void postMultipartEntityAndContent_embeddedContentProperty_http201() throws Exception {
+                    var image = new ClassPathResource("qr-code.png");
+                    var content = image.getInputStream().readAllBytes();
+                    var file = new MockMultipartFile("qr_code", "qr-code.png", MediaType.IMAGE_PNG_VALUE, content);
+
+                    mockMvc.perform(multipart(HttpMethod.POST, "/invoices")
+                                    .file(file)
+                                    .param("number", INVOICE_NUMBER_3)
+                                    .param("counterparty", "/customers/" + customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_3)).orElseThrow();
+
+                    assertThat(invoice.getQrCode().getId()).isNotBlank();
+                    assertThat(invoice.getQrCode().getMimetype()).isEqualTo(MediaType.IMAGE_PNG_VALUE);
+                    assertThat(invoice.getQrCode().getLength()).isEqualTo(file.getSize());
+                    assertThat(invoice.getQrCode().getFilename()).isEqualTo(file.getOriginalFilename());
+                }
             }
 
             @Nested
