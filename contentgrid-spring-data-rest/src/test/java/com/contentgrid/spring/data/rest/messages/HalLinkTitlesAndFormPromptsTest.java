@@ -4,8 +4,10 @@ import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
+import com.contentgrid.spring.test.fixture.invoicing.model.Label;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
+import com.contentgrid.spring.test.fixture.invoicing.repository.LabelRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
 import java.util.Set;
 import java.util.UUID;
@@ -35,14 +37,18 @@ class HalLinkTitlesAndFormPromptsTest {
     CustomerRepository customerRepository;
     @Autowired
     InvoiceRepository invoiceRepository;
+    @Autowired
+    LabelRepository labelRepository;
 
     Customer customer;
     Invoice invoice;
+    Label label;
 
     @BeforeEach
     void setup() {
         customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, new AuditMetadata(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
         invoice = invoiceRepository.save(new Invoice("12345678", true, true, customer, Set.of()));
+        label = labelRepository.save(new Label(UUID.randomUUID(), "here", "there", null));
     }
 
     @AfterEach
@@ -101,16 +107,44 @@ class HalLinkTitlesAndFormPromptsTest {
                                             type : "number"
                                         },
                                         {
-                                            prompt: "Customer Document Mimetype",
-                                            name: "content.mimetype",
-                                            type: "text"
-                                        },
-                                        {
-                                            prompt: "Customer Document Filename",
-                                            name: "content.filename",
-                                            type: "text"
+                                            name: "content",
+                                            type: "file"
                                         },
                                         { name : "orders", type : "url" }, { name : "invoices", type : "url" }
+                                    ]
+                                }
+                            }
+                        }
+                        """))
+        ;
+    }
+
+    @Test
+    void contentFieldCamelCasedInCreateForm() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/labels")
+                        .accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _templates: {
+                                search: {},
+                                create-form: {
+                                    method: "POST",
+                                    properties: [
+                                        {
+                                            name: "from",
+                                            type: "text",
+                                            required: true
+                                        },
+                                        {
+                                            name: "to",
+                                            type: "text",
+                                            required: true
+                                        },
+                                        {
+                                            name: "barcodePicture",
+                                            type: "file"
+                                        }
                                     ]
                                 }
                             }
@@ -132,7 +166,7 @@ class HalLinkTitlesAndFormPromptsTest {
                                         title: "Client"
                                     },
                                     { name: "invoices" }, { name: "refunds" }, { name: "promotions" },
-                                    { name: "shipping-addresses" }, { name: "orders" }
+                                    { name: "shipping-addresses" }, { name: "labels" }, { name: "orders" }
                                 ]
                             }
                         }
@@ -182,13 +216,13 @@ class HalLinkTitlesAndFormPromptsTest {
 
     @Test
     void promptOnCgContentPropertiesInHalForms() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/profile/invoices").accept(MediaTypes.HAL_FORMS_JSON))
+        mockMvc.perform(MockMvcRequestBuilders.get("/invoices/" + invoice.getId()).accept(MediaTypes.HAL_FORMS_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andDo(res -> System.out.println(res.getResponse().getContentAsString()))
                 .andExpect(MockMvcResultMatchers.content().json("""
                         {
                             _templates: {
-                                "create-form": {
+                                "default": {
                                     properties: [
                                         {
                                             prompt: "Attached File Filename",
@@ -200,7 +234,7 @@ class HalLinkTitlesAndFormPromptsTest {
                                             name: "attachment_mimetype",
                                             type: "text"
                                         },
-                                        {},{},{},{},{},{},{},{}
+                                        {},{},{},{},{}
                                     ]
                                 }
                             }

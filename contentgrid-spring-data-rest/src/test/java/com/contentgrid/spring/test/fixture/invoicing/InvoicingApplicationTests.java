@@ -19,6 +19,7 @@ import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfigura
 import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
+import com.contentgrid.spring.test.fixture.invoicing.model.Label;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
@@ -27,8 +28,10 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepositor
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.PromotionCampaignRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingAddressRepository;
+import com.contentgrid.spring.test.fixture.invoicing.repository.LabelRepository;
 import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
 import com.contentgrid.spring.test.fixture.invoicing.store.InvoiceContentStore;
+import com.contentgrid.spring.test.fixture.invoicing.store.LabelContentStore;
 import com.contentgrid.spring.test.security.WithMockJwt;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -131,10 +134,16 @@ class InvoicingApplicationTests {
     ShippingAddressRepository shippingAddresses;
 
     @Autowired
+    LabelRepository labels;
+
+    @Autowired
     InvoiceContentStore invoicesContent;
 
     @Autowired
     CustomerContentStore customersContent;
+
+    @Autowired
+    LabelContentStore labelsContent;
 
     @Autowired
     PlatformTransactionManager transactionManager;
@@ -198,7 +207,6 @@ class InvoicingApplicationTests {
                 new Invoice(INVOICE_NUMBER_1, true, false, xenit, new HashSet<>(List.of(order1, order2)))).getId();
         INVOICE_2_ID = invoices.save(new Invoice(INVOICE_NUMBER_2, false, true, inbev, new HashSet<>(List.of(order3))))
                 .getId();
-
     }
 
     @AfterEach
@@ -208,6 +216,7 @@ class InvoicingApplicationTests {
         shippingAddresses.deleteAll();
         customers.deleteAll();
         promos.deleteAll();
+        labels.deleteAll();
     }
 
     private Matcher<Object> curies() {
@@ -1776,6 +1785,28 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isEqualTo(file.getOriginalFilename());
+                }
+
+                @Test
+                void postMultipartEntityAndContent_camelCaseFieldName_http201() throws Exception {
+                    var file = new MockMultipartFile("barcodePicture", "barcode.jpg", MIMETYPE_PLAINTEXT_UTF8,
+                            UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
+
+                    mockMvc.perform(multipart(HttpMethod.POST, "/labels")
+                                    .file(file)
+                                    .param("from", "here")
+                                    .param("to", "there"))
+                            .andExpect(status().isCreated());
+
+                    var label = labels.findAll().get(0);
+
+                    assertThat(labelsContent.getContent(label, PropertyPath.from("barcodePicture")))
+                            .hasContent(UNICODE_TEXT);
+                    assertThat(label.getBarcodePicture()).isNotNull();
+                    assertThat(label.getBarcodePicture().getId()).isNotBlank();
+                    assertThat(label.getBarcodePicture().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(label.getBarcodePicture().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(label.getBarcodePicture().getFilename()).isEqualTo(file.getOriginalFilename());
                 }
 
             }
