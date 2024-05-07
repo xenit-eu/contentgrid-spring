@@ -4,10 +4,10 @@ import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
-import com.contentgrid.spring.test.fixture.invoicing.model.Label;
+import com.contentgrid.spring.test.fixture.invoicing.model.ShippingLabel;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
-import com.contentgrid.spring.test.fixture.invoicing.repository.LabelRepository;
+import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingLabelRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
 import java.util.Set;
 import java.util.UUID;
@@ -38,17 +38,17 @@ class HalLinkTitlesAndFormPromptsTest {
     @Autowired
     InvoiceRepository invoiceRepository;
     @Autowired
-    LabelRepository labelRepository;
+    ShippingLabelRepository shippingLabelRepository;
 
     Customer customer;
     Invoice invoice;
-    Label label;
+    ShippingLabel shippingLabel;
 
     @BeforeEach
     void setup() {
         customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, new AuditMetadata(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
         invoice = invoiceRepository.save(new Invoice("12345678", true, true, customer, Set.of()));
-        label = labelRepository.save(new Label(UUID.randomUUID(), "here", "there", null));
+        shippingLabel = shippingLabelRepository.save(new ShippingLabel(UUID.randomUUID(), "here", "there", null));
     }
 
     @AfterEach
@@ -121,7 +121,7 @@ class HalLinkTitlesAndFormPromptsTest {
 
     @Test
     void contentFieldCamelCasedInCreateForm() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/profile/labels")
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/shipping-labels")
                         .accept(MediaTypes.HAL_FORMS_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().json("""
@@ -166,7 +166,7 @@ class HalLinkTitlesAndFormPromptsTest {
                                         title: "Client"
                                     },
                                     { name: "invoices" }, { name: "refunds" }, { name: "promotions" },
-                                    { name: "shipping-addresses" }, { name: "labels" }, { name: "orders" }
+                                    { name: "shipping-addresses" }, { name: "shipping-labels" }, { name: "orders" }
                                 ]
                             }
                         }

@@ -133,14 +133,14 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
                 property.getTypeInformation().toTypeDescriptor().getResolvableType())
                 .withRequired(property.isRequired())
                 .withReadOnly(false);
-    };
+    }
 
     private PropertyMetadata propertyToMetadataForUpdateForm(Property property, Class<?> domainClass, String path) {
         return new BasicPropertyMetadata(path,
                 property.getTypeInformation().toTypeDescriptor().getResolvableType())
                 .withRequired(property.isRequired())
                 .withReadOnly(false);
-    };
+    }
 
 
     @RequiredArgsConstructor

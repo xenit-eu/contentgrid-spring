@@ -19,7 +19,6 @@ import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfigura
 import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
-import com.contentgrid.spring.test.fixture.invoicing.model.Label;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
@@ -28,10 +27,10 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepositor
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.PromotionCampaignRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingAddressRepository;
-import com.contentgrid.spring.test.fixture.invoicing.repository.LabelRepository;
+import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingLabelRepository;
 import com.contentgrid.spring.test.fixture.invoicing.store.CustomerContentStore;
 import com.contentgrid.spring.test.fixture.invoicing.store.InvoiceContentStore;
-import com.contentgrid.spring.test.fixture.invoicing.store.LabelContentStore;
+import com.contentgrid.spring.test.fixture.invoicing.store.ShippingLabelContentStore;
 import com.contentgrid.spring.test.security.WithMockJwt;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -134,7 +133,7 @@ class InvoicingApplicationTests {
     ShippingAddressRepository shippingAddresses;
 
     @Autowired
-    LabelRepository labels;
+    ShippingLabelRepository shippingLabels;
 
     @Autowired
     InvoiceContentStore invoicesContent;
@@ -143,7 +142,7 @@ class InvoicingApplicationTests {
     CustomerContentStore customersContent;
 
     @Autowired
-    LabelContentStore labelsContent;
+    ShippingLabelContentStore shippingLabelsContent;
 
     @Autowired
     PlatformTransactionManager transactionManager;
@@ -216,7 +215,7 @@ class InvoicingApplicationTests {
         shippingAddresses.deleteAll();
         customers.deleteAll();
         promos.deleteAll();
-        labels.deleteAll();
+        shippingLabels.deleteAll();
     }
 
     private Matcher<Object> curies() {
@@ -1792,21 +1791,21 @@ class InvoicingApplicationTests {
                     var file = new MockMultipartFile("barcodePicture", "barcode.jpg", MIMETYPE_PLAINTEXT_UTF8,
                             UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
 
-                    mockMvc.perform(multipart(HttpMethod.POST, "/labels")
+                    mockMvc.perform(multipart(HttpMethod.POST, "/shipping-labels")
                                     .file(file)
                                     .param("from", "here")
                                     .param("to", "there"))
                             .andExpect(status().isCreated());
 
-                    var label = labels.findAll().get(0);
+                    var shippingLabel = shippingLabels.findAll().get(0);
 
-                    assertThat(labelsContent.getContent(label, PropertyPath.from("barcodePicture")))
+                    assertThat(shippingLabelsContent.getContent(shippingLabel, PropertyPath.from("barcodePicture")))
                             .hasContent(UNICODE_TEXT);
-                    assertThat(label.getBarcodePicture()).isNotNull();
-                    assertThat(label.getBarcodePicture().getId()).isNotBlank();
-                    assertThat(label.getBarcodePicture().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
-                    assertThat(label.getBarcodePicture().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
-                    assertThat(label.getBarcodePicture().getFilename()).isEqualTo(file.getOriginalFilename());
+                    assertThat(shippingLabel.getBarcodePicture()).isNotNull();
+                    assertThat(shippingLabel.getBarcodePicture().getId()).isNotBlank();
+                    assertThat(shippingLabel.getBarcodePicture().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(shippingLabel.getBarcodePicture().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(shippingLabel.getBarcodePicture().getFilename()).isEqualTo(file.getOriginalFilename());
                 }
 
             }

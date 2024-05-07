@@ -25,7 +25,7 @@ import org.springframework.content.rest.RestResource;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Label {
+public class ShippingLabel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
