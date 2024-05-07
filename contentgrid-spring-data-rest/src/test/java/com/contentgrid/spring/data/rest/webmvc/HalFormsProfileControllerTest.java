@@ -47,7 +47,7 @@ class HalFormsProfileControllerTest {
                             _templates: {
                                 "create-form": {
                                     method: "POST",
-                                    contentType: "application/json",
+                                    contentType: "multipart/form-data",
                                     target: "http://localhost/customers",
                                     properties: [
                                         {
@@ -60,12 +60,8 @@ class HalFormsProfileControllerTest {
                                             type: "text"
                                         },
                                         {
-                                            name: "content.mimetype",
-                                            type: "text"
-                                        },
-                                        {
-                                            name: "content.filename",
-                                            type: "text"
+                                            name: "content",
+                                            type: "file"
                                         },
                                         {
                                             name: "birthday",
@@ -167,7 +163,7 @@ class HalFormsProfileControllerTest {
                             _templates: {
                                 "create-form": {
                                     method: "POST",
-                                    contentType: "application/json",
+                                    contentType: "multipart/form-data",
                                     target: "http://localhost/invoices",
                                     properties: [
                                         {
@@ -184,20 +180,12 @@ class HalFormsProfileControllerTest {
                                             # ,type: "checkbox"
                                         },
                                         {
-                                            name: "content_mimetype",
-                                            type: "text"
+                                            name: "content",
+                                            type: "file"
                                         },
                                         {
-                                            name: "content_filename",
-                                            type: "text"
-                                        },
-                                        {
-                                            name: "attachment_mimetype",
-                                            type: "text"
-                                        },
-                                        {
-                                            name: "attachment_filename",
-                                            type: "text"
+                                            name: "attachment",
+                                            type: "file"
                                         },
                                         {
                                             name: "counterparty",
