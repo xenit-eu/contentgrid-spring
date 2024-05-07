@@ -48,7 +48,7 @@ class HalLinkTitlesAndFormPromptsTest {
     void setup() {
         customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, new AuditMetadata(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
         invoice = invoiceRepository.save(new Invoice("12345678", true, true, customer, Set.of()));
-        shippingLabel = shippingLabelRepository.save(new ShippingLabel(UUID.randomUUID(), "here", "there", null));
+        shippingLabel = shippingLabelRepository.save(new ShippingLabel(UUID.randomUUID(), "here", "there", null, null));
     }
 
     @AfterEach
@@ -143,6 +143,10 @@ class HalLinkTitlesAndFormPromptsTest {
                                         },
                                         {
                                             name: "barcodePicture",
+                                            type: "file"
+                                        },
+                                        {
+                                            name: "_package",
                                             type: "file"
                                         }
                                     ]

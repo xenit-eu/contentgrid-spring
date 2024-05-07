@@ -50,4 +50,15 @@ public class ShippingLabel {
     @RestResource(linkRel = "d:barcode_picture", path = "barcode_picture")
     @JsonProperty("barcode_picture")
     private Content barcodePicture;
+
+
+    @Column(name = "package")
+    @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "package__id"))
+    @AttributeOverride(name = "length", column = @Column(name = "package__length"))
+    @AttributeOverride(name = "mimetype", column = @Column(name = "package__mimetype"))
+    @AttributeOverride(name = "filename", column = @Column(name = "package__filename"))
+    @RestResource(linkRel = "d:package", path = "package")
+    @JsonProperty("package")
+    private Content _package;
 }

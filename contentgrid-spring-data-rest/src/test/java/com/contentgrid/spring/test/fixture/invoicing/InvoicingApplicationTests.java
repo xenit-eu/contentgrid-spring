@@ -1808,6 +1808,28 @@ class InvoicingApplicationTests {
                     assertThat(shippingLabel.getBarcodePicture().getFilename()).isEqualTo(file.getOriginalFilename());
                 }
 
+                @Test
+                void postMultipartEntityAndContent_reservedFieldName_http201() throws Exception {
+                    var file = new MockMultipartFile("_package", "package.bin", MIMETYPE_PLAINTEXT_UTF8,
+                            UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
+
+                    mockMvc.perform(multipart(HttpMethod.POST, "/shipping-labels")
+                                    .file(file)
+                                    .param("from", "here")
+                                    .param("to", "there"))
+                            .andExpect(status().isCreated());
+
+                    var shippingLabel = shippingLabels.findAll().get(0);
+
+                    assertThat(shippingLabelsContent.getContent(shippingLabel, PropertyPath.from("_package")))
+                            .hasContent(UNICODE_TEXT);
+                    assertThat(shippingLabel.get_package()).isNotNull();
+                    assertThat(shippingLabel.get_package().getId()).isNotBlank();
+                    assertThat(shippingLabel.get_package().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
+                    assertThat(shippingLabel.get_package().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
+                    assertThat(shippingLabel.get_package().getFilename()).isEqualTo(file.getOriginalFilename());
+                }
+
             }
 
             @Nested

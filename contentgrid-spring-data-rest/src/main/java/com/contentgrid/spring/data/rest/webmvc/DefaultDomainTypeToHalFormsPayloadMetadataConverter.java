@@ -23,6 +23,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.With;
+import org.apache.commons.lang.CharUtils;
 import org.springframework.content.commons.annotations.ContentId;
 import org.springframework.content.commons.annotations.MimeType;
 import org.springframework.content.commons.annotations.OriginalFileName;
@@ -37,6 +38,7 @@ import org.springframework.hateoas.mediatype.InputTypeFactory;
 import org.springframework.hateoas.mediatype.html.HtmlInputType;
 import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 
 @RequiredArgsConstructor
 public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
@@ -119,7 +121,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         var contentPropertyKey = contentMappingContext.flatMap(context -> context.getContentPropertyMap(domainClass)
                 .entrySet()
                 .stream()
-                .filter(entry -> Objects.equals(entry.getValue().getContentIdPropertyPath(), underscoreToCamelCase(path)))
+                .filter(entry -> pathMatches(entry.getValue().getContentIdPropertyPath(), path))
                 .findFirst()
                 .map(Entry::getKey));
 
@@ -249,6 +251,15 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         PropertyMetadata build(Property property, Class<?> domainClass, String path);
     }
 
+    private static boolean pathMatches(String contentIdPropertyPath, String givenPath) {
+        return Objects.equals(
+                // names that are reserved keywords, like "public", have a leading _ in their java property
+                StringUtils.trimLeadingCharacter(contentIdPropertyPath, '_'),
+                // to match the java field name, we must convert the snake_case from the given path to camelCase
+                underscoreToCamelCase(givenPath)
+        );
+    }
+
     private static String underscoreToCamelCase(String underscored) {
         int index = underscored.indexOf('_');
         if (index == -1) {
@@ -260,7 +271,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         while (index != -1) {
             camel.append(underscored, from, index);
             if (index + 1 < underscored.length()) {
-                camel.append((char) (underscored.charAt(index + 1) - 32));
+                camel.append(Character.toUpperCase(underscored.charAt(index + 1)));
                 from = index + 2;
             } else {
                 from = index + 1;
