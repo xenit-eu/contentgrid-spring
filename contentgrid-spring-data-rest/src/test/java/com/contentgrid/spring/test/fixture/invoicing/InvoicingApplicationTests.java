@@ -152,6 +152,8 @@ class InvoicingApplicationTests {
 
     @Container
     static MinIOContainer minIOContainer = new MinIOContainer("minio/minio")
+            // This makes minio accept virtual host bucket access
+            .withEnv("MINIO_DOMAIN", "localhost")
             .withUserName("test")
             .withPassword("password");
 
