@@ -4,10 +4,8 @@ import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
-import com.contentgrid.spring.test.fixture.invoicing.model.ShippingLabel;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
-import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingLabelRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
 import java.util.Set;
 import java.util.UUID;
@@ -37,18 +35,14 @@ class HalLinkTitlesAndFormPromptsTest {
     CustomerRepository customerRepository;
     @Autowired
     InvoiceRepository invoiceRepository;
-    @Autowired
-    ShippingLabelRepository shippingLabelRepository;
 
     Customer customer;
     Invoice invoice;
-    ShippingLabel shippingLabel;
 
     @BeforeEach
     void setup() {
         customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, new AuditMetadata(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
         invoice = invoiceRepository.save(new Invoice("12345678", true, true, customer, Set.of()));
-        shippingLabel = shippingLabelRepository.save(new ShippingLabel(UUID.randomUUID(), "here", "there", null, null));
     }
 
     @AfterEach
@@ -107,48 +101,16 @@ class HalLinkTitlesAndFormPromptsTest {
                                             type : "number"
                                         },
                                         {
-                                            name: "content",
-                                            type: "file"
+                                            prompt: "Customer Document Mimetype",
+                                            name: "content.mimetype",
+                                            type: "text"
+                                        },
+                                        {
+                                            prompt: "Customer Document Filename",
+                                            name: "content.filename",
+                                            type: "text"
                                         },
                                         { name : "orders", type : "url" }, { name : "invoices", type : "url" }
-                                    ]
-                                }
-                            }
-                        }
-                        """))
-        ;
-    }
-
-    @Test
-    void contentFieldCamelCasedInCreateForm() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/profile/shipping-labels")
-                        .accept(MediaTypes.HAL_FORMS_JSON))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().json("""
-                        {
-                            _templates: {
-                                search: {},
-                                create-form: {
-                                    method: "POST",
-                                    properties: [
-                                        {
-                                            name: "from",
-                                            type: "text",
-                                            required: true
-                                        },
-                                        {
-                                            name: "to",
-                                            type: "text",
-                                            required: true
-                                        },
-                                        {
-                                            name: "barcodePicture",
-                                            type: "file"
-                                        },
-                                        {
-                                            name: "_package",
-                                            type: "file"
-                                        }
                                     ]
                                 }
                             }
@@ -170,7 +132,7 @@ class HalLinkTitlesAndFormPromptsTest {
                                         title: "Client"
                                     },
                                     { name: "invoices" }, { name: "refunds" }, { name: "promotions" },
-                                    { name: "shipping-addresses" }, { name: "shipping-labels" }, { name: "orders" }
+                                    { name: "shipping-addresses" }, { name: "orders" }
                                 ]
                             }
                         }
@@ -220,13 +182,13 @@ class HalLinkTitlesAndFormPromptsTest {
 
     @Test
     void promptOnCgContentPropertiesInHalForms() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/invoices/" + invoice.getId()).accept(MediaTypes.HAL_FORMS_JSON))
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/invoices").accept(MediaTypes.HAL_FORMS_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andDo(res -> System.out.println(res.getResponse().getContentAsString()))
                 .andExpect(MockMvcResultMatchers.content().json("""
                         {
                             _templates: {
-                                "default": {
+                                "create-form": {
                                     properties: [
                                         {
                                             prompt: "Attached File Filename",
@@ -238,7 +200,7 @@ class HalLinkTitlesAndFormPromptsTest {
                                             name: "attachment_mimetype",
                                             type: "text"
                                         },
-                                        {},{},{},{},{}
+                                        {},{},{},{},{},{},{},{}
                                     ]
                                 }
                             }
