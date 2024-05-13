@@ -1,6 +1,5 @@
 package com.contentgrid.spring.data.rest.mediatype.html;
 
-import java.io.File;
 import java.time.Instant;
 import java.time.LocalDate;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,6 @@ import org.springframework.lang.Nullable;
  * <ul>
  *     <li>{@link Boolean} maps to {@code checkbox}</li>
  *     <li>{@link Instant} maps to {@code datetime}</li>
- *     <li>Content maps to {@code file}</li>
  * </ul>
  */
 @Slf4j
@@ -32,10 +30,6 @@ class ContentGridHtmlInputTypeFactory implements InputTypeFactory {
 
 		if (Instant.class.equals(type)) {
 			return "datetime";
-		}
-
-		if (File.class.equals(type)) {
-			return "file";
 		}
 
 		if (inputType == null) {
