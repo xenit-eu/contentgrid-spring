@@ -100,16 +100,6 @@ class HalLinkTitlesAndFormPromptsTest {
                                             name : "total_spend",
                                             type : "number"
                                         },
-                                        {
-                                            prompt: "Customer Document Mimetype",
-                                            name: "content.mimetype",
-                                            type: "text"
-                                        },
-                                        {
-                                            prompt: "Customer Document Filename",
-                                            name: "content.filename",
-                                            type: "text"
-                                        },
                                         { name : "orders", type : "url" }, { name : "invoices", type : "url" }
                                     ]
                                 }
@@ -182,13 +172,13 @@ class HalLinkTitlesAndFormPromptsTest {
 
     @Test
     void promptOnCgContentPropertiesInHalForms() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/profile/invoices").accept(MediaTypes.HAL_FORMS_JSON))
+        mockMvc.perform(MockMvcRequestBuilders.get("/invoices/" + invoice.getId()).accept(MediaTypes.HAL_FORMS_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andDo(res -> System.out.println(res.getResponse().getContentAsString()))
                 .andExpect(MockMvcResultMatchers.content().json("""
                         {
                             _templates: {
-                                "create-form": {
+                                "default": {
                                     properties: [
                                         {
                                             prompt: "Attached File Filename",
@@ -200,7 +190,7 @@ class HalLinkTitlesAndFormPromptsTest {
                                             name: "attachment_mimetype",
                                             type: "text"
                                         },
-                                        {},{},{},{},{},{},{},{}
+                                        {},{},{},{},{}
                                     ]
                                 }
                             }

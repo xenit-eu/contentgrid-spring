@@ -60,14 +60,6 @@ class HalFormsProfileControllerTest {
                                             type: "text"
                                         },
                                         {
-                                            name: "content.mimetype",
-                                            type: "text"
-                                        },
-                                        {
-                                            name: "content.filename",
-                                            type: "text"
-                                        },
-                                        {
                                             name: "birthday",
                                             type: "datetime"
                                         },
@@ -182,22 +174,6 @@ class HalFormsProfileControllerTest {
                                         {
                                             name: "paid"
                                             # ,type: "checkbox"
-                                        },
-                                        {
-                                            name: "content_mimetype",
-                                            type: "text"
-                                        },
-                                        {
-                                            name: "content_filename",
-                                            type: "text"
-                                        },
-                                        {
-                                            name: "attachment_mimetype",
-                                            type: "text"
-                                        },
-                                        {
-                                            name: "attachment_filename",
-                                            type: "text"
                                         },
                                         {
                                             name: "counterparty",

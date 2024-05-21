@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 import lombok.With;
+import org.springframework.content.commons.annotations.MimeType;
+import org.springframework.content.commons.annotations.OriginalFileName;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
@@ -42,7 +45,12 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
     @Override
     public PayloadMetadata convertToCreatePayloadMetadata(Class<?> domainType) {
         List<PropertyMetadata> properties = new ArrayList<>();
-        extractPropertyMetadataForForms(formMapping.forDomainType(domainType))
+        extractPropertyMetadataForForms(formMapping.forDomainType(domainType),
+                domainType,
+                "",
+                (prop) -> (!prop.isReadOnly() && !prop.isIgnored() && prop.findAnnotation(MimeType.class).isEmpty()
+                        && prop.findAnnotation(OriginalFileName.class).isEmpty()),
+                this::propertyToMetadataForCreateForm)
                 .forEachOrdered(properties::add);
         return new ClassnameI18nedPayloadMetadata(domainType, properties);
     }
@@ -50,7 +58,12 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
     @Override
     public PayloadMetadata convertToUpdatePayloadMetadata(Class<?> domainType) {
         List<PropertyMetadata> properties = new ArrayList<>();
-        extractPropertyMetadataForForms(formMapping.forDomainType(domainType))
+        extractPropertyMetadataForForms(formMapping.forDomainType(domainType),
+                domainType,
+                "",
+                (prop) -> (!prop.isReadOnly() && !prop.isIgnored()),
+                this::propertyToMetadataForUpdateForm
+        )
                 .filter(property -> !Objects.equals(property.getInputType(), HtmlInputType.URL_VALUE))
                 .forEachOrdered(properties::add);
         return new ClassnameI18nedPayloadMetadata(domainType, properties);
@@ -71,48 +84,68 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         return new ClassnameI18nedPayloadMetadata(domainType, properties);
     }
 
-    private Stream<PropertyMetadata> extractPropertyMetadataForForms(Container entity) {
+    private Stream<PropertyMetadata> extractPropertyMetadataForForms(Container entity, Class<?> domainType,
+            String pathPrefix, Predicate<Property> filter, PropertyMetadataFactory attributeFactory) {
         var output = Stream.<PropertyMetadata>builder();
         entity.doWithProperties(new RecursivePropertyConsumer(
                 output,
-                (property) -> new BasicPropertyMetadata(property.getName(),
-                        property.getTypeInformation().toTypeDescriptor().getResolvableType())
-                        .withRequired(property.isRequired())
-                        .withReadOnly(false),
-
-                this::extractPropertyMetadataForForms
+                attributeFactory,
+                filter,
+                domainType,
+                pathPrefix
         ));
 
         entity.doWithAssociations(new RecursivePropertyConsumer(
                 output,
-                property -> new BasicPropertyMetadata(property.getName(),
+                (property, a, b) -> new BasicPropertyMetadata(property.getName(),
                         property.getTypeInformation().toTypeDescriptor().getResolvableType())
                         .withInputType(HtmlInputType.URL_VALUE)
                         .withRequired(property.isRequired())
                         .withReadOnly(false),
-                this::extractPropertyMetadataForForms
+                filter,
+                domainType,
+                pathPrefix
         ));
         return output.build();
     }
 
+    private PropertyMetadata propertyToMetadataForCreateForm(Property property, Class<?> domainClass, String path) {
+        // TODO conditional on some kind of feature flag this should look in the MappingContext from spring-content
+        return new BasicPropertyMetadata(path,
+                property.getTypeInformation().toTypeDescriptor().getResolvableType())
+                .withRequired(property.isRequired())
+                .withReadOnly(false);
+    }
+    private PropertyMetadata propertyToMetadataForUpdateForm(Property property, Class<?> domainClass, String path) {
+        return new BasicPropertyMetadata(path,
+                property.getTypeInformation().toTypeDescriptor().getResolvableType())
+                .withRequired(property.isRequired())
+                .withReadOnly(false);
+    }
+
     @RequiredArgsConstructor
-    private static class RecursivePropertyConsumer implements Consumer<Property> {
+    private class RecursivePropertyConsumer implements Consumer<Property> {
         private final Consumer<PropertyMetadata> output;
-        private final Function<Property, PropertyMetadata> factory;
-        private final Function<Container, Stream<PropertyMetadata>> recursor;
+        private final PropertyMetadataFactory factory;
+        private final Predicate<Property> filter;
+        private final Class<?> domainType;
+        private final String pathPrefix;
 
         @Override
         public void accept(Property property) {
-            if (property.isIgnored() || property.isReadOnly()) {
+            if (!filter.test(property)) {
                 return;
             }
 
+            String path = pathPrefix.length() == 0
+                    ? property.getName()
+                    : pathPrefix + "." + property.getName();
+
             property.nestedContainer().ifPresentOrElse(container -> {
-                recursor.apply(container)
-                        .map(propertyMetadata -> new PrefixedPropertyMetadata(property.getName(), propertyMetadata))
+                extractPropertyMetadataForForms(container, domainType, path, filter, factory)
                         .forEachOrdered(output);
             }, () -> {
-                output.accept(factory.apply(property));
+                output.accept(factory.build(property, domainType, path));
             });
         }
     }
@@ -225,6 +258,11 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         public Class<?> getType() {
             return this.domainType;
         }
+    }
+
+    @FunctionalInterface
+    static interface PropertyMetadataFactory {
+        PropertyMetadata build(Property property, Class<?> domainClass, String path);
     }
 
 }
