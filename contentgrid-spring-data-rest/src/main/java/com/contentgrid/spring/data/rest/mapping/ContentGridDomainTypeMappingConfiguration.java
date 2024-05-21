@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.rest.webmvc.ContentGridRestProperties;
 
 @Configuration(proxyBeanMethods = false)
 @Import(ContentGridCollectionFilterMappingConfiguration.class)
@@ -34,13 +35,15 @@ public class ContentGridDomainTypeMappingConfiguration {
     }
 
     @Bean
-    DomainTypeToHalFormsPayloadMetadataConverter DomainTypeToHalFormsPayloadMetadataConverter(
+    DomainTypeToHalFormsPayloadMetadataConverter defaultDomainTypeToHalFormsPayloadMetadataConverter(
             @FormMapping DomainTypeMapping formDomainTypeMapping,
-            CollectionFiltersMapping collectionFiltersMapping
+            CollectionFiltersMapping collectionFiltersMapping,
+            ContentGridRestProperties contentGridRestProperties
     ) {
         return new DefaultDomainTypeToHalFormsPayloadMetadataConverter(
                 formDomainTypeMapping,
-                collectionFiltersMapping
+                collectionFiltersMapping,
+                contentGridRestProperties.isUseMultipartHalForms()
         );
     }
 

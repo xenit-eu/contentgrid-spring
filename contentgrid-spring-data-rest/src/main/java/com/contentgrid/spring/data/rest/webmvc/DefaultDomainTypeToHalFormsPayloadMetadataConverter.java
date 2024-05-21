@@ -41,6 +41,14 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
 
     private final DomainTypeMapping formMapping;
     private final CollectionFiltersMapping searchMapping;
+    private final boolean useMultipartHalForms;
+
+    @Override
+    public MediaType getCreatePayloadMediaType(Class<?> resourceInformation) {
+        return useMultipartHalForms
+                ? MediaType.MULTIPART_FORM_DATA
+                : MediaType.APPLICATION_JSON;
+    }
 
     @Override
     public PayloadMetadata convertToCreatePayloadMetadata(Class<?> domainType) {
@@ -110,7 +118,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
     }
 
     private PropertyMetadata propertyToMetadataForCreateForm(Property property, Class<?> domainClass, String path) {
-        // TODO conditional on some kind of feature flag this should look in the MappingContext from spring-content
+        // TODO conditional on useMultipartHalForms
         return new BasicPropertyMetadata(path,
                 property.getTypeInformation().toTypeDescriptor().getResolvableType())
                 .withRequired(property.isRequired())

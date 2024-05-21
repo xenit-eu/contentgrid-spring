@@ -98,7 +98,7 @@ public class HalFormsProfileController implements InitializingBean {
                 .andAfford(HttpMethod.POST)
                 .withName(IanaLinkRelations.CREATE_FORM_VALUE)
                 .withInput(toHalFormsPayloadMetadataConverter.convertToCreatePayloadMetadata(information.getDomainType()))
-                .withInputMediaType(MediaType.APPLICATION_JSON)
+                .withInputMediaType(toHalFormsPayloadMetadataConverter.getCreatePayloadMediaType(information.getDomainType()))
                 .andAfford(HttpMethod.PATCH) // This gets mapped to "GET" with the very ugly hack below
                 .withName(IanaLinkRelations.SEARCH_VALUE)
                 .withInput(toHalFormsPayloadMetadataConverter.convertToSearchPayloadMetadata(information.getDomainType()))
