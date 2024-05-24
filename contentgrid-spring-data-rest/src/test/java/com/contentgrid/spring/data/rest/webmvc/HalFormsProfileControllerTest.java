@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@SpringBootTest
+@SpringBootTest(properties = { "contentgrid.rest.use-multipart-hal-forms=true" })
 @ContextConfiguration(classes = {
         InvoicingApplication.class,
 })
@@ -47,7 +47,7 @@ class HalFormsProfileControllerTest {
                             _templates: {
                                 "create-form": {
                                     method: "POST",
-                                    contentType: "application/json",
+                                    contentType: "multipart/form-data",
                                     target: "http://localhost/customers",
                                     properties: [
                                         {
@@ -58,6 +58,10 @@ class HalFormsProfileControllerTest {
                                             name: "vat",
                                             required: true,
                                             type: "text"
+                                        },
+                                        {
+                                            name: "content",
+                                            type: "file"
                                         },
                                         {
                                             name: "birthday",
@@ -159,7 +163,7 @@ class HalFormsProfileControllerTest {
                             _templates: {
                                 "create-form": {
                                     method: "POST",
-                                    contentType: "application/json",
+                                    contentType: "multipart/form-data",
                                     target: "http://localhost/invoices",
                                     properties: [
                                         {
@@ -174,6 +178,14 @@ class HalFormsProfileControllerTest {
                                         {
                                             name: "paid"
                                             # ,type: "checkbox"
+                                        },
+                                        {
+                                            name: "content",
+                                            type: "file"
+                                        },
+                                        {
+                                           name: "attachment",
+                                           type: "file"
                                         },
                                         {
                                             name: "counterparty",

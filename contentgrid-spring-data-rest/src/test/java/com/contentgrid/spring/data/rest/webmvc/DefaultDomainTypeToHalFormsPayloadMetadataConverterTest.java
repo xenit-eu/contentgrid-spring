@@ -41,15 +41,10 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                     assertThat(vat.isReadOnly()).isFalse();
                     assertThat(vat.isRequired()).isTrue();
                 },
-                contentMimetype -> {
-                    assertThat(contentMimetype.getName()).isEqualTo("content.mimetype");
-                    assertThat(contentMimetype.isReadOnly()).isFalse();
-                    assertThat(contentMimetype.isRequired()).isFalse();
-                },
-                contentFilename -> {
-                    assertThat(contentFilename.getName()).isEqualTo("content.filename");
-                    assertThat(contentFilename.isReadOnly()).isFalse();
-                    assertThat(contentFilename.isRequired()).isFalse();
+                content -> {
+                    assertThat(content.getName()).isEqualTo("content");
+                    assertThat(content.isReadOnly()).isFalse();
+                    assertThat(content.isRequired()).isFalse();
                 },
                 birthday -> {
                     assertThat(birthday.getName()).isEqualTo("birthday");

@@ -4,8 +4,10 @@ import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
+import com.contentgrid.spring.test.fixture.invoicing.model.ShippingLabel;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
+import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingLabelRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
 import java.util.Set;
 import java.util.UUID;
@@ -21,7 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@SpringBootTest
+@SpringBootTest(properties = { "contentgrid.rest.use-multipart-hal-forms=true" })
 @ContextConfiguration(classes = {
         InvoicingApplication.class,
 })
@@ -35,14 +37,18 @@ class HalLinkTitlesAndFormPromptsTest {
     CustomerRepository customerRepository;
     @Autowired
     InvoiceRepository invoiceRepository;
+    @Autowired
+    ShippingLabelRepository shippingLabelRepository;
 
     Customer customer;
     Invoice invoice;
+    ShippingLabel shippingLabel;
 
     @BeforeEach
     void setup() {
         customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, new AuditMetadata(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
         invoice = invoiceRepository.save(new Invoice("12345678", true, true, customer, Set.of()));
+        shippingLabel = shippingLabelRepository.save(new ShippingLabel(UUID.randomUUID(), "here", "there", null, null));
     }
 
     @AfterEach
@@ -92,6 +98,10 @@ class HalLinkTitlesAndFormPromptsTest {
                                             type: "text"
                                         },
                                         {
+                                            name: "content",
+                                            type: "file"
+                                        },
+                                        {
                                             name : "birthday",
                                             type : "datetime"
                                         },
@@ -101,6 +111,44 @@ class HalLinkTitlesAndFormPromptsTest {
                                             type : "number"
                                         },
                                         { name : "orders", type : "url" }, { name : "invoices", type : "url" }
+                                    ]
+                                }
+                            }
+                        }
+                        """))
+        ;
+    }
+
+    @Test
+    void contentFieldCamelCasedInCreateForm() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/shipping-labels")
+                        .accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _templates: {
+                                search: {},
+                                create-form: {
+                                    method: "POST",
+                                    properties: [
+                                        {
+                                            name: "from",
+                                            type: "text",
+                                            required: true
+                                        },
+                                        {
+                                            name: "to",
+                                            type: "text",
+                                            required: true
+                                        },
+                                        {
+                                            name: "barcodePicture",
+                                            type: "file"
+                                        },
+                                        {
+                                            name: "_package",
+                                            type: "file"
+                                        }
                                     ]
                                 }
                             }
@@ -122,7 +170,7 @@ class HalLinkTitlesAndFormPromptsTest {
                                         title: "Client"
                                     },
                                     { name: "invoices" }, { name: "refunds" }, { name: "promotions" },
-                                    { name: "shipping-addresses" }, { name: "orders" }
+                                    { name: "shipping-addresses" }, { name: "shipping-labels" }, { name: "orders" }
                                 ]
                             }
                         }
