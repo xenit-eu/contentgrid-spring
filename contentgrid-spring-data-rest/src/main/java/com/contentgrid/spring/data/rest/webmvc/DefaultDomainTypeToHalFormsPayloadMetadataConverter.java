@@ -63,7 +63,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
                 domainType,
                 "", // path prefix starts empty
                 (prop) -> (!prop.isReadOnly() && !prop.isIgnored() && prop.findAnnotation(MimeType.class).isEmpty() && prop.findAnnotation(
-                        OriginalFileName.class).isEmpty()) || prop.findAnnotation(ContentId.class).isPresent(),
+                        OriginalFileName.class).isEmpty()) || (useMultipartHalForms && prop.findAnnotation(ContentId.class).isPresent()),
                 this::propertyToMetadataForCreateForm
         ).forEachOrdered(properties::add);
         return new ClassnameI18nedPayloadMetadata(domainType, properties);
