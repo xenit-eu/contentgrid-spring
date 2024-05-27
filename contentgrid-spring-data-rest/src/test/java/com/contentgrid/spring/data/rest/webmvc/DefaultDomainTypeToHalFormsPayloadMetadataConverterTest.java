@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
 import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest
+@SpringBootTest(properties = { "contentgrid.rest.use-multipart-hal-forms=true" })
 @ContextConfiguration(classes = {
         InvoicingApplication.class,
 })
@@ -24,9 +24,8 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
     DomainTypeToHalFormsPayloadMetadataConverter converter;
 
     @Test
-    @Disabled("We temporarily don't have mimetype/filename in create payloads any more")
     void convertToCreatePayloadMetadata_embeddedContent() {
-        var metadata = converter.convertToCreatePayloadMetadata(Customer.class);
+        var metadata = converter.convertToCreatePayloadMetadata(Customer.class).payloadMetadata();
 
         assertThat(metadata.getType()).isEqualTo(Customer.class);
 
@@ -67,7 +66,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_association() {
-        var metadata = converter.convertToCreatePayloadMetadata(Order.class);
+        var metadata = converter.convertToCreatePayloadMetadata(Order.class).payloadMetadata();
 
         assertThat(metadata.getType()).isEqualTo(Order.class);
 
@@ -93,7 +92,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_requiredAssociation() {
-        var metadata = converter.convertToCreatePayloadMetadata(Invoice.class);
+        var metadata = converter.convertToCreatePayloadMetadata(Invoice.class).payloadMetadata();
 
         assertThat(metadata.stream()).anySatisfy(
                 counterparty -> {
@@ -105,7 +104,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_nonExportedAssociation() {
-        var metadata = converter.convertToCreatePayloadMetadata(PromotionCampaign.class);
+        var metadata = converter.convertToCreatePayloadMetadata(PromotionCampaign.class).payloadMetadata();
 
         assertThat(metadata.stream()).satisfiesExactlyInAnyOrder(
                 promoCode -> {

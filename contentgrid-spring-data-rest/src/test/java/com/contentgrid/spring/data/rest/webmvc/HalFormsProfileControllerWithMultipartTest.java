@@ -13,13 +13,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@SpringBootTest(properties = { "contentgrid.rest.use-multipart-hal-forms=false" })
+@SpringBootTest(properties = { "contentgrid.rest.use-multipart-hal-forms=true" })
 @ContextConfiguration(classes = {
         InvoicingApplication.class,
 })
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @WithMockJwt
-class HalFormsProfileControllerWithoutMultipartTest extends AbstractHalFormsProfileControllerTest {
+class HalFormsProfileControllerWithMultipartTest extends AbstractHalFormsProfileControllerTest {
 
     @Autowired
     MockMvc mockMvc;
@@ -47,7 +47,7 @@ class HalFormsProfileControllerWithoutMultipartTest extends AbstractHalFormsProf
                             _templates: {
                                 "create-form": {
                                     method: "POST",
-                                    contentType: "application/json",
+                                    contentType: "multipart/form-data",
                                     target: "http://localhost/customers",
                                     properties: [
                                         {
@@ -58,6 +58,10 @@ class HalFormsProfileControllerWithoutMultipartTest extends AbstractHalFormsProf
                                             name: "vat",
                                             required: true,
                                             type: "text"
+                                        },
+                                        {
+                                            name: "content",
+                                            type: "file"
                                         },
                                         {
                                             name: "birthday",
@@ -107,7 +111,7 @@ class HalFormsProfileControllerWithoutMultipartTest extends AbstractHalFormsProf
                             _templates: {
                                 "create-form": {
                                     method: "POST",
-                                    contentType: "application/json",
+                                    contentType: "multipart/form-data",
                                     target: "http://localhost/invoices",
                                     properties: [
                                         {
@@ -117,9 +121,19 @@ class HalFormsProfileControllerWithoutMultipartTest extends AbstractHalFormsProf
                                         },
                                         {
                                             name: "draft"
+                                            # ,type: "checkbox"
                                         },
                                         {
                                             name: "paid"
+                                            # ,type: "checkbox"
+                                        },
+                                        {
+                                            name: "content",
+                                            type: "file"
+                                        },
+                                        {
+                                           name: "attachment",
+                                           type: "file"
                                         },
                                         {
                                             name: "counterparty",

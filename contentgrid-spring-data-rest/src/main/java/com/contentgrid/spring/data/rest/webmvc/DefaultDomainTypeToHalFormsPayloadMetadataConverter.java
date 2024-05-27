@@ -49,15 +49,14 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
     private final Optional<MappingContext> contentMappingContext;
     private final boolean useMultipartHalForms;
 
-    @Override
-    public MediaType getCreatePayloadMediaType(Class<?> resourceInformation) {
+    private MediaType getCreatePayloadMediaType() {
         return useMultipartHalForms
                 ? MediaType.MULTIPART_FORM_DATA
                 : MediaType.APPLICATION_JSON;
     }
 
     @Override
-    public PayloadMetadata convertToCreatePayloadMetadata(Class<?> domainType) {
+    public PayloadMetadataAndMediaType convertToCreatePayloadMetadata(Class<?> domainType) {
         List<PropertyMetadata> properties = new ArrayList<>();
         extractPropertyMetadataForForms(formMapping.forDomainType(domainType),
                 domainType,
@@ -66,11 +65,12 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
                         OriginalFileName.class).isEmpty()) || (useMultipartHalForms && prop.findAnnotation(ContentId.class).isPresent()),
                 this::propertyToMetadataForCreateForm
         ).forEachOrdered(properties::add);
-        return new ClassnameI18nedPayloadMetadata(domainType, properties);
+
+        return new PayloadMetadataAndMediaType(new ClassnameI18nedPayloadMetadata(domainType, properties), getCreatePayloadMediaType());
     }
 
     @Override
-    public PayloadMetadata convertToUpdatePayloadMetadata(Class<?> domainType) {
+    public PayloadMetadataAndMediaType convertToUpdatePayloadMetadata(Class<?> domainType) {
         List<PropertyMetadata> properties = new ArrayList<>();
         extractPropertyMetadataForForms(formMapping.forDomainType(domainType),
                 domainType,
@@ -80,7 +80,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         )
                 .filter(property -> !Objects.equals(property.getInputType(), HtmlInputType.URL_VALUE))
                 .forEachOrdered(properties::add);
-        return new ClassnameI18nedPayloadMetadata(domainType, properties);
+        return new PayloadMetadataAndMediaType(new ClassnameI18nedPayloadMetadata(domainType, properties), MediaType.APPLICATION_JSON);
     }
 
     @Override

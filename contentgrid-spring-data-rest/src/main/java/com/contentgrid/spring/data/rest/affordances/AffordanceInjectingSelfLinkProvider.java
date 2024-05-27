@@ -28,11 +28,12 @@ public class AffordanceInjectingSelfLinkProvider implements SelfLinkProvider {
     }
 
     private Link addForms(Link selfLink, Class<?> type) {
+        var payloadMeta = domainTypeToHalFormsPayloadMetadataConverter.getObject().convertToUpdatePayloadMetadata(type);
         return Affordances.of(selfLink)
                 .afford(HttpMethod.PUT)
                 .withName("default")
-                .withInputMediaType(MediaType.APPLICATION_JSON)
-                .withInput(domainTypeToHalFormsPayloadMetadataConverter.getObject().convertToUpdatePayloadMetadata(type))
+                .withInputMediaType(payloadMeta.mediaType())
+                .withInput(payloadMeta.payloadMetadata())
                 .withTarget(selfLink)
                 .andAfford(HttpMethod.DELETE)
                 .withName("delete")
