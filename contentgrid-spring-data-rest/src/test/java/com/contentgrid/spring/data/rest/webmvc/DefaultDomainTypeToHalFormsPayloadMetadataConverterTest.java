@@ -7,13 +7,14 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
 import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest
+@SpringBootTest(properties = { "contentgrid.rest.use-multipart-hal-forms=true" })
 @ContextConfiguration(classes = {
         InvoicingApplication.class,
 })
@@ -24,7 +25,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_embeddedContent() {
-        var metadata = converter.convertToCreatePayloadMetadata(Customer.class);
+        var metadata = converter.convertToCreatePayloadMetadata(Customer.class).payloadMetadata();
 
         assertThat(metadata.getType()).isEqualTo(Customer.class);
 
@@ -39,15 +40,10 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                     assertThat(vat.isReadOnly()).isFalse();
                     assertThat(vat.isRequired()).isTrue();
                 },
-                contentMimetype -> {
-                    assertThat(contentMimetype.getName()).isEqualTo("content.mimetype");
-                    assertThat(contentMimetype.isReadOnly()).isFalse();
-                    assertThat(contentMimetype.isRequired()).isFalse();
-                },
-                contentFilename -> {
-                    assertThat(contentFilename.getName()).isEqualTo("content.filename");
-                    assertThat(contentFilename.isReadOnly()).isFalse();
-                    assertThat(contentFilename.isRequired()).isFalse();
+                content -> {
+                    assertThat(content.getName()).isEqualTo("content");
+                    assertThat(content.isReadOnly()).isFalse();
+                    assertThat(content.isRequired()).isFalse();
                 },
                 birthday -> {
                     assertThat(birthday.getName()).isEqualTo("birthday");
@@ -70,7 +66,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_association() {
-        var metadata = converter.convertToCreatePayloadMetadata(Order.class);
+        var metadata = converter.convertToCreatePayloadMetadata(Order.class).payloadMetadata();
 
         assertThat(metadata.getType()).isEqualTo(Order.class);
 
@@ -96,7 +92,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_requiredAssociation() {
-        var metadata = converter.convertToCreatePayloadMetadata(Invoice.class);
+        var metadata = converter.convertToCreatePayloadMetadata(Invoice.class).payloadMetadata();
 
         assertThat(metadata.stream()).anySatisfy(
                 counterparty -> {
@@ -108,7 +104,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_nonExportedAssociation() {
-        var metadata = converter.convertToCreatePayloadMetadata(PromotionCampaign.class);
+        var metadata = converter.convertToCreatePayloadMetadata(PromotionCampaign.class).payloadMetadata();
 
         assertThat(metadata.stream()).satisfiesExactlyInAnyOrder(
                 promoCode -> {

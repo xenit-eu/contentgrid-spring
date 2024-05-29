@@ -93,12 +93,14 @@ public class HalFormsProfileController implements InitializingBean {
                 IanaLinkRelations.DESCRIBES
         ).withName(IanaLinkRelations.ITEM_VALUE);
 
+        var payloadMeta = toHalFormsPayloadMetadataConverter.convertToCreatePayloadMetadata(information.getDomainType());
+
         var collectionAffordances = Affordances.of(collectionLink)
                 .afford(HttpMethod.HEAD) // This is to pin down the default affordance, which we don't care about
                 .andAfford(HttpMethod.POST)
                 .withName(IanaLinkRelations.CREATE_FORM_VALUE)
-                .withInput(toHalFormsPayloadMetadataConverter.convertToCreatePayloadMetadata(information.getDomainType()))
-                .withInputMediaType(MediaType.APPLICATION_JSON)
+                .withInput(payloadMeta.payloadMetadata())
+                .withInputMediaType(payloadMeta.mediaType())
                 .andAfford(HttpMethod.PATCH) // This gets mapped to "GET" with the very ugly hack below
                 .withName(IanaLinkRelations.SEARCH_VALUE)
                 .withInput(toHalFormsPayloadMetadataConverter.convertToSearchPayloadMetadata(information.getDomainType()))

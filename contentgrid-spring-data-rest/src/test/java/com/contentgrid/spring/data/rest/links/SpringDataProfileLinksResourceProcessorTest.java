@@ -50,6 +50,10 @@ class SpringDataProfileLinksResourceProcessorTest {
                                         href: "http://localhost/profile/shipping-addresses"
                                     },
                                     {
+                                        name: "shipping-labels",
+                                        href: "http://localhost/profile/shipping-labels"
+                                    },
+                                    {
                                         name: "refunds",
                                         href: "http://localhost/profile/refunds"
                                     }
