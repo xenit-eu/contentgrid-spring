@@ -278,13 +278,13 @@ class JwtAuditorAwareTest {
         @Embedded
         @Access(AccessType.PROPERTY)
         @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-        @AttributeOverride(name = "createdBy.id", column = @Column(name = "auditing__created_by__id"))
-        @AttributeOverride(name = "createdBy.namespace", column = @Column(name = "auditing__created_by__namespace"))
-        @AttributeOverride(name = "createdBy.name", column = @Column(name = "auditing__created_by__name"))
+        @AttributeOverride(name = "createdBy.id", column = @Column(name = "auditing__created_by_id"))
+        @AttributeOverride(name = "createdBy.namespace", column = @Column(name = "auditing__created_by_ns"))
+        @AttributeOverride(name = "createdBy.name", column = @Column(name = "auditing__created_by_name"))
         @AttributeOverride(name = "createdDate", column = @Column(name = "auditing__created_date"))
-        @AttributeOverride(name = "lastModifiedBy.id", column = @Column(name = "auditing__last_modified_by__id"))
-        @AttributeOverride(name = "lastModifiedBy.namespace", column = @Column(name = "auditing__last_modified_by__namespace"))
-        @AttributeOverride(name = "lastModifiedBy.name", column = @Column(name = "auditing__last_modified_by__name"))
+        @AttributeOverride(name = "lastModifiedBy.id", column = @Column(name = "auditing__last_modified_by_id"))
+        @AttributeOverride(name = "lastModifiedBy.namespace", column = @Column(name = "auditing__last_modified_by_ns"))
+        @AttributeOverride(name = "lastModifiedBy.name", column = @Column(name = "auditing__last_modified_by_name"))
         @AttributeOverride(name = "lastModifiedDate", column = @Column(name = "auditing__last_modified_date"))
         private AuditMetadata auditing = new AuditMetadata();
 
