@@ -23,17 +23,17 @@ public class AutomationAnnotationRepresentationModelAssembler implements
     @Override
     public AutomationAnnotationRepresentationModel toModel(AutomationAnnotationModel annotation) {
         return AutomationAnnotationRepresentationModel.from(annotation)
-                .add(getProfile(annotation))
-                .add(getCollection(annotation));
+                .add(getProfileLink(annotation))
+                .add(getCollectionLink(annotation));
     }
 
-    private Link getProfile(AutomationAnnotationModel annotation) {
+    private Link getProfileLink(AutomationAnnotationModel annotation) {
         var mapping = mappings.getMetadataFor(annotation.getEntityClass());
         return Link.of(ProfileController.getPath(repositoryRestConfiguration, mapping),
                 ContentGridLinkRelations.ENTITY_PROFILE);
     }
 
-    private Link getCollection(AutomationAnnotationModel annotation) {
+    private Link getCollectionLink(AutomationAnnotationModel annotation) {
         return entityLinks.linkToCollectionResource(annotation.getEntityClass()).withRel(ContentGridLinkRelations.ENTITY);
     }
 }
