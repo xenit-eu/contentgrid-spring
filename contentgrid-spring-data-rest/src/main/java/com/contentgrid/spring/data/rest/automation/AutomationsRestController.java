@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.core.io.Resource;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AutomationsRestController {
 
-    private final AutomationsModel model;
+    @Setter
+    @NonNull
+    private AutomationsModel model;
     @NonNull
     private final AutomationRepresentationModelAssembler assembler;
 
