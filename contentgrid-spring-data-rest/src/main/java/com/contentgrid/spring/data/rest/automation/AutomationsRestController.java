@@ -28,17 +28,7 @@ public class AutomationsRestController {
 
     public AutomationsRestController(Resource resource, AutomationRepresentationModelAssembler assembler) {
         this.assembler = assembler;
-        if (resource.exists()) {
-            try {
-                @NonNull ObjectMapper objectMapper = new ObjectMapper()
-                        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-                this.model = objectMapper.readValue(resource.getInputStream(), AutomationsModel.class);
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        } else {
-            this.model = AutomationsModel.builder().automations(List.of()).build();
-        }
+        this.model = loadConfig(resource);
     }
 
     @GetMapping
@@ -55,6 +45,20 @@ public class AutomationsRestController {
         return automation.map(aut -> assembler.toModel(aut, true))
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    static AutomationsModel loadConfig(Resource resource) {
+        if (resource.exists()) {
+            try {
+                @NonNull ObjectMapper objectMapper = new ObjectMapper()
+                        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+                return objectMapper.readValue(resource.getInputStream(), AutomationsModel.class);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        } else {
+            return AutomationsModel.builder().automations(List.of()).build();
+        }
     }
 
 }
