@@ -20,3 +20,6 @@ contentgrid:
     messaging:
       source: https://example.contentgrid.cloud/abc
       destination: audit
+  thunx:
+    abac:
+      source: none
