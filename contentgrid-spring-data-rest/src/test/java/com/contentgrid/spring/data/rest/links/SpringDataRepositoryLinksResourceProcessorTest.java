@@ -31,37 +31,37 @@ class SpringDataRepositoryLinksResourceProcessorTest {
                                 "cg:entity": [
                                     {
                                         name: "customers",
-                                        href: "http://localhost/customers{?page,size,sort}",
+                                        href: "http://localhost/customers{?page,size,sort*}",
                                         templated: true
                                     },
                                     {
                                         name: "invoices",
-                                        href: "http://localhost/invoices{?page,size,sort}",
+                                        href: "http://localhost/invoices{?page,size,sort*}",
                                         templated: true
                                     },
                                     {
                                         name: "orders",
-                                        href: "http://localhost/orders{?page,size,sort}",
+                                        href: "http://localhost/orders{?page,size,sort*}",
                                         templated: true
                                     },
                                     {
                                         name: "promotions",
-                                        href: "http://localhost/promotions{?page,size,sort}",
+                                        href: "http://localhost/promotions{?page,size,sort*}",
                                         templated: true
                                     },
                                     {
                                         name: "shipping-addresses",
-                                        href: "http://localhost/shipping-addresses{?page,size,sort}",
+                                        href: "http://localhost/shipping-addresses{?page,size,sort*}",
                                         templated: true
                                     },
                                     {
                                         name: "shipping-labels",
-                                        href: "http://localhost/shipping-labels{?page,size,sort}",
+                                        href: "http://localhost/shipping-labels{?page,size,sort*}",
                                         templated: true
                                     },
                                     {
                                         name: "refunds",
-                                        href: "http://localhost/refunds{?page,size,sort}",
+                                        href: "http://localhost/refunds{?page,size,sort*}",
                                         templated: true
                                     }
                                 ]

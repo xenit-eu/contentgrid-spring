@@ -1,7 +1,7 @@
 package com.contentgrid.spring.boot.autoconfigure.flyway;
 
 import org.flywaydb.core.Flyway;
-import org.flywaydb.core.internal.database.postgresql.PostgreSQLConfigurationExtension;
+import org.flywaydb.database.postgresql.PostgreSQLConfigurationExtension;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
