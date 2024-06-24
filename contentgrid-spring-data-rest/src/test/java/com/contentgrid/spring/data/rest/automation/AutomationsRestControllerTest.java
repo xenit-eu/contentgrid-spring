@@ -136,7 +136,7 @@ class AutomationsRestControllerTest {
                                             href: "http://localhost/profile/customers"
                                         },
                                         "cg:entity": {
-                                            href: "http://localhost/customers{?page,size,sort}",
+                                            href: "http://localhost/customers{?page,size,sort*}",
                                             templated: true
                                         }
                                     }
@@ -156,7 +156,7 @@ class AutomationsRestControllerTest {
                                             href: "http://localhost/profile/customers"
                                         },
                                         "cg:entity": {
-                                            href: "http://localhost/customers{?page,size,sort}",
+                                            href: "http://localhost/customers{?page,size,sort*}",
                                             templated: true
                                         }
                                     }
