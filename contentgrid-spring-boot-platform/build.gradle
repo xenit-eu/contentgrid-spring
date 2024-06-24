@@ -9,7 +9,10 @@ javaPlatform {
 
 
 dependencies {
-    api platform('org.springframework.boot:spring-boot-dependencies:3.2.6')
+    // enforcedPlatform because otherwise spring-content would transitively give us JPA 3.2,
+    // which is not (yet) compatible with Spring Boot.
+    // See https://github.com/paulcwarren/spring-content/pull/2002
+    api enforcedPlatform('org.springframework.boot:spring-boot-dependencies:3.2.6')
     api platform('com.contentgrid.thunx:thunx-bom:0.10.0')
     api platform('com.github.paulcwarren:spring-content-bom:3.0.11')
     api platform('io.cloudevents:cloudevents-bom:3.0.0')
