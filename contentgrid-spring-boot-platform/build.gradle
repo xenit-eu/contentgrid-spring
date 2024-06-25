@@ -9,15 +9,18 @@ javaPlatform {
 
 
 dependencies {
-    // enforcedPlatform because otherwise spring-content would transitively give us JPA 3.2,
-    // which is not (yet) compatible with Spring Boot.
-    // See https://github.com/paulcwarren/spring-content/pull/2002
-    api enforcedPlatform('org.springframework.boot:spring-boot-dependencies:3.3.1')
+    api platform('org.springframework.boot:spring-boot-dependencies:3.3.1')
     api platform('com.contentgrid.thunx:thunx-bom:0.10.0')
     api platform('com.github.paulcwarren:spring-content-bom:3.0.11')
     api platform('io.cloudevents:cloudevents-bom:3.0.0')
 
     constraints {
+        api('jakarta.persistence:jakarta.persistence-api') {
+            version {
+                strictly '3.1.0'
+            }
+            because 'spring-boot is not compatible with 3.2.0'
+        }
         api project(':contentgrid-spring-boot-starter')
         api project(':contentgrid-spring-boot-starter-annotations')
         api project(':contentgrid-spring-boot-actuators')
