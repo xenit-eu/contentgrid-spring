@@ -384,7 +384,6 @@ public class AuditMetadataTest {
         }
 
         @Test
-        @Disabled("ACC-1313")
         void postMultipartInvoiceAndContent_shouldSetAuditMetadataFields_http201() throws Exception {
             var createdDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(createdDate));
@@ -535,7 +534,6 @@ public class AuditMetadataTest {
         }
 
         @Test
-        @Disabled("ACC-1313")
         void postMultipartCustomerAndContent_shouldSetAuditMetadataFields_http201() throws Exception {
             var createdDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(createdDate));

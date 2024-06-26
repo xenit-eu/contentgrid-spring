@@ -1316,6 +1316,17 @@ class InvoicingApplicationTests {
                 }
 
                 @Test
+                void postMultipartEntityAndContent_missingFile_http201() throws Exception {
+                    mockMvc.perform(multipart(HttpMethod.POST, "/invoices")
+                                    .param("number", INVOICE_NUMBER_3)
+                                    .param("counterparty", "/customers/" + customerIdByVat(ORG_XENIT_VAT)))
+                            .andExpect(status().isCreated());
+
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_3)).orElseThrow();
+                    assertThat(invoice.getContentId()).isNull();
+                }
+
+                @Test
                 void postMultipartEntityAndContent_textPlainUtf8_http201() throws Exception {
                     var file = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                             UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
@@ -1763,6 +1774,18 @@ class InvoicingApplicationTests {
                     assertThat(customer.getContent().getMimetype()).isEqualTo(MIMETYPE_PLAINTEXT_UTF8);
                     assertThat(customer.getContent().getLength()).isEqualTo(UNICODE_TEXT_UTF8_LENGTH);
                     assertThat(customer.getContent().getFilename()).isEqualTo(file.getOriginalFilename());
+                }
+
+                @Test
+                void postMultipartEntityAndContent_missingFile_http201() throws Exception {
+                    mockMvc.perform(multipart(HttpMethod.POST, "/customers")
+                                    .param("name", "Example")
+                                    .param("vat", ORG_EXAMPLE_VAT))
+                            .andExpect(status().isCreated());
+
+                    var customer = customers.findById(customerIdByVat(ORG_EXAMPLE_VAT)).orElseThrow();
+                    assertThat(customer.getName()).isEqualTo("Example");
+                    assertThat(customer.getContent()).isNull();
                 }
 
                 @Test

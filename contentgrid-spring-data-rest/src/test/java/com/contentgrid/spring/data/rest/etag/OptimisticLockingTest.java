@@ -262,7 +262,6 @@ public class OptimisticLockingTest {
         }
 
         @Test
-        @Disabled("ACC-1313")
         void postMultipartInvoiceAndContent_shouldSetETag_http201() throws Exception {
             var file = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                     UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
@@ -361,7 +360,6 @@ public class OptimisticLockingTest {
         }
 
         @Test
-        @Disabled("ACC-1313")
         void postMultipartCustomerAndContent_shouldSetETag_http201() throws Exception {
             var file = new MockMultipartFile("content", "content.txt", MIMETYPE_PLAINTEXT_UTF8,
                     UNICODE_TEXT.getBytes(StandardCharsets.UTF_8));
