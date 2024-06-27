@@ -1,9 +1,9 @@
-package com.contentgrid.spring.data.rest.automation;
+package com.contentgrid.automations.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.contentgrid.spring.data.rest.automation.AutomationsModel.AutomationAnnotationModel;
-import com.contentgrid.spring.data.rest.automation.AutomationsModel.AutomationModel;
+import com.contentgrid.automations.rest.AutomationsModel.AutomationAnnotationModel;
+import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

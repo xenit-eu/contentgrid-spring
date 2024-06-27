@@ -1,6 +1,6 @@
-package com.contentgrid.spring.data.rest.automation;
+package com.contentgrid.automations.rest;
 
-import com.contentgrid.spring.data.rest.automation.AutomationsModel.AutomationAnnotationModel;
+import com.contentgrid.automations.rest.AutomationsModel.AutomationAnnotationModel;
 import com.contentgrid.spring.data.rest.links.ContentGridLinkRelations;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;

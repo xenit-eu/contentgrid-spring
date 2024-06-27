@@ -1,5 +1,7 @@
-package com.contentgrid.spring.data.rest.automation;
+package com.contentgrid.automations.rest;
 
+import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
+import com.contentgrid.thunx.spring.data.context.AbacContextSupplier;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -25,20 +27,27 @@ public class AutomationsRestController {
     private AutomationsModel model;
     @NonNull
     private final AutomationRepresentationModelAssembler assembler;
+    @NonNull
+    private final AbacContextSupplier abacContextSupplier;
+    @NonNull
+    private final AutomationModelVisitor visitor = new AutomationModelVisitor();
 
-    public AutomationsRestController(Resource resource, AutomationRepresentationModelAssembler assembler) {
+    public AutomationsRestController(Resource resource, AutomationRepresentationModelAssembler assembler,
+            AbacContextSupplier abacContextSupplier) {
         this.assembler = assembler;
         this.model = loadConfig(resource);
+        this.abacContextSupplier = abacContextSupplier;
     }
 
     @GetMapping
     public ResponseEntity<CollectionModel<AutomationRepresentationModel>> getAutomations() {
-        return ResponseEntity.ok(assembler.toCollectionModel(model.getAutomations()));
+        var automations = filterAutomations(model.getAutomations());
+        return ResponseEntity.ok(assembler.toCollectionModel(automations));
     }
 
     @GetMapping("{id}")
     public ResponseEntity<AutomationRepresentationModel> getAutomation(@PathVariable String id) {
-        var automation = model.getAutomations().stream()
+        var automation = filterAutomations(model.getAutomations()).stream()
                 .filter(aut -> aut.getId().equals(id))
                 .findFirst();
 
@@ -59,6 +68,20 @@ public class AutomationsRestController {
         } else {
             return AutomationsModel.builder().automations(List.of()).build();
         }
+    }
+
+    private List<AutomationModel> filterAutomations(List<AutomationModel> automations) {
+        var abacContext = abacContextSupplier.getAbacContext();
+        if (abacContext != null) {
+            return automations.stream()
+                    .filter(automation -> {
+                        var result = abacContext.accept(visitor, automation);
+                        result.assertResultType(Boolean.class);
+                        return (Boolean) result.getValue();
+                    })
+                    .toList();
+        }
+        return automations;
     }
 
 }

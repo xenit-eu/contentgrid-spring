@@ -7,6 +7,7 @@ dependencies {
     api platform(project(':contentgrid-spring-boot-platform'))
     api "com.contentgrid.thunx:thunx-api-spring-boot-starter"
 
+    api project(':contentgrid-automations-rest')
     api project(':contentgrid-spring-boot-actuators')
     api project(':contentgrid-spring-integration-events')
     api project(':contentgrid-spring-data-rest')
