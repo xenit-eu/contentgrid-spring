@@ -52,7 +52,10 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
-@SpringBootTest(properties = {"spring.content.storage.type.default = fs"})
+@SpringBootTest(properties = {
+        "spring.content.storage.type.default = fs",
+        "contentgrid.thunx.abac.source = none"
+})
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 class JwtAuditorAwareTest {
 
