@@ -132,6 +132,26 @@ public class ContentLastModifiedTest {
     class InlinedContentProperty {
 
         @Test
+        void getInvoiceContent_withRecentIfModifiedSince_http304() throws Exception {
+            var headerDate = INVOICE_TIMESTAMP.plus(1, ChronoUnit.MINUTES);
+
+            mockMvc.perform(get(INVOICE_CONTENT_URL)
+                            .accept(MediaType.TEXT_PLAIN)
+                            .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(headerDate)))
+                    .andExpect(status().isNotModified());
+        }
+
+        @Test
+        void getInvoiceContent_withOutdatedIfModifiedSince_http200() throws Exception {
+            var headerDate = INVOICE_TIMESTAMP.minus(1, ChronoUnit.MINUTES);
+
+            mockMvc.perform(get(INVOICE_CONTENT_URL)
+                            .accept(MediaType.TEXT_PLAIN)
+                            .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(headerDate)))
+                    .andExpect(status().isOk());
+        }
+
+        @Test
         void putInvoiceContent_withRecentIfUnmodifiedSince_http200() throws Exception {
             var headerDate = INVOICE_TIMESTAMP.plus(1, ChronoUnit.MINUTES);
 
@@ -184,6 +204,26 @@ public class ContentLastModifiedTest {
 
     @Nested
     class EmbeddedContentProperty {
+
+        @Test
+        void getCustomerContent_withRecentIfModifiedSince_http304() throws Exception {
+            var headerDate = CUSTOMER_TIMESTAMP.plus(1, ChronoUnit.MINUTES);
+
+            mockMvc.perform(get(CUSTOMER_CONTENT_URL)
+                            .accept(MediaType.TEXT_PLAIN)
+                            .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(headerDate)))
+                    .andExpect(status().isNotModified());
+        }
+
+        @Test
+        void getCustomerContent_withOutdatedIfModifiedSince_http200() throws Exception {
+            var headerDate = CUSTOMER_TIMESTAMP.minus(1, ChronoUnit.MINUTES);
+
+            mockMvc.perform(get(CUSTOMER_CONTENT_URL)
+                            .accept(MediaType.TEXT_PLAIN)
+                            .header(HttpHeaders.IF_MODIFIED_SINCE, formatInstant(headerDate)))
+                    .andExpect(status().isOk());
+        }
 
         @Test
         void putCustomerContent_withRecentIfUnmodifiedSince_http200() throws Exception {
