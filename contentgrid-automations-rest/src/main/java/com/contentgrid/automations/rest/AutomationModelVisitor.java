@@ -39,6 +39,7 @@ class AutomationModelVisitor implements ThunkExpressionVisitor<Scalar<?>, Automa
                 yield Scalar.of(!terms.get(0).equals(terms.get(1)));
             }
             case AND -> {
+                assertNotEmpty(terms);
                 yield Scalar.of(terms.stream()
                         .map(scalar -> scalar.assertResultType(Boolean.class))
                         .map(ThunkExpression::maybeValue)
@@ -47,6 +48,7 @@ class AutomationModelVisitor implements ThunkExpressionVisitor<Scalar<?>, Automa
                         .reduce(true, (left, right) -> left && right));
             }
             case OR -> {
+                assertNotEmpty(terms);
                 yield Scalar.of(terms.stream()
                         .map(scalar -> scalar.assertResultType(Boolean.class))
                         .map(ThunkExpression::maybeValue)
@@ -64,6 +66,12 @@ class AutomationModelVisitor implements ThunkExpressionVisitor<Scalar<?>, Automa
                         .formatted(functionExpression.getOperator().getKey()));
             }
         };
+    }
+
+    private static void assertNotEmpty(List<? extends ThunkExpression<?>> terms) {
+        if (terms.isEmpty()) {
+            throw new IllegalArgumentException("Operation requires at least 1 parameter.");
+        }
     }
 
     private static void assertOneTerm(List<? extends ThunkExpression<?>> terms) {
@@ -90,7 +98,7 @@ class AutomationModelVisitor implements ThunkExpressionVisitor<Scalar<?>, Automa
         try {
             Object result = context;
             for (var elem : path) {
-                Objects.requireNonNull(result, () -> "Cannot lookup property %s of null value"
+                Objects.requireNonNull(result, () -> "Cannot lookup property '%s' of null value"
                         .formatted(getPathElementName(elem)));
                 var field = result.getClass().getDeclaredField(getPathElementName(elem));
                 field.setAccessible(true);
@@ -106,11 +114,11 @@ class AutomationModelVisitor implements ThunkExpressionVisitor<Scalar<?>, Automa
             } else if (result instanceof String string) {
                 return Scalar.of(string);
             } else {
-                throw new IllegalArgumentException("Field %s has unknown type %s"
+                throw new IllegalArgumentException("Field '%s' has unknown type '%s'"
                         .formatted(symbolicReference.toPath(), result.getClass().getSimpleName()));
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new IllegalArgumentException("Field %s does not exist".formatted(symbolicReference.toPath()));
+            throw new IllegalArgumentException("Field '%s' does not exist".formatted(symbolicReference.toPath()));
         }
     }
 
