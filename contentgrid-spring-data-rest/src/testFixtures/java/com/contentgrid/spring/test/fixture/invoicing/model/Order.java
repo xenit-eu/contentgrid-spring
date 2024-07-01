@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.Column;
+import jakarta.persistence.FetchType;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -34,7 +35,7 @@ public class Order {
     @JsonProperty(access = Access.READ_ONLY)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer")
     @CollectionFilterParam
     @CollectionFilterParam(value = "customer._id", predicate = EntityId.class, documented = false)
@@ -56,7 +57,7 @@ public class Order {
     @CollectionFilterParam(value = "manual_promos._id", predicate = EntityId.class, documented = false)
     private Set<PromotionCampaign> manualPromos = new HashSet<>();
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JsonProperty("shipping_address")
     @CollectionFilterParam("shipping_address")
     @CollectionFilterParam(value = "shipping_address._id", predicate = EntityId.class, documented = false)
