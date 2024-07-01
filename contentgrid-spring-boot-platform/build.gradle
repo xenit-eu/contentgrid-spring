@@ -12,7 +12,7 @@ dependencies {
     api platform('org.springframework.boot:spring-boot-dependencies:3.3.1')
     api platform('com.contentgrid.thunx:thunx-bom:0.11.0')
     api platform('com.github.paulcwarren:spring-content-bom:3.0.11')
-    api platform('io.cloudevents:cloudevents-bom:3.0.0')
+    api platform('io.cloudevents:cloudevents-bom:4.0.0')
 
     constraints {
         api('jakarta.persistence:jakarta.persistence-api') {
