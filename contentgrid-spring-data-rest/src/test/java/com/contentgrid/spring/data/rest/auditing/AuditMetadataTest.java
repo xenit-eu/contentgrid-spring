@@ -328,30 +328,10 @@ public class AuditMetadataTest {
     }
 
     @Nested
-    class InlineContentProperty {
+    class InlinedContentProperty {
 
         @Test
-        @Disabled("ACC-1312")
-        void postInvoiceContent_withRecentIfUnmodifiedSince_http201() throws Exception {
-            var modifiedDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
-            Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = TIMESTAMP.plus(1, ChronoUnit.MINUTES);
-
-            mockMvc.perform(post("/invoices/{id}/content", INVOICE_1_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .contentType(MediaType.TEXT_PLAIN)
-                            .characterEncoding(StandardCharsets.UTF_8)
-                            .content(UNICODE_TEXT)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
-                    .andExpect(status().isCreated());
-
-            checkInvoiceAuditMetadataFields(INVOICE_1_ID, "John", TIMESTAMP, "Bob", modifiedDate);
-        }
-
-        @Test
-        void postInvoiceContent_withoutIfUnmodifiedSince_http201() throws Exception {
-            // Previous test without header to test that auditMetadata fields are updated after creating content
+        void postInvoiceContent_shouldUpdateAuditMetadataFields_http201() throws Exception {
             var modifiedDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
 
@@ -363,24 +343,6 @@ public class AuditMetadataTest {
                     .andExpect(status().isCreated());
 
             checkInvoiceAuditMetadataFields(INVOICE_1_ID, "John", TIMESTAMP, "Bob", modifiedDate);
-        }
-
-        @Test
-        void postInvoiceContent_withOutdatedIfUnmodifiedSince_http412() throws Exception {
-            var modifiedDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
-            Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = TIMESTAMP.minus(1, ChronoUnit.MINUTES);
-
-            mockMvc.perform(post("/invoices/{id}/content", INVOICE_1_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .contentType(MediaType.TEXT_PLAIN)
-                            .characterEncoding(StandardCharsets.UTF_8)
-                            .content(UNICODE_TEXT)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
-                    .andExpect(status().isPreconditionFailed());
-
-            checkInvoiceAuditMetadataFields(INVOICE_1_ID, "John", TIMESTAMP);
         }
 
         @Test
@@ -405,75 +367,33 @@ public class AuditMetadataTest {
         }
 
         @Test
-        void putInvoiceContent_withRecentIfUnmodifiedSince_http200() throws Exception {
+        void putInvoiceContent_shouldUpdateAuditMetadataFields_http200() throws Exception {
             setupContentProperties();
             var modifiedDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.MINUTES);
 
             // update content, ONLY changing the charset
             mockMvc.perform(put("/invoices/{id}/content", INVOICE_1_ID)
                             .with(jwtWithClaims("user-id-2", "Bob"))
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.TEXT_PLAIN)
-                            .content(EXT_ASCII_TEXT)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
+                            .content(EXT_ASCII_TEXT))
                     .andExpect(status().isOk());
 
             checkInvoiceAuditMetadataFields(INVOICE_1_ID, "John", TIMESTAMP, "Bob", modifiedDate);
         }
 
         @Test
-        void putInvoiceContent_withOutdatedIfUnmodifiedSince_http412() throws Exception {
+        void deleteInvoiceContent_shouldUpdateAuditMetadataFields_http204() throws Exception {
             setupContentProperties();
             var modifiedDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = CONTENT_TIMESTAMP.minus(1, ChronoUnit.MINUTES);
-
-            // update content, ONLY changing the charset
-            mockMvc.perform(put("/invoices/{id}/content", INVOICE_1_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .characterEncoding(StandardCharsets.UTF_8)
-                            .contentType(MediaType.TEXT_PLAIN)
-                            .content(EXT_ASCII_TEXT)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
-                    .andExpect(status().isPreconditionFailed());
-
-            checkInvoiceAuditMetadataFields(INVOICE_1_ID, "John", TIMESTAMP, "John", CONTENT_TIMESTAMP);
-        }
-
-        @Test
-        void deleteInvoiceContent_withRecentIfUnmodifiedSince_http200() throws Exception {
-            setupContentProperties();
-            var modifiedDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.HOURS);
-            Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.MINUTES);
 
             mockMvc.perform(delete("/invoices/{id}/content", INVOICE_1_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
+                            .with(jwtWithClaims("user-id-2", "Bob")))
                     .andExpect(status().isNoContent());
 
             checkInvoiceAuditMetadataFields(INVOICE_1_ID, "John", TIMESTAMP, "Bob", modifiedDate);
-        }
-
-        @Test
-        void deleteInvoiceContent_withOutdatedIfUnmodifiedSince_http412() throws Exception {
-            setupContentProperties();
-            var modifiedDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.HOURS);
-            Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = CONTENT_TIMESTAMP.minus(1, ChronoUnit.MINUTES);
-
-            mockMvc.perform(delete("/invoices/{id}/content", INVOICE_1_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
-                    .andExpect(status().isPreconditionFailed());
-
-            checkInvoiceAuditMetadataFields(INVOICE_1_ID, "John", TIMESTAMP, "John", CONTENT_TIMESTAMP);
         }
     }
 
@@ -481,27 +401,7 @@ public class AuditMetadataTest {
     class EmbeddedContentProperty {
 
         @Test
-        @Disabled("ACC-1312")
-        void postCustomerContent_withRecentIfUnmodifiedSince_http201() throws Exception {
-            var modifiedDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
-            Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = TIMESTAMP.plus(1, ChronoUnit.MINUTES);
-
-            mockMvc.perform(post("/customers/{id}/content", XENIT_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .contentType(MediaType.TEXT_PLAIN)
-                            .characterEncoding(StandardCharsets.UTF_8)
-                            .content(UNICODE_TEXT)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
-                    .andExpect(status().isCreated());
-
-            checkCustomerAuditMetadataFields(XENIT_ID, "John", TIMESTAMP, "Bob", modifiedDate);
-        }
-
-        @Test
-        void postCustomerContent_withoutIfUnmodifiedSince_http201() throws Exception {
-            // Previous test without header to test that auditMetadata fields are updated after creating content
+        void postCustomerContent_shouldUpdateAuditMetadataFields_http201() throws Exception {
             var modifiedDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
 
@@ -513,24 +413,6 @@ public class AuditMetadataTest {
                     .andExpect(status().isCreated());
 
             checkCustomerAuditMetadataFields(XENIT_ID, "John", TIMESTAMP, "Bob", modifiedDate);
-        }
-
-        @Test
-        void postCustomerContent_withOutdatedIfUnmodifiedSince_http412() throws Exception {
-            var modifiedDate = TIMESTAMP.plus(1, ChronoUnit.HOURS);
-            Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = TIMESTAMP.minus(1, ChronoUnit.MINUTES);
-
-            mockMvc.perform(post("/customers/{id}/content", XENIT_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .contentType(MediaType.TEXT_PLAIN)
-                            .characterEncoding(StandardCharsets.UTF_8)
-                            .content(UNICODE_TEXT)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
-                    .andExpect(status().isPreconditionFailed());
-
-            checkCustomerAuditMetadataFields(XENIT_ID, "John", TIMESTAMP);
         }
 
         @Test
@@ -555,75 +437,33 @@ public class AuditMetadataTest {
         }
 
         @Test
-        void putCustomerContent_withRecentIfUnmodifiedSince_http200() throws Exception {
+        void putCustomerContent_shouldUpdateAuditMetadataFields_http200() throws Exception {
             setupContentProperties();
             var modifiedDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.MINUTES);
 
             // update content, ONLY changing the charset
             mockMvc.perform(put("/customers/{id}/content", XENIT_ID)
                             .with(jwtWithClaims("user-id-2", "Bob"))
                             .characterEncoding(StandardCharsets.UTF_8)
                             .contentType(MediaType.TEXT_PLAIN)
-                            .content(EXT_ASCII_TEXT)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
+                            .content(EXT_ASCII_TEXT))
                     .andExpect(status().isOk());
 
             checkCustomerAuditMetadataFields(XENIT_ID, "John", TIMESTAMP, "Bob", modifiedDate);
         }
 
         @Test
-        void putCustomerContent_withOutdatedIfUnmodifiedSince_http412() throws Exception {
+        void deleteCustomerContent_shouldUpdateAuditMetadataFields_http204() throws Exception {
             setupContentProperties();
             var modifiedDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.HOURS);
             Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = CONTENT_TIMESTAMP.minus(1, ChronoUnit.MINUTES);
-
-            // update content, ONLY changing the charset
-            mockMvc.perform(put("/customers/{id}/content", XENIT_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .characterEncoding(StandardCharsets.UTF_8)
-                            .contentType(MediaType.TEXT_PLAIN)
-                            .content(EXT_ASCII_TEXT)
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
-                    .andExpect(status().isPreconditionFailed());
-
-            checkCustomerAuditMetadataFields(XENIT_ID, "John", TIMESTAMP, "John", CONTENT_TIMESTAMP);
-        }
-
-        @Test
-        void deleteCustomerContent_withRecentIfUnmodifiedSince_http200() throws Exception {
-            setupContentProperties();
-            var modifiedDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.HOURS);
-            Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.MINUTES);
 
             mockMvc.perform(delete("/customers/{id}/content", XENIT_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
+                            .with(jwtWithClaims("user-id-2", "Bob")))
                     .andExpect(status().isNoContent());
 
             checkCustomerAuditMetadataFields(XENIT_ID, "John", TIMESTAMP, "Bob", modifiedDate);
-        }
-
-        @Test
-        void deleteCustomerContent_withOutdatedIfUnmodifiedSince_http412() throws Exception {
-            setupContentProperties();
-            var modifiedDate = CONTENT_TIMESTAMP.plus(1, ChronoUnit.HOURS);
-            Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(modifiedDate));
-
-            var headerDate = CONTENT_TIMESTAMP.minus(1, ChronoUnit.MINUTES);
-
-            mockMvc.perform(delete("/customers/{id}/content", XENIT_ID)
-                            .with(jwtWithClaims("user-id-2", "Bob"))
-                            .header(HttpHeaders.IF_UNMODIFIED_SINCE, formatInstant(headerDate)))
-                    .andExpect(status().isPreconditionFailed());
-
-            checkCustomerAuditMetadataFields(XENIT_ID, "John", TIMESTAMP, "John", CONTENT_TIMESTAMP);
         }
     }
 }
