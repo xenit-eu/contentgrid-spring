@@ -29,8 +29,8 @@ public class AutomationsRestController {
     private final AutomationRepresentationModelAssembler assembler;
     @NonNull
     private final AbacContextSupplier abacContextSupplier;
-    @NonNull
-    private final AutomationModelVisitor visitor = new AutomationModelVisitor();
+
+    private static final AutomationModelVisitor VISITOR = new AutomationModelVisitor();
 
     public AutomationsRestController(Resource resource, AutomationRepresentationModelAssembler assembler,
             AbacContextSupplier abacContextSupplier) {
@@ -72,16 +72,16 @@ public class AutomationsRestController {
 
     private List<AutomationModel> filterAutomations(List<AutomationModel> automations) {
         var abacContext = abacContextSupplier.getAbacContext();
-        if (abacContext != null) {
-            return automations.stream()
-                    .filter(automation -> {
-                        var result = abacContext.accept(visitor, automation);
-                        result.assertResultType(Boolean.class);
-                        return (Boolean) result.getValue();
-                    })
-                    .toList();
+        if (abacContext == null) {
+            return automations;
         }
-        return automations;
+        return automations.stream()
+                .filter(automation -> {
+                    var result = abacContext.accept(VISITOR, automation);
+                    result.assertResultType(Boolean.class);
+                    return (Boolean) result.getValue();
+                })
+                .toList();
     }
 
 }

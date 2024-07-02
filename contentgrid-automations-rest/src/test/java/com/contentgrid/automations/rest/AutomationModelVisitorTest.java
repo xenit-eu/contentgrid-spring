@@ -35,7 +35,7 @@ class AutomationModelVisitorTest {
             .annotations(List.of())
             .build();
 
-    private final AutomationModelVisitor visitor = new AutomationModelVisitor();
+    private static final AutomationModelVisitor VISITOR = new AutomationModelVisitor();
 
     public static Stream<Arguments> alwaysTruePolicy() {
         return Stream.of(
@@ -64,50 +64,50 @@ class AutomationModelVisitorTest {
     @ParameterizedTest
     @MethodSource
     void alwaysTruePolicy(ThunkExpression<?> expression) {
-        assertThat(expression.accept(visitor, AUTOMATION_1).getValue()).isEqualTo(true);
-        assertThat(expression.accept(visitor, AUTOMATION_2).getValue()).isEqualTo(true);
+        assertThat(expression.accept(VISITOR, AUTOMATION_1).getValue()).isEqualTo(true);
+        assertThat(expression.accept(VISITOR, AUTOMATION_2).getValue()).isEqualTo(true);
     }
 
     @ParameterizedTest
     @MethodSource
     void alwaysFalsePolicy(ThunkExpression<?> expression) {
-        assertThat(expression.accept(visitor, AUTOMATION_1).getValue()).isEqualTo(false);
-        assertThat(expression.accept(visitor, AUTOMATION_2).getValue()).isEqualTo(false);
+        assertThat(expression.accept(VISITOR, AUTOMATION_1).getValue()).isEqualTo(false);
+        assertThat(expression.accept(VISITOR, AUTOMATION_2).getValue()).isEqualTo(false);
     }
 
     @Test
     void conditionalOnSystemPolicy() {
         var policy = Comparison.areEqual(
-                SymbolicReference.of("automation", path -> path.string("system")),
+                SymbolicReference.of("entity", path -> path.string("system")),
                 Scalar.of("my-system")
         );
 
-        assertThat(policy.accept(visitor, AUTOMATION_1).getValue()).isEqualTo(true);
-        assertThat(policy.accept(visitor, AUTOMATION_2).getValue()).isEqualTo(false);
+        assertThat(policy.accept(VISITOR, AUTOMATION_1).getValue()).isEqualTo(true);
+        assertThat(policy.accept(VISITOR, AUTOMATION_2).getValue()).isEqualTo(false);
     }
 
     @Test
     void conditionalOnSystemPolicy_wrongSubject_shouldThrow() {
         var policy = Comparison.areEqual(
-                SymbolicReference.of("entity", path -> path.string("system")),
+                SymbolicReference.of("automation", path -> path.string("system")),
                 Scalar.of("my-system")
         );
 
-        assertThatThrownBy(() -> policy.accept(visitor, AUTOMATION_1).getValue(),
-                "Expected symbolic-ref subject named 'automation', but got 'entity'")
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> policy.accept(VISITOR, AUTOMATION_1).getValue())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Expected symbolic-ref subject named 'entity', but got 'automation'");
     }
 
     @Test
     void conditionalOnSystemPolicy_wrongPath_shouldThrow() {
         var policy = Comparison.areEqual(
-                SymbolicReference.of("automation", path -> path.string("sys")),
+                SymbolicReference.of("entity", path -> path.string("sys")),
                 Scalar.of("my-system")
         );
 
-        assertThatThrownBy(() -> policy.accept(visitor, AUTOMATION_1).getValue(),
-                "Field 'sys' does not exists")
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> policy.accept(VISITOR, AUTOMATION_1).getValue())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Field 'entity.sys' does not exist");
     }
 
 }

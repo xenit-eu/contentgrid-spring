@@ -10,6 +10,7 @@ import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
 import com.contentgrid.automations.rest.AutomationsModel.AutomationAnnotationModel;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
+import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.security.WithMockJwt;
 import com.contentgrid.thunx.encoding.json.JsonThunkExpressionCoder;
 import com.contentgrid.thunx.predicates.model.Comparison;
@@ -52,22 +53,14 @@ class AutomationsRestControllerTest {
     private static final String RELATION_ANNOTATION_ID = UUID.randomUUID().toString();
     private static final Map<String, String> RELATION_ANNOTATION_SUBJECT = Map.of("type", "relation", "entity", "customer", "relation", "orders");
     private static final Map<String, Object> RELATION_ANNOTATION_DATA = Map.of("type", "output");
-    private static final Class<?> ENTITY_CLASS;
-
-    static {
-        try {
-            ENTITY_CLASS = Class.forName("com.contentgrid.spring.test.fixture.invoicing.model.Customer");
-        } catch (ClassNotFoundException e) {
-            throw new IllegalStateException(e);
-        }
-    }
+    private static final Class<?> ENTITY_CLASS = Customer.class;
 
     // true = true
     private static final Comparison DEFAULT_POLICY = Comparison.areEqual(Scalar.of(true), Scalar.of(true));
 
     // automation.system = my-system
     private static final Comparison MY_SYSTEM_POLICY = Comparison.areEqual(
-            SymbolicReference.of("automation", path -> path.string("system")),
+            SymbolicReference.of("entity", path -> path.string("system")),
             Scalar.of("my-system"));
 
     private static String headerEncode(ThunkExpression<Boolean> expression) {

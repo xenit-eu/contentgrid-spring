@@ -18,7 +18,7 @@ dependencies {
     implementation project(':contentgrid-spring-data-rest')
 
     implementation 'org.springframework.data:spring-data-rest-webmvc'
-    implementation 'com.contentgrid.thunx:thunx-predicates-querydsl'
+    implementation 'com.contentgrid.thunx:thunx-model'
     implementation 'com.contentgrid.thunx:thunx-spring-api'
 
     testImplementation 'com.contentgrid.thunx:thunx-encoding-json'

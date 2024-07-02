@@ -13,10 +13,10 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.PropertyAccessorFactory;
 
 class AutomationModelVisitor implements ThunkExpressionVisitor<Scalar<?>, AutomationModel> {
-
-    private static final String SUBJECT_NAME = "automation";
 
     @Override
     public Scalar<?> visit(Scalar<?> scalar, AutomationModel context) {
@@ -89,9 +89,9 @@ class AutomationModelVisitor implements ThunkExpressionVisitor<Scalar<?>, Automa
     @Override
     public Scalar<?> visit(SymbolicReference symbolicReference, AutomationModel context) {
         String subject = symbolicReference.getSubject().getName();
-        if (!SUBJECT_NAME.equalsIgnoreCase(subject)) {
+        if (!"entity".equalsIgnoreCase(subject)) {
             throw new IllegalArgumentException(
-                    "Expected symbolic-ref subject named '" + SUBJECT_NAME + "', but got '" + subject + "'");
+                    "Expected symbolic-ref subject named 'entity', but got '" + subject + "'");
         }
 
         var path = symbolicReference.getPath();
@@ -100,15 +100,18 @@ class AutomationModelVisitor implements ThunkExpressionVisitor<Scalar<?>, Automa
             for (var elem : path) {
                 Objects.requireNonNull(result, () -> "Cannot lookup property '%s' of null value"
                         .formatted(getPathElementName(elem)));
-                var field = result.getClass().getDeclaredField(getPathElementName(elem));
-                field.setAccessible(true);
-                result = field.get(result);
+                var propertyAccessor = PropertyAccessorFactory.forDirectFieldAccess(result);
+                result = propertyAccessor.getPropertyValue(getPathElementName(elem));
             }
 
             if (result == null) {
                 return Scalar.nullValue();
-            } else if (result instanceof Number number) {
-                return Scalar.of((BigDecimal) number);
+            } else if (result instanceof Long number) {
+                return Scalar.of(number);
+            } else if (result instanceof Double number) {
+                return Scalar.of(number);
+            } else if (result instanceof BigDecimal number) {
+                return Scalar.of(number);
             } else if (result instanceof Boolean bool) {
                 return Scalar.of(bool);
             } else if (result instanceof String string) {
@@ -117,7 +120,7 @@ class AutomationModelVisitor implements ThunkExpressionVisitor<Scalar<?>, Automa
                 throw new IllegalArgumentException("Field '%s' has unknown type '%s'"
                         .formatted(symbolicReference.toPath(), result.getClass().getSimpleName()));
             }
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (BeansException e) {
             throw new IllegalArgumentException("Field '%s' does not exist".formatted(symbolicReference.toPath()));
         }
     }
