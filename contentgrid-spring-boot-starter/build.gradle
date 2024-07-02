@@ -14,6 +14,7 @@ dependencies {
     api project(':contentgrid-spring-querydsl')
     api project(':contentgrid-spring-common')
 
+    implementation project(':contentgrid-automations-rest')
     implementation project(':contentgrid-spring-swagger-ui')
     implementation project(':contentgrid-spring-audit-logging')
     implementation 'io.cloudevents:cloudevents-spring'

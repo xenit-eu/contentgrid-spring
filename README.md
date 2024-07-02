@@ -18,6 +18,7 @@ dependencies {
 
 ## Modules
 
+* `contentgrid-automations-rest` serve the automation configurations of ContentGrid applications
 * `contentgrid-spring-boot-actuators` serve the authorization policy and webhook configuration as actuator endpoints
 * `contentgrid-spring-boot-autoconfigure` contains Spring Boot AutoConfiguration for ContentGrid applications
 * `contentgrid-spring-boot-platform` is a Bill of Materials for ContentGrid applications,

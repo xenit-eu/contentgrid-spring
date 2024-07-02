@@ -1,9 +1,9 @@
-package com.contentgrid.spring.data.rest.automation;
+package com.contentgrid.automations.rest;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
-import com.contentgrid.spring.data.rest.automation.AutomationsModel.AutomationModel;
+import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
