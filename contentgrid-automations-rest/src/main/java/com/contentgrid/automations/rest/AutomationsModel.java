@@ -1,4 +1,4 @@
-package com.contentgrid.spring.data.rest.automation;
+package com.contentgrid.automations.rest;
 
 import java.util.List;
 import java.util.Map;

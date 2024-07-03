@@ -1,9 +1,10 @@
-package com.contentgrid.spring.data.rest.automation;
+package com.contentgrid.automations.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.contentgrid.spring.data.rest.automation.AutomationsModel.AutomationAnnotationModel;
-import com.contentgrid.spring.data.rest.automation.AutomationsModel.AutomationModel;
+import com.contentgrid.automations.rest.AutomationsModel.AutomationAnnotationModel;
+import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
+import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -23,15 +24,7 @@ public class AutomationsModelTest {
     private static final String ATTRIBUTE_ANNOTATION_ID = UUID.randomUUID().toString();
     private static final Map<String, String> ATTRIBUTE_ANNOTATION_SUBJECT = Map.of("type", "attribute", "entity", "customer", "attribute", "content");
     private static final Map<String, Object> ATTRIBUTE_ANNOTATION_DATA = Map.of("type", "input");
-    private static final Class<?> ENTITY_CLASS;
-
-    static {
-        try {
-            ENTITY_CLASS = Class.forName("com.contentgrid.spring.test.fixture.invoicing.model.Customer");
-        } catch (ClassNotFoundException e) {
-            throw new IllegalStateException(e);
-        }
-    }
+    private static final Class<?> ENTITY_CLASS = Customer.class;
 
     @Test
     void loadMissingConfig() {

@@ -1,0 +1,35 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom(annotationProcessor)
+    }
+}
+
+dependencies {
+
+    annotationProcessor platform(project(':contentgrid-spring-boot-platform'))
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation platform(project(':contentgrid-spring-boot-platform'))
+    implementation project(':contentgrid-spring-data-rest')
+
+    implementation 'org.springframework.data:spring-data-rest-webmvc'
+    implementation 'com.contentgrid.thunx:thunx-model'
+    implementation 'com.contentgrid.thunx:thunx-spring-api'
+
+    testImplementation 'com.contentgrid.thunx:thunx-encoding-json'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation project(':contentgrid-spring-boot-autoconfigure')
+    testImplementation project(':contentgrid-spring-test')
+
+    testImplementation testFixtures(project(':contentgrid-spring-data-rest'))
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

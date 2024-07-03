@@ -31,8 +31,11 @@ dependencies {
     compileOnly project(':contentgrid-spring-swagger-ui')
     compileOnly project(':contentgrid-spring-audit-logging')
     compileOnly project(':contentgrid-spring-data-support')
+    compileOnly project(':contentgrid-automations-rest')
     compileOnly 'org.springframework:spring-messaging'
     compileOnly 'io.cloudevents:cloudevents-spring'
+    compileOnly 'com.contentgrid.thunx:thunx-model'
+    compileOnly 'com.contentgrid.thunx:thunx-spring-api'
 
     compileOnly 'org.springframework.security:spring-security-web'
     compileOnly 'org.springframework.security:spring-security-config'
