@@ -12,9 +12,7 @@ import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -28,11 +26,9 @@ import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.repository.support.RepositoryInvoker;
 import org.springframework.data.rest.core.mapping.PropertyAwareResourceMapping;
-import org.springframework.data.rest.core.mapping.RepositoryResourceMappings;
 import org.springframework.data.rest.core.mapping.ResourceMetadata;
 import org.springframework.data.rest.core.support.SelfLinkProvider;
 import org.springframework.data.rest.webmvc.support.BackendId;
@@ -43,6 +39,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -50,6 +47,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @RepositoryRestController
@@ -272,7 +270,11 @@ public class DelegatingRepositoryPropertyReferenceController {
             @RequestBody(required = false) CollectionModel<Object> incoming, @BackendId Serializable id,
             @PathVariable String property) throws Exception {
 
-        return this.delegate.createPropertyReference(resourceInformation, requestMethod, incoming, id, property);
+        try {
+            return this.delegate.createPropertyReference(resourceInformation, requestMethod, incoming, id, property);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e);
+        }
     }
 
     @RequestMapping(value = BASE_MAPPING + "/{propertyId}", method = DELETE)
@@ -286,6 +288,12 @@ public class DelegatingRepositoryPropertyReferenceController {
     @ExceptionHandler
     public ResponseEntity<Void> handle(
             RepositoryPropertyReferenceController.HttpRequestMethodNotSupportedException exception) {
+        return exception.toResponse();
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ProblemDetail> handle(
+            BadRequestException exception) {
         return exception.toResponse();
     }
 
@@ -327,6 +335,21 @@ public class DelegatingRepositoryPropertyReferenceController {
                 .orElseThrow(ResourceNotFoundException::new);
     }
 
+    static class BadRequestException extends ResponseStatusException {
+
+        BadRequestException(Throwable cause) {
+            this(cause.getMessage(), cause);
+        }
+
+        BadRequestException(String message, Throwable cause) {
+            super(HttpStatus.BAD_REQUEST, message, cause);
+        }
+
+        ResponseEntity<ProblemDetail> toResponse() {
+            return ResponseEntity.badRequest().body(this.getBody());
+        }
+
+    }
 
     private class ReferencedProperty {
 

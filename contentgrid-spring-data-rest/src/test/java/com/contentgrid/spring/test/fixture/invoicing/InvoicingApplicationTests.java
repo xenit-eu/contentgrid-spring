@@ -569,6 +569,30 @@ class InvoicingApplicationTests {
                             .andExpect(status().isNoContent());
                 }
 
+                @Test
+                void putUriList_shouldReturn_http204() throws Exception {
+                    // fictive example: fix the customer
+                    var correctCustomerId = customers.findByVat(ORG_INBEV_VAT).orElseThrow().getId();
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
+                                    .contentType(RestMediaTypes.TEXT_URI_LIST)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            /customers/%s
+                                            """.formatted(correctCustomerId)))
+                            .andExpect(status().isNoContent());
+                }
+
+                @Test
+                void putUriList_multipleLinks_http400() throws Exception {
+                    mockMvc.perform(put("/invoices/" + invoiceId(INVOICE_NUMBER_1) + "/counterparty")
+                                    .contentType(RestMediaTypes.TEXT_URI_LIST)
+                                    .accept(MediaType.APPLICATION_JSON)
+                                    .content("""
+                                            /customers/%s
+                                            /customers/%s
+                                            """.formatted(XENIT_ID, INBEV_ID)))
+                            .andExpect(status().isBadRequest());
+                }
             }
 
             @Nested
