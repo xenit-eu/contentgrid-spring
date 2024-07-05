@@ -255,8 +255,10 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
      * <ul>
      * <li>Create entity without required attribute
      * <li>Create entity without required (-to-one) relation
+     * <li>Create entity with attribute value not in allowed values
      * <li>Update entity to remove/null required attribute
      * <li>Update entity to remove/null required relation
+     * <li>Update entity with attribute value not in allowed values
      * <li>Remove entity relation that is required on this side
      * <li>Remove entity relation that is the target of a required one-to-one relation
      * </ul>
@@ -294,6 +296,23 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     )
                     .andExpect(validationConstraintViolation()
                             .withError(error -> error.withProperty("counterparty"))
+                    );
+        }
+
+        @Test
+        void createEntityWithAttributeValueNotInAllowedValues() throws Exception {
+            mockMvc.perform(post("/customers")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
+                            .content("""
+                                    {
+                                        "vat": "%s",
+                                        "gender": "illegal"
+                                    }
+                                    """.formatted(UUID.randomUUID()))
+                    )
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("gender"))
                     );
         }
 
@@ -355,6 +374,37 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     )
                     .andExpect(validationConstraintViolation()
                             .withError(error -> error.withProperty("counterparty"))
+                    );
+        }
+
+        @Test
+        void updateEntityWithAttributeValueNotInAllowedValues() throws Exception {
+            var customer = createCustomer();
+            mockMvc.perform(put("/customers/{id}", customer.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
+                            .content("""
+                                    {
+                                        "vat": "%s",
+                                        "gender": "illegal"
+                                    }
+                                    """.formatted(customer.getVat()))
+                    )
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("gender"))
+                    );
+
+            mockMvc.perform(patch("/customers/{id}", customer.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
+                            .content("""
+                                    {
+                                        "gender": "illegal"
+                                    }
+                                    """)
+                    )
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("gender"))
                     );
         }
 

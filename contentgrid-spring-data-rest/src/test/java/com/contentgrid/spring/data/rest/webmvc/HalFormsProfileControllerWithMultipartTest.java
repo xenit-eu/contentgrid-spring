@@ -68,6 +68,10 @@ class HalFormsProfileControllerWithMultipartTest extends AbstractHalFormsProfile
                                             type: "datetime"
                                         },
                                         {
+                                            name: "gender",
+                                            type: "text"
+                                        },
+                                        {
                                             name: "total_spend",
                                             type: "number"
                                         },

@@ -76,8 +76,12 @@ class AffordanceInjectingSelfLinkProviderTest {
                                             type: "text"
                                         },
                                         {
-                                            name: "birthday"
-                                            #, type: "datetime"
+                                            name: "birthday",
+                                            type: "datetime"
+                                        },
+                                        {
+                                            name: "gender",
+                                            type: "text"
                                         },
                                         {
                                             name: "total_spend",
@@ -131,8 +135,12 @@ class AffordanceInjectingSelfLinkProviderTest {
                                                         type: "text"
                                                     },
                                                     {
-                                                        name: "birthday"
-                                                        #, type: "datetime"
+                                                        name: "birthday",
+                                                        type: "datetime"
+                                                    },
+                                                    {
+                                                        name: "gender",
+                                                        type: "text"
                                                     },
                                                     {
                                                         name: "total_spend",

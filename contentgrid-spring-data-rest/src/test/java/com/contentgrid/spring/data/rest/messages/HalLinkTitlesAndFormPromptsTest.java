@@ -105,6 +105,10 @@ class HalLinkTitlesAndFormPromptsTest {
                                             type : "datetime"
                                         },
                                         {
+                                            name: "gender",
+                                            type: "text"
+                                        },
+                                        {
                                             prompt: "Spending Total",
                                             name : "total_spend",
                                             type : "number"
