@@ -1,12 +1,9 @@
 package com.contentgrid.spring.data.rest.affordances;
 
-import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
-import java.util.Set;
-import java.util.UUID;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +34,7 @@ class AffordanceInjectingSelfLinkProviderTest {
 
     @BeforeEach
     void setup() {
-        customer = customerRepository.save(new Customer(UUID.randomUUID(), 0, new AuditMetadata(), "Abc", "ABC", null, null, null, Set.of(), Set.of()));
+        customer = customerRepository.save(new Customer("Abc", "ABC"));
     }
 
     @AfterEach

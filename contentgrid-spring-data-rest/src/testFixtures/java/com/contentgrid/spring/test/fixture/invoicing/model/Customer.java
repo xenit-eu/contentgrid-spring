@@ -25,7 +25,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import jakarta.persistence.OneToMany;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -36,7 +35,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Customer {
 
@@ -103,4 +101,8 @@ public class Customer {
     @Size(max = 0, groups = OnEntityDelete.class)
     private Set<Invoice> invoices = new HashSet<>();
 
+    public Customer(String name, String vat) {
+        this.name = name;
+        this.vat = vat;
+    }
 }

@@ -11,7 +11,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
-import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
@@ -121,9 +120,7 @@ public class AuditMetadataTest {
         TIMESTAMP = Instant.now().truncatedTo(ChronoUnit.MILLIS);
         Mockito.when(mockedDateTimeProvider.getNow()).thenReturn(Optional.of(TIMESTAMP));
 
-        var xenit = customers.save(
-                new Customer(null, 0, new AuditMetadata(), "XeniT", ORG_XENIT_VAT, null, null, null, new HashSet<>(),
-                        new HashSet<>()));
+        var xenit = customers.save(new Customer("XeniT", ORG_XENIT_VAT));
 
         XENIT_ID = xenit.getId();
 
