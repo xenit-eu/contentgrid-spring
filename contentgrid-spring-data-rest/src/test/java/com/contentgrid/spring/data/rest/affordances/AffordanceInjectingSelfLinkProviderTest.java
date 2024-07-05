@@ -81,7 +81,10 @@ class AffordanceInjectingSelfLinkProviderTest {
                                         },
                                         {
                                             name: "gender",
-                                            type: "text"
+                                            type: "text",
+                                            options: {
+                                                inline: [ "female", "male" ]
+                                            }
                                         },
                                         {
                                             name: "total_spend",
@@ -140,7 +143,10 @@ class AffordanceInjectingSelfLinkProviderTest {
                                                     },
                                                     {
                                                         name: "gender",
-                                                        type: "text"
+                                                        type: "text",
+                                                        options: {
+                                                            inline: [ "female", "male" ]
+                                                        }
                                                     },
                                                     {
                                                         name: "total_spend",

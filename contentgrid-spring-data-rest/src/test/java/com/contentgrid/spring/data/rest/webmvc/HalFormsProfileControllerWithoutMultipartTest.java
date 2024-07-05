@@ -65,7 +65,10 @@ class HalFormsProfileControllerWithoutMultipartTest extends AbstractHalFormsProf
                                         },
                                         {
                                             name: "gender",
-                                            type: "text"
+                                            type: "text",
+                                            options: {
+                                                inline: [ "female", "male" ]
+                                            }
                                         },
                                         {
                                             name: "total_spend",

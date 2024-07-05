@@ -106,7 +106,10 @@ class HalLinkTitlesAndFormPromptsTest {
                                         },
                                         {
                                             name: "gender",
-                                            type: "text"
+                                            type: "text",
+                                            options: {
+                                                inline: [ "female", "male" ]
+                                            }
                                         },
                                         {
                                             prompt: "Spending Total",

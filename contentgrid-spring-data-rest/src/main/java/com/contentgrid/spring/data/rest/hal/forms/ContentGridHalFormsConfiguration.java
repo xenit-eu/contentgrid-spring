@@ -21,4 +21,11 @@ public class ContentGridHalFormsConfiguration {
     ) {
         return new HalFormsRelationFieldOptionsCustomizer(domainTypeMapping, entityLinks);
     }
+
+    @Bean
+    MediaTypeConfigurationCustomizer<HalFormsConfiguration> contentGridHalFormsAttributeFieldOptionsCustomizer(
+            @FormMapping DomainTypeMapping domainTypeMapping
+    ) {
+        return new HalFormsAttributeFieldOptionsCustomizer(domainTypeMapping);
+    }
 }

@@ -6,7 +6,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
+import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +28,14 @@ class ContentGridHalFormsConfigurationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private CustomerRepository customers;
+
+    @AfterEach
+    void cleanUp() {
+        customers.deleteAll();
+    }
 
     @Test
     void createFormFieldForToOneRelationLinksToReferredResource() throws Exception {
@@ -54,6 +64,29 @@ class ContentGridHalFormsConfigurationTest {
                                 }
                                 """)
                 );
+    }
+
+    @Test
+    void createFormFieldForConstrainedAttributeOptions() throws Exception {
+        mockMvc.perform(get("/profile/customers").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(content().json("""
+                            {
+                                _templates: {
+                                    "create-form": {
+                                        properties: [
+                                            {
+                                                name: "gender",
+                                                type: "text",
+                                                options: {
+                                                    inline: [ "female", "male" ]
+                                                }
+                                            },
+                                            {},{},{},{},{},{}
+                                        ]
+                                    }
+                                }
+                            }
+                        """));
     }
 
     @Test
@@ -103,6 +136,42 @@ class ContentGridHalFormsConfigurationTest {
                                                 minItems: 0
                                             }
                                         }
+                                    ]
+                                }
+                            }
+                        }
+                        """)
+        );
+    }
+
+    @Test
+    void updateFormFieldForConstrainedAttributeOptions() throws Exception {
+        var createdCustomer = mockMvc.perform(
+                        post("/customers").contentType(MediaType.APPLICATION_JSON).content("""
+                                {
+                                    "vat": "BE123"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getHeader("Location");
+
+        mockMvc.perform(get(createdCustomer).accept(MediaTypes.HAL_FORMS_JSON)).andExpect(
+                content().json("""
+                        {
+                            _templates: {
+                                default: {
+                                    method: "PUT",
+                                    properties: [
+                                        {
+                                            name: "gender",
+                                            type: "text",
+                                            options: {
+                                                inline: [ "female", "male" ]
+                                            }
+                                        },
+                                        {},{},{},{},{},{}
                                     ]
                                 }
                             }
