@@ -88,7 +88,7 @@ public class Customer {
     @CollectionFilterParam
     private Instant birthday;
 
-    @AllowedValues(options = {"female", "male"})
+    @AllowedValues({"female", "male"})
     @InputType(HtmlInputType.RADIO_VALUE)
     private String gender;
 

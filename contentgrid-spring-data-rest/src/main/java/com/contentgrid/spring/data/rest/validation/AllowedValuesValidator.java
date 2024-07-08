@@ -10,7 +10,7 @@ public class AllowedValuesValidator implements ConstraintValidator<AllowedValues
 
     @Override
     public void initialize(AllowedValues constraintAnnotation) {
-        this.options = Set.of(constraintAnnotation.options());
+        this.options = Set.of(constraintAnnotation.value());
     }
 
     @Override

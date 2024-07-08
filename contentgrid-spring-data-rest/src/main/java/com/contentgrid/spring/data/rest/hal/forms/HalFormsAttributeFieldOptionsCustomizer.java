@@ -30,10 +30,9 @@ public class HalFormsAttributeFieldOptionsCustomizer implements MediaTypeConfigu
         var configAtomic = new AtomicReference<>(configuration);
         container.doWithProperties(property -> {
             property.findAnnotation(AllowedValues.class)
-                    .map(AllowedValues::options)
+                    .map(AllowedValues::value)
                     .ifPresent(options -> configAtomic.updateAndGet(config -> {
                         return config.withOptions(domainType, property.getName(), metadata -> {
-                            metadata.getInputType();
                             return HalFormsOptions.inline(options);
                         });
                     }));

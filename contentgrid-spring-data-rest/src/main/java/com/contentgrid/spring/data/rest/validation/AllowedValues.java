@@ -26,7 +26,7 @@ public @interface AllowedValues {
     /**
      * @return the allowed options of the constraint
      */
-    String[] options() default {};
+    String[] value();
 
     /**
      * @return the error message template
