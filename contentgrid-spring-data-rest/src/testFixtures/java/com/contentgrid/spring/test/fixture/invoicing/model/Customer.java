@@ -31,6 +31,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.content.rest.RestResource;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.hateoas.InputType;
+import org.springframework.hateoas.mediatype.html.HtmlInputType;
 
 @Entity
 @Getter
@@ -87,6 +89,7 @@ public class Customer {
     private Instant birthday;
 
     @AllowedValues(options = {"female", "male"})
+    @InputType(HtmlInputType.RADIO_VALUE)
     private String gender;
 
     @JsonProperty("total_spend")

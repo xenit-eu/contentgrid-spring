@@ -81,7 +81,7 @@ class AffordanceInjectingSelfLinkProviderTest {
                                         },
                                         {
                                             name: "gender",
-                                            type: "text",
+                                            type: "radio",
                                             options: {
                                                 inline: [ "female", "male" ]
                                             }
@@ -143,7 +143,7 @@ class AffordanceInjectingSelfLinkProviderTest {
                                                     },
                                                     {
                                                         name: "gender",
-                                                        type: "text",
+                                                        type: "radio",
                                                         options: {
                                                             inline: [ "female", "male" ]
                                                         }

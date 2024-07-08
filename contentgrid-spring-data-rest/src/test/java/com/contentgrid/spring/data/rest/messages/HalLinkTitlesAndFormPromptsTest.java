@@ -106,7 +106,7 @@ class HalLinkTitlesAndFormPromptsTest {
                                         },
                                         {
                                             name: "gender",
-                                            type: "text",
+                                            type: "radio",
                                             options: {
                                                 inline: [ "female", "male" ]
                                             }

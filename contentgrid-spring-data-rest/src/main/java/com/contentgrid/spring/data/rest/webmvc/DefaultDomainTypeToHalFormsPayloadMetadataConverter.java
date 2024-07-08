@@ -33,6 +33,7 @@ import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
 import org.springframework.hateoas.AffordanceModel.Named;
 import org.springframework.hateoas.AffordanceModel.PayloadMetadata;
 import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
+import org.springframework.hateoas.InputType;
 import org.springframework.hateoas.mediatype.InputTypeFactory;
 import org.springframework.hateoas.mediatype.html.HtmlInputType;
 import org.springframework.http.MediaType;
@@ -140,17 +141,22 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
             }
         }
 
-        return new BasicPropertyMetadata(path,
-                property.getTypeInformation().toTypeDescriptor().getResolvableType())
-                .withRequired(property.isRequired())
-                .withReadOnly(false);
+        // Default: use same property metadata as for update form
+        return propertyToMetadataForUpdateForm(property, domainClass, path);
     }
 
     private PropertyMetadata propertyToMetadataForUpdateForm(Property property, Class<?> domainClass, String path) {
-        return new BasicPropertyMetadata(path,
+        var result = new BasicPropertyMetadata(path,
                 property.getTypeInformation().toTypeDescriptor().getResolvableType())
                 .withRequired(property.isRequired())
                 .withReadOnly(false);
+
+        var inputTypeAnnotation = property.findAnnotation(InputType.class);
+
+        if (inputTypeAnnotation.isPresent()) {
+            return result.withInputType(inputTypeAnnotation.get().value());
+        }
+        return result;
     }
 
 

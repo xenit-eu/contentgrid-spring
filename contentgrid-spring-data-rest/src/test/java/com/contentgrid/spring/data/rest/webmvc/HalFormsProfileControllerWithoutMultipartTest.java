@@ -65,7 +65,7 @@ class HalFormsProfileControllerWithoutMultipartTest extends AbstractHalFormsProf
                                         },
                                         {
                                             name: "gender",
-                                            type: "text",
+                                            type: "radio",
                                             options: {
                                                 inline: [ "female", "male" ]
                                             }
