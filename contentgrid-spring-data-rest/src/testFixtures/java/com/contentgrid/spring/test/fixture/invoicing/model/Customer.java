@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing.model;
 
+import com.contentgrid.spring.data.rest.validation.AllowedValues;
 import com.contentgrid.spring.data.rest.validation.OnEntityDelete;
 import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
@@ -25,18 +26,18 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import jakarta.persistence.OneToMany;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.content.rest.RestResource;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.hateoas.InputType;
+import org.springframework.hateoas.mediatype.html.HtmlInputType;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Customer {
 
@@ -87,6 +88,10 @@ public class Customer {
     @CollectionFilterParam
     private Instant birthday;
 
+    @AllowedValues({"female", "male"})
+    @InputType(HtmlInputType.RADIO_VALUE)
+    private String gender;
+
     @JsonProperty("total_spend")
     private Integer totalSpend;
 
@@ -103,4 +108,8 @@ public class Customer {
     @Size(max = 0, groups = OnEntityDelete.class)
     private Set<Invoice> invoices = new HashSet<>();
 
+    public Customer(String name, String vat) {
+        this.name = name;
+        this.vat = vat;
+    }
 }

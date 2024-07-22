@@ -64,6 +64,13 @@ class HalFormsProfileControllerWithoutMultipartTest extends AbstractHalFormsProf
                                             type: "datetime"
                                         },
                                         {
+                                            name: "gender",
+                                            type: "radio",
+                                            options: {
+                                                inline: [ "female", "male" ]
+                                            }
+                                        },
+                                        {
                                             name: "total_spend",
                                             type: "number"
                                         },
