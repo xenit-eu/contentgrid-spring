@@ -329,11 +329,11 @@ class AuditObservationHandlerTest {
     void relationGetItem(MediaType mediaType) throws Exception {
         var order = new Order();
         order.setCustomer(customerRepository.getReferenceById(CUSTOMER_ID));
-        orderRepository.save(order);
+        var savedOrder = orderRepository.save(order);
         var invoice = invoiceRepository.findById(INVOICE_ID).orElseThrow();
-        invoice.setOrders(Set.of(order));
+        invoice.setOrders(Set.of(savedOrder));
         invoiceRepository.save(invoice);
-        mockMvc.perform(MockMvcRequestBuilders.get("/invoices/{id}/orders/{id}", INVOICE_ID, order.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get("/invoices/{id}/orders/{id}", INVOICE_ID, savedOrder.getId())
                         .accept(mediaType)
                 )
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection());
@@ -344,7 +344,7 @@ class AuditObservationHandlerTest {
                     assertThat(event.getOperation()).isEqualTo(EntityRelationItemAuditEvent.Operation.READ);
                     assertThat(event.getId()).isEqualTo(INVOICE_ID.toString());
                     assertThat(event.getRelationName()).isEqualTo("orders");
-                    assertThat(event.getRelationId()).isEqualTo(order.getId().toString());
+                    assertThat(event.getRelationId()).isEqualTo(savedOrder.getId().toString());
                 });
     }
 

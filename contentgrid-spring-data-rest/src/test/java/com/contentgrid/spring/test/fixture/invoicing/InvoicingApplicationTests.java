@@ -363,6 +363,30 @@ class InvoicingApplicationTests {
                     });
                 });
             }
+
+            @Test
+            void createOrder_withMultipartFormData_noContentProperty_http201_created() throws Exception {
+                var customerId = customers.findByVat(ORG_XENIT_VAT).orElseThrow().getId();
+
+                var result = mockMvc.perform(multipart(HttpMethod.POST, "/orders")
+                                .param("customer", "/customers/" + customerId)
+                                .contentType(MediaType.MULTIPART_FORM_DATA))
+                        .andExpect(status().isCreated())
+                        .andExpect(headers().location().path("/orders/{id}"))
+                        .andReturn();
+
+                var orderId = Optional.ofNullable(result.getResponse().getHeader(HttpHeaders.LOCATION))
+                        .map(location -> new UriTemplate("{scheme}://{host}/orders/{id}").match(location))
+                        .map(matches -> matches.get("id"))
+                        .map(UUID::fromString)
+                        .orElseThrow();
+
+                doInTransaction(() -> {
+                    assertThat(orders.findById(orderId)).hasValueSatisfying(order -> {
+                        assertThat(order.getCustomer().getId()).isEqualTo(customerId);
+                    });
+                });
+            }
         }
     }
 

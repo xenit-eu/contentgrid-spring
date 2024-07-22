@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ETagHeaderMatcher {
 
-    public static ETag toETag(int version) {
+    public static ETag toETag(long version) {
         return ETag.from(String.valueOf(version));
     }
 
