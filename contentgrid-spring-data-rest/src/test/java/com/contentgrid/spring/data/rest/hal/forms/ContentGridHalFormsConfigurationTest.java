@@ -92,6 +92,55 @@ class ContentGridHalFormsConfigurationTest {
     }
 
     @Test
+    void searchFormFieldForConstrainedAttributeOptions() throws Exception {
+        mockMvc.perform(get("/profile/customers").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(content().json("""
+                            {
+                                _templates: {
+                                    "search": {
+                                        properties: [
+                                            {
+                                                "name" : "gender",
+                                                "type" : "text",
+                                                "options" : {
+                                                  "inline" : [ "female", "male" ],
+                                                  "minItems" : 0,
+                                                  "maxItems" : 1
+                                                }
+                                            },
+                                            {},{},{},{},{},{},{},{},{}
+                                        ]
+                                    }
+                                }
+                            }
+                        """));
+    }
+
+    @Test
+    void searchFormFieldForConstrainedAttributeOptionsThroughRelation() throws Exception {
+        mockMvc.perform(get("/profile/orders").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(content().json("""
+                            {
+                                _templates: {
+                                    "search": {
+                                        properties: [
+                                            {
+                                                name: "customer.gender",
+                                                type: "text",
+                                                options: {
+                                                    inline: [ "female", "male" ],
+                                                    maxItems: 1
+                                                }
+                                            },
+                                            {},{},{},{},{},{}
+                                        ]
+                                    }
+                                }
+                            }
+                        """));
+    }
+
+    @Test
     void linkRelationFormFieldForToManyRelationLinksToReferredResource() throws Exception {
         var createdCustomer = mockMvc.perform(
                         post("/customers").contentType(MediaType.APPLICATION_JSON).content("""
