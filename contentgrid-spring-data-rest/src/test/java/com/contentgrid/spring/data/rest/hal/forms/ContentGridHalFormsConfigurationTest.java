@@ -78,7 +78,9 @@ class ContentGridHalFormsConfigurationTest {
                                                 name: "gender",
                                                 type: "radio",
                                                 options: {
-                                                    inline: [ "female", "male" ]
+                                                    inline: [ "female", "male" ],
+                                                    minItems: 0,
+                                                    maxItems: 1
                                                 }
                                             },
                                             {},{},{},{},{},{}
@@ -168,7 +170,9 @@ class ContentGridHalFormsConfigurationTest {
                                             name: "gender",
                                             type: "radio",
                                             options: {
-                                                inline: [ "female", "male" ]
+                                                inline: [ "female", "male" ],
+                                                minItems: 0,
+                                                maxItems: 1
                                             }
                                         },
                                         {},{},{},{},{},{}
