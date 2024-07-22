@@ -57,8 +57,8 @@ public class OptimisticLockingTest {
     static UUID INVOICE_1_ID;
     static UUID XENIT_ID;
 
-    static int INVOICE_1_VERSION;
-    static int XENIT_VERSION;
+    static Long INVOICE_1_VERSION;
+    static Long XENIT_VERSION;
     static final ETag INVALID_VERSION = ETag.from("INVALID");
 
     private static final String EXT_ASCII_TEXT = "L'éducation doit être gratuite.";

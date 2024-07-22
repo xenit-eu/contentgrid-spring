@@ -51,7 +51,7 @@ public class Invoice {
     private UUID id;
 
     @Version
-    private int version;
+    private Long version = 0L;
 
     @JsonProperty(value = "audit_metadata", access = Access.READ_ONLY)
     @Embedded

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.Column;
+import jakarta.persistence.Version;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -33,6 +34,9 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @JsonProperty(access = Access.READ_ONLY)
     private UUID id;
+
+    @Version
+    private Long version = 0L;
 
     @ManyToOne
     @JoinColumn(name = "customer")
