@@ -11,7 +11,8 @@ import org.springframework.hateoas.mediatype.hal.forms.HalFormsConfiguration;
 import org.springframework.hateoas.mediatype.hal.forms.HalFormsOptions;
 
 @RequiredArgsConstructor
-public class HalFormsAttributeFieldOptionsCustomizer implements MediaTypeConfigurationCustomizer<HalFormsConfiguration> {
+public class HalFormsAttributeFieldOptionsCustomizer implements
+        MediaTypeConfigurationCustomizer<HalFormsConfiguration> {
 
     @NonNull
     private final DomainTypeMapping domainTypeMapping;
@@ -33,7 +34,9 @@ public class HalFormsAttributeFieldOptionsCustomizer implements MediaTypeConfigu
                     .map(AllowedValues::value)
                     .ifPresent(options -> configAtomic.updateAndGet(config -> {
                         return config.withOptions(domainType, property.getName(), metadata -> {
-                            return HalFormsOptions.inline(options);
+                            return HalFormsOptions.inline(options)
+                                    .withMinItems(metadata.isRequired() ? 1L : 0L)
+                                    .withMaxItems(property.getTypeInformation().isCollectionLike() ? null : 1L);
                         });
                     }));
         });
