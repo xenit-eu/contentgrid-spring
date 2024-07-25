@@ -55,6 +55,7 @@ class CollectionFiltersMappingImplTest {
                         "content.mimetype",
                         "content.filename",
                         "birthday",
+                        "gender",
                         "invoices.$$id",
                         "invoices.number",
                         "invoices.paid",

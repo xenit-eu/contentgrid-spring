@@ -3,6 +3,7 @@ package com.contentgrid.spring.data.rest.hal.forms;
 import com.contentgrid.spring.data.rest.mapping.ContentGridDomainTypeMappingConfiguration;
 import com.contentgrid.spring.data.rest.mapping.DomainTypeMapping;
 import com.contentgrid.spring.data.rest.mapping.FormMapping;
+import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -24,8 +25,9 @@ public class ContentGridHalFormsConfiguration {
 
     @Bean
     MediaTypeConfigurationCustomizer<HalFormsConfiguration> contentGridHalFormsAttributeFieldOptionsCustomizer(
-            @FormMapping DomainTypeMapping domainTypeMapping
+            @FormMapping DomainTypeMapping domainTypeMapping,
+            CollectionFiltersMapping collectionFiltersMapping
     ) {
-        return new HalFormsAttributeFieldOptionsCustomizer(domainTypeMapping);
+        return new HalFormsAttributeFieldOptionsCustomizer(domainTypeMapping, collectionFiltersMapping);
     }
 }

@@ -71,7 +71,7 @@ public class Customer {
 
     private String name;
 
-    @Column(unique=true, nullable = false)
+    @Column(unique = true, nullable = false)
     @CollectionFilterParam(predicate = EqualsIgnoreCase.class)
     @NotNull
     private String vat;
@@ -90,6 +90,7 @@ public class Customer {
 
     @AllowedValues({"female", "male"})
     @InputType(HtmlInputType.RADIO_VALUE)
+    @CollectionFilterParam
     private String gender;
 
     @JsonProperty("total_spend")
@@ -100,7 +101,7 @@ public class Customer {
     @CollectionFilterParam(predicate = EntityId.class, documented = false)
     private Set<Order> orders = new HashSet<>();
 
-    @OneToMany(mappedBy="counterparty")
+    @OneToMany(mappedBy = "counterparty")
     @CollectionFilterParam
     @CollectionFilterParam(value = "invoices.$$id", predicate = EntityId.class, documented = false)
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:invoices")

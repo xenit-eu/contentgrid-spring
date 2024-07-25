@@ -62,6 +62,10 @@ abstract class AbstractHalFormsProfileControllerTest {
                                             type: "datetime"
                                         },
                                         {
+                                            name: "gender",
+                                            type: "text"
+                                        },
+                                        {
                                             name: "invoices.number",
                                             type: "text"
                                         },
@@ -159,12 +163,14 @@ abstract class AbstractHalFormsProfileControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[4].name",
                         Matchers.is("birthday")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[5].name",
-                        Matchers.is("invoices.number")))
+                        Matchers.is("gender")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[6].name",
-                        Matchers.is("invoices.paid")))
+                        Matchers.is("invoices.number")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[7].name",
-                        Matchers.is("invoices.content.length")))
+                        Matchers.is("invoices.paid")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[8].name",
+                        Matchers.is("invoices.content.length")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[9].name",
                         Matchers.is("invoices.orders.id")));
     }
 }

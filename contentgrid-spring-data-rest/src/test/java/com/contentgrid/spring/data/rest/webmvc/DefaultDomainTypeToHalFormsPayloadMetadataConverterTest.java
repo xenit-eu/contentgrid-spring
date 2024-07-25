@@ -130,6 +130,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
         assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
                 "vat",
                 "birthday",
+                "gender",
                 "content.size",
                 "content.mimetype",
                 "content.filename",
@@ -149,6 +150,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
         assertThat(metadata.stream()).map(PropertyMetadata::getName).containsExactlyInAnyOrder(
                 "customer.vat",
                 "customer.birthday",
+                "customer.gender",
                 "customer.content.size",
                 "customer.content.mimetype",
                 "customer.content.filename",
