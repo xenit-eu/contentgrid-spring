@@ -4,7 +4,7 @@ import com.contentgrid.spring.data.rest.validation.OnEntityDelete;
 import com.contentgrid.spring.data.support.auditing.v1.AuditMetadata;
 import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.querydsl.predicate.EntityId;
-import com.contentgrid.spring.querydsl.predicate.EqualsIgnoreCase;
+import com.contentgrid.spring.querydsl.predicate.Text.EqualsIgnoreCase;
 import com.contentgrid.spring.querydsl.predicate.None;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
