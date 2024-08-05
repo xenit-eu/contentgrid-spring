@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class TextTest {
-    private final PredicateFactoryTester<QTestObject> TESTER = new PredicateFactoryTester<>(new QTestObject(
+    private static final PredicateFactoryTester<QTestObject> TESTER = new PredicateFactoryTester<>(new QTestObject(
             PathMetadataFactory.forVariable("o")));
 
     static Stream<Class<? extends QuerydslPredicateFactory>> factories() {
@@ -56,13 +56,13 @@ class TextTest {
         };
 
         return Stream.of(
-                Arguments.of(new Text.EqualsIgnoreCase(), equalsIgnoreCase),
-                Arguments.of(new Text.EqualsNormalized(), equalsNormalized),
-                Arguments.of(new Text.EqualsIgnoreCaseNormalized(), equalsIgnoreCaseNormalized),
-                Arguments.of(new Text.StartsWith(), startsWith),
-                Arguments.of(new Text.StartsWithIgnoreCase(), startsWithIgnoreCase),
-                Arguments.of(new Text.StartsWithNormalized(), startsWithNormalized),
-                Arguments.of(new Text.StartsWithIgnoreCaseNormalized(), startsWithIgnoreCaseNormalized)
+                Arguments.of(new Text.EqualsIgnoreCase(), equalsIgnoreCase, "lower(o.stringValue) in [abcdef, ghi]"),
+                Arguments.of(new Text.EqualsNormalized(), equalsNormalized, "normalize(o.stringValue) in [ABCdef, GHI]"),
+                Arguments.of(new Text.EqualsIgnoreCaseNormalized(), equalsIgnoreCaseNormalized, "lower(normalize(o.stringValue)) in [abcdef, ghi]"),
+                Arguments.of(new Text.StartsWith(), startsWith, null),
+                Arguments.of(new Text.StartsWithIgnoreCase(), startsWithIgnoreCase, null),
+                Arguments.of(new Text.StartsWithNormalized(), startsWithNormalized, null),
+                Arguments.of(new Text.StartsWithIgnoreCaseNormalized(), startsWithIgnoreCaseNormalized, null)
         );
     }
 
@@ -89,7 +89,8 @@ class TextTest {
 
     @ParameterizedTest
     @MethodSource("boundPredicates")
-    void bindsStringPath(QuerydslPredicateFactory<StringPath, String> predicateFactory, BiFunction<StringPath, String, BooleanExpression> mapper) {
+    void bindsStringPath(QuerydslPredicateFactory<StringPath, String> predicateFactory, BiFunction<StringPath, String,
+            BooleanExpression> mapper, String collectionValue) {
         var factory = TESTER.evaluate(predicateFactory, QTestObject::stringValue);
 
         assertThat(factory.boundPaths()).containsExactly(TESTER.getPathBase().stringValue);
@@ -101,8 +102,12 @@ class TextTest {
             assertThat(predicate).isEqualTo(mapper.apply(TESTER.getPathBase().stringValue, "ABCdef"));
         });
         assertThat(factory.bind(List.of("ABCdef", "GHI"))).hasValueSatisfying(predicate -> {
-            assertThat(predicate).isEqualTo(mapper.apply(TESTER.getPathBase().stringValue, "ABCdef")
-                    .or(mapper.apply(TESTER.getPathBase().stringValue, "GHI")));
+            if (collectionValue != null) {
+                assertThat(predicate).hasToString(collectionValue);
+            } else {
+                assertThat(predicate).isEqualTo(mapper.apply(TESTER.getPathBase().stringValue, "ABCdef")
+                        .or(mapper.apply(TESTER.getPathBase().stringValue, "GHI")));
+            }
         });
     }
 

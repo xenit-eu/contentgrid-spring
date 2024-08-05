@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class Text {
 
     @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
-    private static abstract class AbstractStringPredicateFactory extends AbstractSimpleQuerydslPredicateFactory<StringPath, String> {
+    private abstract static class AbstractStringPredicateFactory extends AbstractSimpleQuerydslPredicateFactory<StringPath, String> {
         private final BiFunction<StringPath, String, BooleanExpression> stringExpressionMapper;
 
         @Override
@@ -58,6 +58,14 @@ public class Text {
         public EqualsIgnoreCase() {
             super(StringExpression::equalsIgnoreCase);
         }
+
+        @Override
+        protected Optional<Predicate> bindCoerced(StringPath path, Collection<? extends String> values) {
+            if (values.size() <= 1) {
+                return super.bindCoerced(path, values);
+            }
+            return Optional.of(path.lower().in(values.stream().map(String::toLowerCase).toList()));
+        }
     }
 
     /**
@@ -94,6 +102,17 @@ public class Text {
         public EqualsNormalized() {
             super((expr, value) -> normalize(expr).eq(Normalizer.normalize(value, Form.NFC)));
         }
+
+        @Override
+        protected Optional<Predicate> bindCoerced(StringPath path, Collection<? extends String> values) {
+            if (values.size() <= 1) {
+                return super.bindCoerced(path, values);
+            }
+
+            return Optional.of(normalize(path).in(values.stream()
+                    .map(value -> Normalizer.normalize(value, Form.NFC))
+                    .toList()));
+        }
     }
 
     /**
@@ -105,6 +124,17 @@ public class Text {
 
         public EqualsIgnoreCaseNormalized() {
             super((expr, value) -> normalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFC)));
+        }
+
+        @Override
+        protected Optional<Predicate> bindCoerced(StringPath path, Collection<? extends String> values) {
+            if (values.size() <= 1) {
+                return super.bindCoerced(path, values);
+            }
+
+            return Optional.of(normalize(path).lower().in(values.stream()
+                    .map(value -> Normalizer.normalize(value, Form.NFC).toLowerCase())
+                    .toList()));
         }
     }
 
