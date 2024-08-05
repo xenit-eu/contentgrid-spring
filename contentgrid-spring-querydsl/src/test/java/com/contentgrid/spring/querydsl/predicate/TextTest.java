@@ -13,6 +13,8 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.core.types.dsl.StringPath;
 import java.lang.reflect.InvocationTargetException;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
@@ -27,8 +29,12 @@ class TextTest {
     static Stream<Class<? extends QuerydslPredicateFactory>> factories() {
         return Stream.of(
                 Text.EqualsIgnoreCase.class,
+                Text.EqualsNormalized.class,
+                Text.EqualsIgnoreCaseNormalized.class,
                 Text.StartsWith.class,
-                Text.StartsWithIgnoreCase.class
+                Text.StartsWithIgnoreCase.class,
+                Text.StartsWithNormalized.class,
+                Text.StartsWithIgnoreCaseNormalized.class
         );
     }
 
@@ -36,11 +42,27 @@ class TextTest {
         BiFunction<StringPath, String, BooleanExpression> equalsIgnoreCase = StringExpression::equalsIgnoreCase;
         BiFunction<StringPath, String, BooleanExpression> startsWith = StringExpression::startsWith;
         BiFunction<StringPath, String, BooleanExpression> startsWithIgnoreCase = StringExpression::startsWithIgnoreCase;
+        BiFunction<StringPath, String, BooleanExpression> equalsNormalized = (expr, value) -> {
+            return Text.normalize(expr).eq(Normalizer.normalize(value, Form.NFC));
+        };
+        BiFunction<StringPath, String, BooleanExpression> equalsIgnoreCaseNormalized = (expr, value) -> {
+            return Text.normalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFC));
+        };
+        BiFunction<StringPath, String, BooleanExpression> startsWithNormalized = (expr, value) -> {
+            return Text.normalize(expr).startsWith(Normalizer.normalize(value, Form.NFC));
+        };
+        BiFunction<StringPath, String, BooleanExpression> startsWithIgnoreCaseNormalized = (expr, value) -> {
+            return Text.normalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFC));
+        };
 
         return Stream.of(
                 Arguments.of(new Text.EqualsIgnoreCase(), equalsIgnoreCase),
+                Arguments.of(new Text.EqualsNormalized(), equalsNormalized),
+                Arguments.of(new Text.EqualsIgnoreCaseNormalized(), equalsIgnoreCaseNormalized),
                 Arguments.of(new Text.StartsWith(), startsWith),
-                Arguments.of(new Text.StartsWithIgnoreCase(), startsWithIgnoreCase)
+                Arguments.of(new Text.StartsWithIgnoreCase(), startsWithIgnoreCase),
+                Arguments.of(new Text.StartsWithNormalized(), startsWithNormalized),
+                Arguments.of(new Text.StartsWithIgnoreCaseNormalized(), startsWithIgnoreCaseNormalized)
         );
     }
 

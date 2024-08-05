@@ -25,6 +25,7 @@ dependencies {
     implementation platform(project(':contentgrid-spring-boot-platform'))
     implementation 'org.springframework.data:spring-data-commons'
     implementation 'com.contentgrid.thunx:spring-data-querydsl-predicate-injector'
+    implementation 'org.hibernate.orm:hibernate-core'
 
     testAnnotationProcessor platform(project(':contentgrid-spring-boot-platform'))
     testAnnotationProcessor 'org.projectlombok:lombok'

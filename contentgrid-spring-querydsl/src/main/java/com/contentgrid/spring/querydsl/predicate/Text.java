@@ -5,8 +5,11 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.core.types.dsl.StringPath;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -79,6 +82,58 @@ public class Text {
         public StartsWithIgnoreCase() {
             super(StringExpression::startsWithIgnoreCase);
         }
+    }
+
+    /**
+     * Filters items down to only items matching the supplied value in a NFC normalized way.
+     * <p>
+     * This predicate only supports {@link String}s, and can not be used with other types.
+     */
+    public static class EqualsNormalized extends AbstractStringPredicateFactory {
+
+        public EqualsNormalized() {
+            super((expr, value) -> normalize(expr).eq(Normalizer.normalize(value, Form.NFC)));
+        }
+    }
+
+    /**
+     * Filters items down to only items matching the supplied value in a case-insensitive, NFC normalized way.
+     * <p>
+     * This predicate only supports {@link String}s, and can not be used with other types.
+     */
+    public static class EqualsIgnoreCaseNormalized extends AbstractStringPredicateFactory {
+
+        public EqualsIgnoreCaseNormalized() {
+            super((expr, value) -> normalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFC)));
+        }
+    }
+
+    /**
+     * Filters items down to only items starting with the supplied value in a NFC normalized way.
+     * <p>
+     * This predicate only supports {@link String}s, and can not be used with other types.
+     */
+    public static class StartsWithIgnoreCaseNormalized extends AbstractStringPredicateFactory {
+
+        protected StartsWithIgnoreCaseNormalized() {
+            super((expr, value) -> normalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFC)));
+        }
+    }
+
+    /**
+     * Filters items down to only items starting with the supplied value in a case-insensitive, NFC normalized way.
+     * <p>
+     * This predicate only supports {@link String}s, and can not be used with other types.
+     */
+    public static class StartsWithNormalized extends AbstractStringPredicateFactory {
+
+        protected StartsWithNormalized() {
+            super((expr, value) -> normalize(expr).startsWith(Normalizer.normalize(value, Form.NFC)));
+        }
+    }
+
+    static StringExpression normalize(StringExpression expr) {
+        return Expressions.stringTemplate("normalize({0s})", expr);
     }
 
 }
