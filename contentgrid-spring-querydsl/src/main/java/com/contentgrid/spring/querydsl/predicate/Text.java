@@ -15,7 +15,9 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class Text {
 
     @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
