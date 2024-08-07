@@ -43,16 +43,16 @@ class TextTest {
         BiFunction<StringPath, String, BooleanExpression> startsWith = StringExpression::startsWith;
         BiFunction<StringPath, String, BooleanExpression> startsWithIgnoreCase = StringExpression::startsWithIgnoreCase;
         BiFunction<StringPath, String, BooleanExpression> equalsNormalized = (expr, value) -> {
-            return Text.normalize(expr).eq(Normalizer.normalize(value, Form.NFC));
+            return Text.normalize(expr).eq(Normalizer.normalize(value, Form.NFKC));
         };
         BiFunction<StringPath, String, BooleanExpression> equalsIgnoreCaseNormalized = (expr, value) -> {
-            return Text.normalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFC));
+            return Text.normalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFKC));
         };
         BiFunction<StringPath, String, BooleanExpression> startsWithNormalized = (expr, value) -> {
-            return Text.normalize(expr).startsWith(Normalizer.normalize(value, Form.NFC));
+            return Text.normalize(expr).startsWith(Normalizer.normalize(value, Form.NFKC));
         };
         BiFunction<StringPath, String, BooleanExpression> startsWithIgnoreCaseNormalized = (expr, value) -> {
-            return Text.normalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFC));
+            return Text.normalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFKC));
         };
 
         return Stream.of(

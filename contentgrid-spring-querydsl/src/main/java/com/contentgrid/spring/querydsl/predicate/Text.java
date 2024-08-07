@@ -95,14 +95,14 @@ public class Text {
     }
 
     /**
-     * Filters items down to only items matching the supplied value in a NFC normalized way.
+     * Filters items down to only items matching the supplied value in a NFKC normalized way.
      * <p>
      * This predicate only supports {@link String}s, and can not be used with other types.
      */
     public static class EqualsNormalized extends AbstractStringPredicateFactory {
 
         public EqualsNormalized() {
-            super((expr, value) -> normalize(expr).eq(Normalizer.normalize(value, Form.NFC)));
+            super((expr, value) -> normalize(expr).eq(Normalizer.normalize(value, Form.NFKC)));
         }
 
         @Override
@@ -112,20 +112,20 @@ public class Text {
             }
 
             return Optional.of(normalize(path).in(values.stream()
-                    .map(value -> Normalizer.normalize(value, Form.NFC))
+                    .map(value -> Normalizer.normalize(value, Form.NFKC))
                     .toList()));
         }
     }
 
     /**
-     * Filters items down to only items matching the supplied value in a case-insensitive, NFC normalized way.
+     * Filters items down to only items matching the supplied value in a case-insensitive, NFKC normalized way.
      * <p>
      * This predicate only supports {@link String}s, and can not be used with other types.
      */
     public static class EqualsIgnoreCaseNormalized extends AbstractStringPredicateFactory {
 
         public EqualsIgnoreCaseNormalized() {
-            super((expr, value) -> normalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFC)));
+            super((expr, value) -> normalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFKC)));
         }
 
         @Override
@@ -135,32 +135,32 @@ public class Text {
             }
 
             return Optional.of(normalize(path).lower().in(values.stream()
-                    .map(value -> Normalizer.normalize(value, Form.NFC).toLowerCase())
+                    .map(value -> Normalizer.normalize(value, Form.NFKC).toLowerCase())
                     .toList()));
         }
     }
 
     /**
-     * Filters items down to only items starting with the supplied value in a NFC normalized way.
+     * Filters items down to only items starting with the supplied value in a NFKC normalized way.
      * <p>
      * This predicate only supports {@link String}s, and can not be used with other types.
      */
     public static class StartsWithIgnoreCaseNormalized extends AbstractStringPredicateFactory {
 
         protected StartsWithIgnoreCaseNormalized() {
-            super((expr, value) -> normalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFC)));
+            super((expr, value) -> normalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFKC)));
         }
     }
 
     /**
-     * Filters items down to only items starting with the supplied value in a case-insensitive, NFC normalized way.
+     * Filters items down to only items starting with the supplied value in a case-insensitive, NFKC normalized way.
      * <p>
      * This predicate only supports {@link String}s, and can not be used with other types.
      */
     public static class StartsWithNormalized extends AbstractStringPredicateFactory {
 
         protected StartsWithNormalized() {
-            super((expr, value) -> normalize(expr).startsWith(Normalizer.normalize(value, Form.NFC)));
+            super((expr, value) -> normalize(expr).startsWith(Normalizer.normalize(value, Form.NFKC)));
         }
     }
 
