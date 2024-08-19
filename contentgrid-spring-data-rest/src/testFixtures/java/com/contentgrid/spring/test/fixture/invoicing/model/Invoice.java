@@ -13,6 +13,7 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.OneToOne;
 import jakarta.validation.constraints.NotNull;
@@ -120,7 +121,7 @@ public class Invoice {
     @JsonProperty("attachment_filename")
     private String attachmentFilename;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "counterparty", nullable = false)
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:counterparty")
     @CollectionFilterParam(predicate = EntityId.class, documented = false)
@@ -134,7 +135,7 @@ public class Invoice {
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:orders")
     private Set<Order> orders = new HashSet<>();
 
-    @OneToOne(mappedBy = "invoice")
+    @OneToOne(mappedBy = "invoice", fetch = FetchType.LAZY)
     @org.springframework.data.rest.core.annotation.RestResource(rel = "d:refund")
     @Null(groups = OnEntityDelete.class)
     // Refund#invoice is required, this constraint ensures that there is no refund linked when deleting the invoice

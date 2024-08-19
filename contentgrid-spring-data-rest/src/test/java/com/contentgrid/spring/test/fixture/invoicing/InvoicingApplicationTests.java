@@ -21,6 +21,7 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
+import com.contentgrid.spring.test.fixture.invoicing.model.ShippingLabel;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
@@ -295,6 +296,27 @@ class InvoicingApplicationTests {
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(0))
                         .andExpect(jsonPath("$._links.self.href").value("http://localhost/refunds?page=0&size=20"))
                         .andExpect(jsonPath("$._links.curies").value(curies()));
+            }
+
+            @Test
+            void listShippingLabels_withLabelsInLoop_http200_ok() throws Exception {
+                // set up the loop of shipping-labels
+                var label1 = shippingLabels.save(new ShippingLabel("a", "b"));
+                label1 = shippingLabels.save(label1);
+
+                var label2 = shippingLabels.save(new ShippingLabel("b", "a"));
+                label2 = shippingLabels.save(label2);
+
+                // Add relations
+                label1.setParent(label2);
+                label1 = shippingLabels.save(label1);
+
+                label2.setParent(label1);
+                shippingLabels.save(label2);
+
+                mockMvc.perform(get("/shipping-labels")
+                                .accept(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk());
             }
         }
 

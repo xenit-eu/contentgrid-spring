@@ -9,7 +9,6 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepositor
 import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingLabelRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
 import java.util.Set;
-import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +46,7 @@ class HalLinkTitlesAndFormPromptsTest {
     void setup() {
         customer = customerRepository.save(new Customer("Abc", "ABC"));
         invoice = invoiceRepository.save(new Invoice("12345678", true, true, customer, Set.of()));
-        shippingLabel = shippingLabelRepository.save(new ShippingLabel(UUID.randomUUID(), "here", "there", null, null));
+        shippingLabel = shippingLabelRepository.save(new ShippingLabel("here", "there"));
     }
 
     @AfterEach
@@ -150,6 +149,10 @@ class HalLinkTitlesAndFormPromptsTest {
                                             name: "to",
                                             type: "text",
                                             required: true
+                                        },
+                                        {
+                                            name: "parent",
+                                            type: "url"
                                         },
                                         {
                                             name: "barcodePicture",

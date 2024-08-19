@@ -9,9 +9,12 @@ import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -42,6 +45,12 @@ public class ShippingLabel {
     @NotNull
     private String to;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent")
+    @CollectionFilterParam
+    @org.springframework.data.rest.core.annotation.RestResource(rel = "d:parent")
+    private ShippingLabel parent;
+
     @Embedded
     @AttributeOverride(name = "id", column = @Column(name = "barcode_picture__id"))
     @AttributeOverride(name = "length", column = @Column(name = "barcode_picture__length"))
@@ -61,4 +70,9 @@ public class ShippingLabel {
     @RestResource(linkRel = "d:package", path = "package")
     @JsonProperty("package")
     private Content _package;
+
+    public ShippingLabel(String from, String to) {
+        this.from = from;
+        this.to = to;
+    }
 }
