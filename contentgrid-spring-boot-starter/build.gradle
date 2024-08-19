@@ -37,6 +37,7 @@ dependencies {
     implementation project(':contentgrid-spring-boot-autoconfigure')
 
     runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate6'
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }
