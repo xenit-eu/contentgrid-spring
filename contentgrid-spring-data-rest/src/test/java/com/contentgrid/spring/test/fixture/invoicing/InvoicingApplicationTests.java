@@ -1419,6 +1419,14 @@ class InvoicingApplicationTests {
                     assertThat(invoice.getAttachmentLength()).isEqualTo(EXT_ASCII_TEXT_LATIN1_LENGTH);
                     assertThat(invoice.getAttachmentFilename()).isEqualTo(attachmentFile.getOriginalFilename());
                 }
+
+                @Test
+                void postMultipartEntity_missingRequiredAttribute_http400() throws Exception {
+                    mockMvc.perform(multipart(HttpMethod.POST, "/customers")
+                            .param("name", "Example")
+                            // Missing required param "vat"
+                    ).andExpect(status().isBadRequest());
+                }
             }
 
             @Nested
