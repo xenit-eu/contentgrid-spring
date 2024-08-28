@@ -2,6 +2,7 @@ package org.springframework.data.rest.webmvc;
 
 import com.contentgrid.spring.data.querydsl.mapping.ContentGridCollectionFilterMappingConfiguration;
 import com.contentgrid.spring.data.querydsl.predicate.ContentGridCollectionFilterPredicateConfiguration;
+import com.contentgrid.spring.data.querydsl.sort.ContentGridCollectionFilterSortConfiguration;
 import com.contentgrid.spring.querydsl.resolver.CollectionFilterParamPredicateResolver;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import com.contentgrid.thunx.spring.data.querydsl.predicate.injector.rest.webmvc.QuerydslBindingsPredicateResolver;
@@ -18,7 +19,11 @@ import org.springframework.data.rest.core.support.SelfLinkProvider;
 import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
 
 @Configuration(proxyBeanMethods = false)
-@Import({ContentGridCollectionFilterMappingConfiguration.class, ContentGridCollectionFilterPredicateConfiguration.class})
+@Import({
+        ContentGridCollectionFilterMappingConfiguration.class,
+        ContentGridCollectionFilterPredicateConfiguration.class,
+        ContentGridCollectionFilterSortConfiguration.class
+})
 public class ContentGridSpringDataRestConfiguration {
 
     @Bean
