@@ -54,7 +54,7 @@ public class HalFormsAttributeFieldOptionsCustomizer implements
                 // Exclude properties that were already configured
                 .filter(f -> !configuredProperties.contains(f.getFilterName()))
                 .forEach(filter -> {
-                    var allowedValues = filter.getPath().getAnnotatedElement().getAnnotation(AllowedValues.class);
+                    var allowedValues = filter.getAnnotatedElement().getAnnotation(AllowedValues.class);
                     if (allowedValues == null) {
                         return;
                     }

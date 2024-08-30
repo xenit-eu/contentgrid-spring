@@ -45,7 +45,6 @@ class CollectionFilterQuerydslPredicateConverterTest {
         var filter = TestCollectionFilter.<T>builder()
                 .filterName("test")
                 .path(path)
-                .parameterType((Class<T>)path.getType())
                 .build();
         var converter = new CollectionFilterQuerydslPredicateConverter(
                 createMapping(filter),
@@ -72,7 +71,6 @@ class CollectionFilterQuerydslPredicateConverterTest {
         var filter = TestCollectionFilter.<T>builder()
                 .filterName("test")
                 .path(path)
-                .parameterType((Class<T>)path.getType())
                 .build();
         var converter = new CollectionFilterQuerydslPredicateConverter(
                 createMapping(filter),

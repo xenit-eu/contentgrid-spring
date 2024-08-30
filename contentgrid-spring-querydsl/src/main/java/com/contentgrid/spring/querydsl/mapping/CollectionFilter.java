@@ -4,6 +4,7 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
+import java.lang.reflect.AnnotatedElement;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -46,6 +47,15 @@ public interface CollectionFilter<T> {
      * This method is primarily useful for reverse lookups from Path back to a filter
      */
     Path<T> getPath();
+
+    /**
+     * Obtain the Java property that was annotated with
+     * {@link com.contentgrid.spring.querydsl.annotation.CollectionFilterParam}
+     *
+     * @return The element that is annotated with
+     * {@link com.contentgrid.spring.querydsl.annotation.CollectionFilterParam}
+     */
+    AnnotatedElement getAnnotatedElement();
 
     /**
      * Obtain the type of the request query parameter(s) for this filter

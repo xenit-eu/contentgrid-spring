@@ -91,7 +91,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
                 .filter(CollectionFilter::isDocumented)
                 .<PropertyMetadata>map(filter -> new BasicPropertyMetadata(
                                 filter.getFilterName(),
-                                ResolvableType.forClass(filter.getPath().getType())
+                                ResolvableType.forClass(filter.getParameterType())
                         )
                         .withReadOnly(false)
                 ).toList();

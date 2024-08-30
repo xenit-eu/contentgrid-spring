@@ -39,10 +39,10 @@ class CollectionFiltersFactory {
                 CollectionFilter::getFilterName,
                 Function.identity(),
                 (a, b) -> {
-                    throw new IllegalStateException("Duplicate filter name '%s' mapping to paths '%s' and '%s'"
-                            .formatted(a.getFilterName(), a.getPath(), b.getPath()));
+                    throw new IllegalStateException("Duplicate filter name '%s' defined on '%s' and '%s'"
+                            .formatted(a.getFilterName(), a.getAnnotatedElement(), b.getAnnotatedElement()));
                 },
-                // This "factory" supplier ensurers that it remains ordered
+                // This "factory" supplier ensures that it remains ordered
                 LinkedHashMap::new
         ));
 
