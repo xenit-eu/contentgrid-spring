@@ -12,6 +12,8 @@ import java.lang.annotation.Target;
 
 /**
  * Marks an entity field as being available for filtering the collection of entities
+ *
+ * @see com.contentgrid.spring.querydsl.mapping.CollectionFilter for the operational representation
  */
 @Target( { METHOD, FIELD })
 @Retention(RUNTIME)

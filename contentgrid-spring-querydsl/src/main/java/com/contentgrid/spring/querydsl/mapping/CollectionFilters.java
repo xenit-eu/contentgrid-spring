@@ -6,7 +6,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Holds an ordered set of {@link CollectionFilter}s that can be further filtered down
+ */
 public interface CollectionFilters {
+
+    /**
+     * @return An ordered stream of filters present in this object
+     */
     Stream<CollectionFilter<?>> filters();
 
     /**
@@ -19,12 +26,23 @@ public interface CollectionFilters {
                 .filter(filter -> filter.createOrderSpecifier(Order.ASC).isPresent());
     }
 
+    /**
+     * Restricts filters to those that are applicable to a certain QueryDSL {@link Path}
+     *
+     * @param path The QueryDSL {@link Path} to restrict the filters to
+     * @return A reduced set of {@link CollectionFilter} that can be used for a certain path
+     */
     default CollectionFilters forPath(Path<?> path) {
         return () -> CollectionFilters.this.filters().filter(filter -> Objects.equals(filter.getPath(), path));
     }
 
+    /**
+     * Tries to locate a filter by its name
+     *
+     * @param filterName The filter name to locate the filter for
+     */
     default Optional<CollectionFilter<?>> named(String filterName) {
         return filters().filter(filter -> Objects.equals(filter.getFilterName(), filterName)).findAny();
-    };
+    }
 
 }
