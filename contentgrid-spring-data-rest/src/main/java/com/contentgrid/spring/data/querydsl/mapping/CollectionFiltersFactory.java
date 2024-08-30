@@ -73,7 +73,14 @@ class CollectionFiltersFactory {
         var propertyPath = pathNavigator.get(property.getName()).getPath();
         QuerydslPredicateFactory<Path<?>, ?> predicateFactory = instantiator.instantiate(filterParam.predicate());
 
-        return predicateFactory.boundPaths(propertyPath)
+        var boundPaths = predicateFactory.boundPaths(propertyPath).collect(Collectors.toUnmodifiableSet());
+        if (boundPaths.size() > 1) {
+            throw new UnsupportedOperationException(
+                    "Binding to multiple paths is not supported yet (in %s)".formatted(predicateFactory.getClass())
+            );
+        }
+
+        return boundPaths.stream()
                 .map(boundPath -> new CollectionFilterImpl<>(
                         prefix+getName(property, filterParam),
                         boundPath,
