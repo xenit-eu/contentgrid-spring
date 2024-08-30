@@ -10,7 +10,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.util.TypeInformation;

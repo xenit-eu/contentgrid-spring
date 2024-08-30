@@ -1,6 +1,8 @@
 package com.contentgrid.spring.querydsl.test.mapping;
 
 import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
 import java.util.Collection;
@@ -29,6 +31,11 @@ public class TestCollectionFilter<T> implements CollectionFilter<T> {
     @Override
     public Optional<Predicate> createPredicate(Collection<T> parameters) {
         lastParameters = parameters;
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<OrderSpecifier<?>> createOrderSpecifier(Order order) {
         return Optional.empty();
     }
 

@@ -1,5 +1,6 @@
 package com.contentgrid.spring.querydsl.annotation;
 
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
 import java.util.Collection;
@@ -40,4 +41,15 @@ public interface QuerydslPredicateFactory<T extends Path<?>,  S> {
      * @return Type to coerce query parameter collection values to
      */
     Class<? extends S> valueType(T path);
+
+    /**
+     * Create expressions to sort by this {@link CollectionFilterParam}
+     *
+     * @param path Property path at the position of the {@link CollectionFilterParam} annotation that references this
+     * factory
+     * @return All {@link Expression}s that will be used for sorting on this field
+     */
+    default Optional<Expression<? extends Comparable<?>>> sortExpression(T path) {
+        return Optional.empty();
+    }
 }

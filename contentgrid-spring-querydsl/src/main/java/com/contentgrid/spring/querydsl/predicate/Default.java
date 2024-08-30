@@ -4,10 +4,13 @@ import com.contentgrid.spring.querydsl.annotation.QuerydslPredicateFactory;
 import com.contentgrid.spring.querydsl.mapping.UnsupportedCollectionFilterPredicateException;
 import com.contentgrid.spring.querydsl.mapping.UnsupportedCollectionFilterPredicatePathTypeException;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BeanPath;
 import com.querydsl.core.types.dsl.CollectionPathBase;
+import com.querydsl.core.types.dsl.ComparableExpression;
+import com.querydsl.core.types.dsl.ComparableExpressionBase;
 import com.querydsl.core.types.dsl.SimpleExpression;
 import java.util.Collection;
 import java.util.Optional;
@@ -98,4 +101,13 @@ public class Default implements QuerydslPredicateFactory<Path<?>, Object> {
     public Class<?> valueType(Path<?> path) {
         return path.getType();
     }
+
+    @Override
+    public Optional<Expression<? extends Comparable<?>>> sortExpression(Path<?> path) {
+        if (path instanceof ComparableExpressionBase<?> comparableExpression) {
+            return Optional.of((ComparableExpressionBase<Comparable<?>>) comparableExpression);
+        }
+        return Optional.empty();
+    }
+
 }
