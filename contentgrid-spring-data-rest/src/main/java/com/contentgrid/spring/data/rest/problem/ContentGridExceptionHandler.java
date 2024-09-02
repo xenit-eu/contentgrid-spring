@@ -1,5 +1,6 @@
 package com.contentgrid.spring.data.rest.problem;
 
+import com.contentgrid.spring.data.querydsl.sort.UnsupportedSortPropertyException;
 import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties;
 import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties.FieldViolationProblemProperties;
 import com.contentgrid.spring.data.rest.problem.ext.InvalidFilterProblemProperties;
@@ -17,13 +18,18 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.context.support.MessageSourceAccessor;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.rest.core.RepositoryConstraintViolationException;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
+import org.springframework.data.web.SortHandlerMethodArgumentResolver;
 import org.springframework.hateoas.mediatype.problem.Problem;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -161,6 +167,36 @@ public class ContentGridExceptionHandler {
                                 exception.getInvalidValue()))
         );
 
+    }
+
+    @NonNull
+    private final HateoasSortHandlerMethodArgumentResolver sortHandlerMethodArgumentResolver;
+
+    @ExceptionHandler
+    ResponseEntity<Problem> handleUnsupportedSortPropertyException(
+            UnsupportedSortPropertyException exception
+    ) {
+        // Using the sortHandlerMethodArgumentResolver's UriComponentsContributor to add the sort parameter with its correct
+        // serialized value, so we can extract it for the error message
+        var uriComponentsBuilder = UriComponentsBuilder.newInstance();
+        sortHandlerMethodArgumentResolver.enhance(uriComponentsBuilder, null, Sort.by(exception.getOrder()));
+        var uriComponents = uriComponentsBuilder.build();
+        var queryParam = uriComponents.getQueryParams().entrySet().iterator().next();
+
+        return responseEntityFactory.createResponse(
+                problemFactory.createProblem(
+                                ProblemType.INVALID_SORT_PARAMETER,
+                                queryParam.getKey(),
+                                queryParam.getValue().get(0),
+                                exception.getOrder().getProperty()
+                        )
+                        .withStatus(HttpStatus.BAD_REQUEST)
+                        .withProperties(new InvalidFilterProblemProperties(
+                                        queryParam.getKey(),
+                                        queryParam.getValue().get(0)
+                                )
+                        )
+        );
     }
 
 }

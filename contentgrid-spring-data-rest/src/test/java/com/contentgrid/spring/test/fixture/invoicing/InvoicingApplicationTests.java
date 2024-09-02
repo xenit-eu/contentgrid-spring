@@ -1,5 +1,6 @@
 package com.contentgrid.spring.test.fixture.invoicing;
 
+import static com.contentgrid.spring.data.rest.problem.ProblemDetailsMockMvcMatchers.problemDetails;
 import static com.contentgrid.spring.test.matchers.ExtendedHeaderResultMatchers.headers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.endsWith;
@@ -16,6 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
+import com.contentgrid.spring.data.rest.problem.ProblemDetailsMockMvcMatchers;
+import com.contentgrid.spring.data.rest.problem.ProblemDetailsMockMvcMatchers.ProblemDetailsMatcher;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
@@ -65,6 +68,7 @@ import org.springframework.hateoas.Links;
 import org.springframework.hateoas.mediatype.hal.CurieProvider;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -318,6 +322,73 @@ class InvoicingApplicationTests {
                                 .accept(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk());
             }
+        }
+
+        @Nested
+        @DisplayName("GET /{repository/ - sorting")
+        class GetSorted {
+
+            @Test
+            void sortInvoices_number_returns_http200_ok() throws Exception {
+                mockMvc.perform(get("/invoices?sort=number")
+                                .accept(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.item[0].number").value(INVOICE_NUMBER_1))
+                        .andExpect(jsonPath("$._embedded.item[1].number").value(INVOICE_NUMBER_2))
+                        .andExpect(jsonPath("$._links.self.href").value(
+                                "http://localhost/invoices?page=0&size=20&sort=number,asc"));
+                mockMvc.perform(get("/invoices?sort=number,desc")
+                                .accept(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.item[0].number").value(INVOICE_NUMBER_2))
+                        .andExpect(jsonPath("$._embedded.item[1].number").value(INVOICE_NUMBER_1))
+                        .andExpect(jsonPath("$._links.self.href").value(
+                                "http://localhost/invoices?page=0&size=20&sort=number,desc"));
+            }
+
+            @Test
+            void sortInvoices_draft_returns_http400_badRequest() throws Exception {
+                mockMvc.perform(get("/invoices?sort=draft"))
+                        .andExpect(problemDetails()
+                                .withStatusCode(HttpStatus.BAD_REQUEST)
+                                .withType("https://contentgrid.cloud/problems/invalid-filter-parameter/sort")
+                        );
+            }
+
+            @Test
+            void sortInvoices_counterpartyBirthday_returns_http400_badRequest() throws Exception {
+                mockMvc.perform(get("/invoices?sort=counterparty.birthday"))
+                        .andExpect(problemDetails()
+                                .withStatusCode(HttpStatus.BAD_REQUEST)
+                                .withType("https://contentgrid.cloud/problems/invalid-filter-parameter/sort")
+                        );
+            }
+
+            @Test
+            void sortCustomers_contentSize_returns_http200_ok() throws Exception {
+                var xenit = customers.findByVat(ORG_XENIT_VAT).orElseThrow();
+                var stream = new ByteArrayInputStream("short-value".getBytes(StandardCharsets.UTF_8));
+                customersContent.setContent(xenit, PropertyPath.from("content"), stream);
+                xenit.getContent().setMimetype("text/plain");
+                xenit.getContent().setFilename("test.txt");
+                customers.save(xenit);
+
+                var inbev = customers.findByVat(ORG_INBEV_VAT).orElseThrow();
+                var longStream = new ByteArrayInputStream("a-longer-value".getBytes(StandardCharsets.UTF_8));
+                customersContent.setContent(inbev, PropertyPath.from("content"), longStream);
+                inbev.getContent().setMimetype("text/plain");
+                inbev.getContent().setFilename("test.txt");
+                customers.save(inbev);
+
+                mockMvc.perform(get("/customers?sort=content.size"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$._embedded.item[0].vat").value(ORG_XENIT_VAT))
+                        .andExpect(jsonPath("$._embedded.item[1].vat").value(ORG_INBEV_VAT))
+                        .andExpect(jsonPath("$._links.self.href").value(
+                                "http://localhost/customers?page=0&size=20&sort=content.size,asc"));
+
+            }
+
         }
 
         @Nested

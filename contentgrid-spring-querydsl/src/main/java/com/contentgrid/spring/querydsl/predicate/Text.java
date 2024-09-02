@@ -2,6 +2,7 @@ package com.contentgrid.spring.querydsl.predicate;
 
 import com.contentgrid.spring.querydsl.mapping.UnsupportedCollectionFilterPredicatePathTypeException;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -68,6 +69,11 @@ public class Text {
             }
             return Optional.of(path.lower().in(values.stream().map(String::toLowerCase).toList()));
         }
+
+        @Override
+        public Optional<Expression<? extends Comparable<?>>> sortExpression(Path<?> path) {
+            return Optional.of(coercePath(path).lower());
+        }
     }
 
     /**
@@ -115,6 +121,11 @@ public class Text {
                     .map(value -> Normalizer.normalize(value, Form.NFKC))
                     .toList()));
         }
+
+        @Override
+        public Optional<Expression<? extends Comparable<?>>> sortExpression(Path<?> path) {
+            return Optional.of(normalize(coercePath(path)));
+        }
     }
 
     /**
@@ -137,6 +148,10 @@ public class Text {
             return Optional.of(normalize(path).lower().in(values.stream()
                     .map(value -> Normalizer.normalize(value, Form.NFKC).toLowerCase())
                     .toList()));
+        }
+        @Override
+        public Optional<Expression<? extends Comparable<?>>> sortExpression(Path<?> path) {
+            return Optional.of(normalize(coercePath(path)).lower());
         }
     }
 

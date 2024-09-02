@@ -11,6 +11,7 @@ public enum ProblemType implements ProblemTypeResolvable {
     CONSTRAINT_VIOLATION("integrity", "constraint-violation"),
     INVALID_FILTER_PARAMETER("invalid-filter-parameter"),
     INVALID_FILTER_PARAMETER_FORMAT("invalid-filter-parameter", "format"),
+    INVALID_SORT_PARAMETER("invalid-filter-parameter", "sort"),
 
     INVALID_REQUEST_BODY("invalid-request-body"),
     INVALID_REQUEST_BODY_TYPE("invalid-request-body", "type"),

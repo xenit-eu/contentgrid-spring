@@ -15,6 +15,7 @@ import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.context.support.MessageSourceSupport;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
 import org.springframework.hateoas.UriTemplate;
 import org.springframework.hateoas.config.EnableHypermediaSupport;
 import org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType;
@@ -51,13 +52,15 @@ public class ContentGridProblemDetailsConfiguration {
     ContentGridExceptionHandler contentGridExceptionHandler(
             ProblemFactory problemFactory,
             JsonPropertyPathConverter jsonPropertyPathConverter,
-            ResponseEntityFactory responseEntityFactory
+            ResponseEntityFactory responseEntityFactory,
+            HateoasSortHandlerMethodArgumentResolver sortHandlerMethodArgumentResolver
     ) {
         return new ContentGridExceptionHandler(
                 problemFactory,
                 new MessageSourceAccessor(applicationContext),
                 jsonPropertyPathConverter,
-                responseEntityFactory
+                responseEntityFactory,
+                sortHandlerMethodArgumentResolver
         );
     }
 

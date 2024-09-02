@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
@@ -560,6 +561,19 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
     class CollectionFilterValueErrors {
 
         @Test
+        void invalidSortParameter() throws Exception {
+            mockMvc.perform(get("/customers?sort=xyz")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(problemDetails()
+                            .withStatusCode(HttpStatus.BAD_REQUEST)
+                            .withType(PROBLEM_TYPE_PREFIX + "invalid-filter-parameter/sort")
+                    )
+                    .andExpect(jsonPath("$.property").value("sort"))
+                    .andExpect(jsonPath("$.invalid_value").value("xyz,asc"))
+            ;
+        }
+
+        @Test
         void invalidDateFilterValue() throws Exception {
             mockMvc.perform(get("/customers?birthday=invalid")
                             .accept(MediaType.APPLICATION_JSON)
@@ -567,7 +581,10 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     .andExpect(problemDetails()
                             .withStatusCode(HttpStatus.BAD_REQUEST)
                             .withType(PROBLEM_TYPE_PREFIX + "invalid-filter-parameter/format")
-                    );
+                    )
+                    .andExpect(jsonPath("$.property").value("birthday"))
+                    .andExpect(jsonPath("$.invalid_value").value("invalid"))
+            ;
         }
 
     }

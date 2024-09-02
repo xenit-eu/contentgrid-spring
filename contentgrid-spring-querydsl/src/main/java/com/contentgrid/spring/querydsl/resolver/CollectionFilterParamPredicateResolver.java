@@ -5,6 +5,8 @@ import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import com.contentgrid.thunx.spring.data.querydsl.predicate.injector.resolver.CollectionFilteringOperationPredicates;
 import com.contentgrid.thunx.spring.data.querydsl.predicate.injector.resolver.OperationPredicates;
 import com.contentgrid.thunx.spring.data.querydsl.predicate.injector.resolver.QuerydslPredicateResolver;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.Expressions;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,6 +23,8 @@ public class CollectionFilterParamPredicateResolver implements QuerydslPredicate
 
     private final CollectionFilterQuerydslPredicateConverter querydslPredicateConverter;
 
+    private static final Predicate DEFAULT_PREDICATE = Expressions.TRUE;
+
     public CollectionFilterParamPredicateResolver(CollectionFiltersMapping filtersMapping, ConversionService conversionService) {
         this(new CollectionFilterQuerydslPredicateConverter(filtersMapping, conversionService));
     }
@@ -33,7 +37,15 @@ public class CollectionFilterParamPredicateResolver implements QuerydslPredicate
         }
 
         return querydslPredicateConverter.getPredicate(domainType, toMultiValueMap(parameters))
-                .map(CollectionFilteringOperationPredicates::new);
+                .<OperationPredicates>map(CollectionFilteringOperationPredicates::new)
+                /*
+                If there is no predicate derived from collection filters, we still need to ensure that there is *a* predicate present.
+                Without any QueryDSL predicate present, QuerydslRepositoryInvokerAdapterFactory will fall back to the
+                default RepositoryInvoker. The default RepositoryInvoker does not process QSort specially, but tries to map the plain Sort.Order objects
+                to JPA fields. This will not work in all cases, because these Sort.Order objects are statically derived from OrderSpecifier and not mapped through JPA.
+                (It might work for simple cases where there are no special functions or special characters in the name; but that does not cover all cases)
+                */
+                .or(() -> Optional.of(new CollectionFilteringOperationPredicates(DEFAULT_PREDICATE)));
     }
 
     /**

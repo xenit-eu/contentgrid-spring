@@ -70,6 +70,21 @@ class CollectionFiltersMappingImplTest {
     }
 
     @Test
+    void forSorting() {
+        assertThat(collectionFiltersMapping.forDomainType(Customer.class).forSorting().filters())
+                .map(CollectionFilter::getFilterName)
+                .containsExactlyInAnyOrder(
+                        "vat",
+                        "content.size",
+                        "content.mimetype",
+                        "content.filename",
+                        "birthday",
+                        "gender"
+                        // nothing across invoices or orders relations is included
+                );
+    }
+
+    @Test
     void forProperty() {
         assertThat(collectionFiltersMapping.forProperty(Customer.class, "vat"))
                 .hasValueSatisfying(filter -> {
