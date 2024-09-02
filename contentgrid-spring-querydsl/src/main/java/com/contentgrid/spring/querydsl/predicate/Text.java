@@ -2,6 +2,7 @@ package com.contentgrid.spring.querydsl.predicate;
 
 import com.contentgrid.spring.querydsl.mapping.UnsupportedCollectionFilterPredicatePathTypeException;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.ConstantImpl;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
@@ -108,7 +109,7 @@ public class Text {
     public static class EqualsNormalized extends AbstractStringPredicateFactory {
 
         public EqualsNormalized() {
-            super((expr, value) -> normalize(expr).eq(Normalizer.normalize(value, Form.NFKC)));
+            super((expr, value) -> postgresNormalize(expr).eq(Normalizer.normalize(value, Form.NFKC)));
         }
 
         @Override
@@ -117,14 +118,14 @@ public class Text {
                 return super.bindCoerced(path, values);
             }
 
-            return Optional.of(normalize(path).in(values.stream()
+            return Optional.of(postgresNormalize(path).in(values.stream()
                     .map(value -> Normalizer.normalize(value, Form.NFKC))
                     .toList()));
         }
 
         @Override
         public Optional<Expression<? extends Comparable<?>>> sortExpression(Path<?> path) {
-            return Optional.of(normalize(coercePath(path)));
+            return Optional.of(postgresNormalize(coercePath(path)));
         }
     }
 
@@ -136,7 +137,7 @@ public class Text {
     public static class EqualsIgnoreCaseNormalized extends AbstractStringPredicateFactory {
 
         public EqualsIgnoreCaseNormalized() {
-            super((expr, value) -> normalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFKC)));
+            super((expr, value) -> postgresNormalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFKC)));
         }
 
         @Override
@@ -145,13 +146,13 @@ public class Text {
                 return super.bindCoerced(path, values);
             }
 
-            return Optional.of(normalize(path).lower().in(values.stream()
+            return Optional.of(postgresNormalize(path).lower().in(values.stream()
                     .map(value -> Normalizer.normalize(value, Form.NFKC).toLowerCase())
                     .toList()));
         }
         @Override
         public Optional<Expression<? extends Comparable<?>>> sortExpression(Path<?> path) {
-            return Optional.of(normalize(coercePath(path)).lower());
+            return Optional.of(postgresNormalize(coercePath(path)).lower());
         }
     }
 
@@ -160,10 +161,10 @@ public class Text {
      * <p>
      * This predicate only supports {@link String}s, and can not be used with other types.
      */
-    public static class StartsWithIgnoreCaseNormalized extends AbstractStringPredicateFactory {
+    public static class StartsWithNormalized extends AbstractStringPredicateFactory {
 
-        protected StartsWithIgnoreCaseNormalized() {
-            super((expr, value) -> normalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFKC)));
+        protected StartsWithNormalized() {
+            super((expr, value) -> postgresNormalize(expr).startsWith(Normalizer.normalize(value, Form.NFKC)));
         }
     }
 
@@ -172,15 +173,38 @@ public class Text {
      * <p>
      * This predicate only supports {@link String}s, and can not be used with other types.
      */
-    public static class StartsWithNormalized extends AbstractStringPredicateFactory {
+    public static class StartsWithIgnoreCaseNormalized extends AbstractStringPredicateFactory {
 
-        protected StartsWithNormalized() {
-            super((expr, value) -> normalize(expr).startsWith(Normalizer.normalize(value, Form.NFKC)));
+        protected StartsWithIgnoreCaseNormalized() {
+            super((expr, value) -> postgresNormalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFKC)));
         }
     }
 
-    static StringExpression normalize(StringExpression expr) {
+    /**
+     * Filters items down to only items starting with the supplied value
+     * in a case-insensitive, accent-insensitive, NFKC normalized way.
+     * <p>
+     * This predicate only supports {@link String}s, and can not be used with other types.
+     */
+    public static class StartsWithIgnoreCaseAccentNormalized extends AbstractStringPredicateFactory {
+
+        protected StartsWithIgnoreCaseAccentNormalized() {
+            // Using like() and manually append '%' to inner expression because startsWith() appends '%' to outer expression
+            super((expr, value) -> contentgridNormalize(expr)
+                    .like(contentgridNormalizePattern(ConstantImpl.create(value), "{0%}")));
+        }
+    }
+
+    static StringExpression postgresNormalize(Expression<String> expr) {
         return Expressions.stringTemplate("normalize({0s})", expr);
+    }
+
+    static StringExpression contentgridNormalize(Expression<String> expr) {
+        return contentgridNormalizePattern(expr, "{0s}");
+    }
+
+    static StringExpression contentgridNormalizePattern(Expression<String> expr, String pattern) {
+        return Expressions.stringTemplate("contentgrid_normalize(%s)".formatted(pattern), expr);
     }
 
 }

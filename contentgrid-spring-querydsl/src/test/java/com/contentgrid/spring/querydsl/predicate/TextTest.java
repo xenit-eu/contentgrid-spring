@@ -7,6 +7,7 @@ import com.contentgrid.spring.querydsl.annotation.QuerydslPredicateFactory;
 import com.contentgrid.spring.querydsl.mapping.UnsupportedCollectionFilterPredicatePathTypeException;
 import com.contentgrid.spring.querydsl.test.fixtures.QTestObject;
 import com.contentgrid.spring.querydsl.test.predicate.PredicateFactoryTester;
+import com.querydsl.core.types.ConstantImpl;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.PathMetadataFactory;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -34,7 +35,8 @@ class TextTest {
                 Text.StartsWith.class,
                 Text.StartsWithIgnoreCase.class,
                 Text.StartsWithNormalized.class,
-                Text.StartsWithIgnoreCaseNormalized.class
+                Text.StartsWithIgnoreCaseNormalized.class,
+                Text.StartsWithIgnoreCaseAccentNormalized.class
         );
     }
 
@@ -43,16 +45,19 @@ class TextTest {
         BiFunction<StringPath, String, BooleanExpression> startsWith = StringExpression::startsWith;
         BiFunction<StringPath, String, BooleanExpression> startsWithIgnoreCase = StringExpression::startsWithIgnoreCase;
         BiFunction<StringPath, String, BooleanExpression> equalsNormalized = (expr, value) -> {
-            return Text.normalize(expr).eq(Normalizer.normalize(value, Form.NFKC));
+            return Text.postgresNormalize(expr).eq(Normalizer.normalize(value, Form.NFKC));
         };
         BiFunction<StringPath, String, BooleanExpression> equalsIgnoreCaseNormalized = (expr, value) -> {
-            return Text.normalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFKC));
+            return Text.postgresNormalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFKC));
         };
         BiFunction<StringPath, String, BooleanExpression> startsWithNormalized = (expr, value) -> {
-            return Text.normalize(expr).startsWith(Normalizer.normalize(value, Form.NFKC));
+            return Text.postgresNormalize(expr).startsWith(Normalizer.normalize(value, Form.NFKC));
         };
         BiFunction<StringPath, String, BooleanExpression> startsWithIgnoreCaseNormalized = (expr, value) -> {
-            return Text.normalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFKC));
+            return Text.postgresNormalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFKC));
+        };
+        BiFunction<StringPath, String, BooleanExpression> startsWithContentGridNormalized = (expr, value) -> {
+            return Text.contentgridNormalize(expr).like(Text.contentgridNormalizePattern(ConstantImpl.create(value), "{0%}"));
         };
 
         return Stream.of(
@@ -62,7 +67,8 @@ class TextTest {
                 Arguments.of(new Text.StartsWith(), startsWith, null),
                 Arguments.of(new Text.StartsWithIgnoreCase(), startsWithIgnoreCase, null),
                 Arguments.of(new Text.StartsWithNormalized(), startsWithNormalized, null),
-                Arguments.of(new Text.StartsWithIgnoreCaseNormalized(), startsWithIgnoreCaseNormalized, null)
+                Arguments.of(new Text.StartsWithIgnoreCaseNormalized(), startsWithIgnoreCaseNormalized, null),
+                Arguments.of(new Text.StartsWithIgnoreCaseAccentNormalized(), startsWithContentGridNormalized, null)
         );
     }
 
