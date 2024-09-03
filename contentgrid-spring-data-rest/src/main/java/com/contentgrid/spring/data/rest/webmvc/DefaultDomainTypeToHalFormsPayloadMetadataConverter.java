@@ -1,7 +1,5 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
-import com.contentgrid.spring.data.rest.hal.forms.BasicPropertyMetadata;
-import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,7 +11,6 @@ import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
-import org.springframework.core.ResolvableType;
 import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
 import org.springframework.hateoas.AffordanceModel.Named;
 import org.springframework.hateoas.AffordanceModel.PayloadMetadata;
@@ -33,7 +30,7 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
     }
 
     @Override
-    public PayloadMetadataAndMediaType convertToCreatePayloadMetadata(Class<?> domainType) {
+    public PayloadMetadata convertToCreatePayloadMetadata(Class<?> domainType) {
         List<PropertyMetadata> properties = new ArrayList<>();
 
         callContributors(domainType, HalFormsPayloadMetadataContributor::contributeToCreateForm)
@@ -41,17 +38,19 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
 
         var hasFiles = properties.stream().anyMatch(prop -> Objects.equals(HtmlInputType.FILE_VALUE, prop.getInputType()));
 
-        return new PayloadMetadataAndMediaType(new ClassnameI18nedPayloadMetadata(domainType, properties), hasFiles?MediaType.MULTIPART_FORM_DATA:MediaType.APPLICATION_JSON);
+        return new ClassnameI18nedPayloadMetadata(domainType, properties)
+                .withMediaTypes(List.of(hasFiles?MediaType.MULTIPART_FORM_DATA:MediaType.APPLICATION_JSON));
     }
 
     @Override
-    public PayloadMetadataAndMediaType convertToUpdatePayloadMetadata(Class<?> domainType) {
+    public PayloadMetadata convertToUpdatePayloadMetadata(Class<?> domainType) {
         List<PropertyMetadata> properties = new ArrayList<>();
 
         callContributors(domainType, HalFormsPayloadMetadataContributor::contributeToUpdateForm)
                 .forEachOrdered(properties::add);
 
-        return new PayloadMetadataAndMediaType(new ClassnameI18nedPayloadMetadata(domainType, properties), MediaType.APPLICATION_JSON);
+        return new ClassnameI18nedPayloadMetadata(domainType, properties)
+                .withMediaTypes(List.of(MediaType.APPLICATION_JSON));
     }
 
     @Override

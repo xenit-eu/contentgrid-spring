@@ -11,7 +11,10 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.hateoas.AffordanceModel.InputPayloadMetadata;
 import org.springframework.hateoas.AffordanceModel.PropertyMetadata;
+import org.springframework.hateoas.mediatype.html.HtmlInputType;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 
 @SpringBootTest(properties = { "contentgrid.rest.use-multipart-hal-forms=true" })
@@ -25,7 +28,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_embeddedContent() {
-        var metadata = converter.convertToCreatePayloadMetadata(Customer.class).payloadMetadata();
+        var metadata = converter.convertToCreatePayloadMetadata(Customer.class);
 
         assertThat(metadata.getType()).isEqualTo(Customer.class);
 
@@ -44,6 +47,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                     assertThat(content.getName()).isEqualTo("content");
                     assertThat(content.isReadOnly()).isFalse();
                     assertThat(content.isRequired()).isFalse();
+                    assertThat(content.getInputType()).isEqualTo(HtmlInputType.FILE_VALUE);
                 },
                 birthday -> {
                     assertThat(birthday.getName()).isEqualTo("birthday");
@@ -67,11 +71,13 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                     assertThat(invoices.getName()).isEqualTo("invoices");
                 }
         );
+
+        assertThat(InputPayloadMetadata.from(metadata).getMediaTypes()).containsExactly(MediaType.MULTIPART_FORM_DATA);
     }
 
     @Test
     void convertToCreatePayloadMetadata_association() {
-        var metadata = converter.convertToCreatePayloadMetadata(Order.class).payloadMetadata();
+        var metadata = converter.convertToCreatePayloadMetadata(Order.class);
 
         assertThat(metadata.getType()).isEqualTo(Order.class);
 
@@ -93,11 +99,14 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                     assertThat(manualPromos.getName()).isEqualTo("manualPromos");
                 }
         );
+
+        // No File input; use JSON for mediatype
+        assertThat(InputPayloadMetadata.from(metadata).getMediaTypes()).containsExactly(MediaType.APPLICATION_JSON);
     }
 
     @Test
     void convertToCreatePayloadMetadata_requiredAssociation() {
-        var metadata = converter.convertToCreatePayloadMetadata(Invoice.class).payloadMetadata();
+        var metadata = converter.convertToCreatePayloadMetadata(Invoice.class);
 
         assertThat(metadata.stream()).anySatisfy(
                 counterparty -> {
@@ -109,7 +118,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
 
     @Test
     void convertToCreatePayloadMetadata_nonExportedAssociation() {
-        var metadata = converter.convertToCreatePayloadMetadata(PromotionCampaign.class).payloadMetadata();
+        var metadata = converter.convertToCreatePayloadMetadata(PromotionCampaign.class);
 
         assertThat(metadata.stream()).satisfiesExactlyInAnyOrder(
                 promoCode -> {

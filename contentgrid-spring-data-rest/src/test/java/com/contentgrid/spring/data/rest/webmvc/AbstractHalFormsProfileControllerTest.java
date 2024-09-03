@@ -148,6 +148,43 @@ abstract class AbstractHalFormsProfileControllerTest {
     }
 
     @Test
+    void profileController_noContent_createForm() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/orders")
+                        .accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _templates: {
+                                "create-form": {
+                                    method: "POST",
+                                    target: "http://localhost/orders",
+                                    contentType: "application/json", # Always JSON, because there is no content property
+                                    properties: [
+                                        {
+                                            name: "customer",
+                                            type: "url"
+                                        },
+                                        {
+                                            name: "shipping_address",
+                                            type: "url"
+                                        },
+                                        # These many-to-many are still present because they are not ignored
+                                        {
+                                            name: "promos",
+                                            type: "url"
+                                        },
+                                        {
+                                            name: "manualPromos",
+                                            type: "url"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                        """));
+    }
+
+    @Test
     void profileController_orderedSearchParams() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/profile/customers")
                         .accept(MediaTypes.HAL_FORMS_JSON))
