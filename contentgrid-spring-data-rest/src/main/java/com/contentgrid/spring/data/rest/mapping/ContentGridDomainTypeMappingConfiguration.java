@@ -4,7 +4,6 @@ import com.contentgrid.spring.data.querydsl.mapping.ContentGridCollectionFilterM
 import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedContainer;
 import com.contentgrid.spring.data.rest.mapping.persistent.ThroughAssociationsContainer;
 import com.contentgrid.spring.data.rest.mapping.rest.DataRestBasedContainer;
-import com.contentgrid.spring.data.rest.webmvc.DefaultDomainTypeToHalFormsPayloadMetadataConverter;
 import com.contentgrid.spring.data.rest.webmvc.DomainTypeToHalFormsPayloadMetadataConverter;
 import com.contentgrid.spring.data.rest.webmvc.HalFormsPayloadMetadataContributor;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
@@ -39,20 +38,19 @@ public class ContentGridDomainTypeMappingConfiguration {
     }
 
     @Bean
-    DomainTypeToHalFormsPayloadMetadataConverter defaultDomainTypeToHalFormsPayloadMetadataConverter(
+    HalFormsPayloadMetadataContributor domainTypeModificationHalFormsPayloadMetadataContributor(
             @FormMapping DomainTypeMapping formDomainTypeMapping,
             CollectionFiltersMapping collectionFiltersMapping,
             Optional<MappingContext> contentMappingContext,
-            ContentGridRestProperties contentGridRestProperties,
-            Collection<HalFormsPayloadMetadataContributor> contributors
+            ContentGridRestProperties contentGridRestProperties
     ) {
-        return new DefaultDomainTypeToHalFormsPayloadMetadataConverter(
+        return new DomainTypeModificationHalFormsPayloadMetadataContributor(
                 formDomainTypeMapping,
                 collectionFiltersMapping,
                 contentMappingContext,
-                contributors,
                 contentGridRestProperties.isUseMultipartHalForms()
         );
+
     }
 
 }

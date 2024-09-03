@@ -1,5 +1,6 @@
 package com.contentgrid.spring.data.querydsl.mapping;
 
+import com.contentgrid.spring.data.rest.webmvc.HalFormsPayloadMetadataContributor;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,14 @@ public class ContentGridCollectionFilterMappingConfiguration {
                 querydslBindingsFactory.getEntityPathResolver(),
                 2
         );
+    }
+
+    @Bean
+    HalFormsPayloadMetadataContributor collectionFilterHalFormsPayloadMetadataContributor(
+            CollectionFiltersMapping collectionFiltersMapping
+    ) {
+        return new CollectionFilterHalFormsPayloadMetadataContributor(collectionFiltersMapping);
+
     }
 
 }
