@@ -99,8 +99,7 @@ public class HalFormsProfileController implements InitializingBean {
                 .afford(HttpMethod.HEAD) // This is to pin down the default affordance, which we don't care about
                 .andAfford(HttpMethod.POST)
                 .withName(IanaLinkRelations.CREATE_FORM_VALUE)
-                .withInput(payloadMeta.payloadMetadata())
-                .withInputMediaType(payloadMeta.mediaType())
+                .withInput(payloadMeta)
                 .andAfford(HttpMethod.PATCH) // This gets mapped to "GET" with the very ugly hack below
                 .withName(IanaLinkRelations.SEARCH_VALUE)
                 .withInput(toHalFormsPayloadMetadataConverter.convertToSearchPayloadMetadata(information.getDomainType()))
