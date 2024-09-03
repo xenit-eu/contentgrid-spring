@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -48,12 +49,18 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
     private final CollectionFiltersMapping searchMapping;
     // Optional means it only gets autowired if available
     private final Optional<MappingContext> contentMappingContext;
+    private final Collection<HalFormsPayloadMetadataContributor> contributors;
     private final boolean useMultipartHalForms;
 
     private MediaType getCreatePayloadMediaType() {
         return useMultipartHalForms
                 ? MediaType.MULTIPART_FORM_DATA
                 : MediaType.APPLICATION_JSON;
+    }
+
+    private Stream<PropertyMetadata> callContributors(Class<?> domainType, BiFunction<HalFormsPayloadMetadataContributor, Class<?>, Stream<PropertyMetadata>> contribFunction) {
+        return contributors.stream()
+                .flatMap(contributor -> contribFunction.apply(contributor, domainType));
     }
 
     @Override
@@ -66,6 +73,9 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
                         OriginalFileName.class).isEmpty()) || (useMultipartHalForms && prop.findAnnotation(ContentId.class).isPresent()),
                 this::propertyToMetadataForCreateForm
         ).forEachOrdered(properties::add);
+
+        callContributors(domainType, HalFormsPayloadMetadataContributor::contributeToCreateForm)
+                .forEachOrdered(properties::add);
 
         return new PayloadMetadataAndMediaType(new ClassnameI18nedPayloadMetadata(domainType, properties), getCreatePayloadMediaType());
     }
@@ -81,20 +91,28 @@ public class DefaultDomainTypeToHalFormsPayloadMetadataConverter implements
         )
                 .filter(property -> !Objects.equals(property.getInputType(), HtmlInputType.URL_VALUE))
                 .forEachOrdered(properties::add);
+
+        callContributors(domainType, HalFormsPayloadMetadataContributor::contributeToUpdateForm)
+                .forEachOrdered(properties::add);
+
         return new PayloadMetadataAndMediaType(new ClassnameI18nedPayloadMetadata(domainType, properties), MediaType.APPLICATION_JSON);
     }
 
     @Override
     public PayloadMetadata convertToSearchPayloadMetadata(Class<?> domainType) {
-        var properties = searchMapping.forDomainType(domainType)
+        List<PropertyMetadata> properties = new ArrayList<>();
+        searchMapping.forDomainType(domainType)
                 .filters()
                 .filter(CollectionFilter::isDocumented)
                 .<PropertyMetadata>map(filter -> new BasicPropertyMetadata(
                                 filter.getFilterName(),
                                 ResolvableType.forClass(filter.getParameterType())
                         )
-                        .withReadOnly(false)
-                ).toList();
+                                .withReadOnly(false)
+                ).forEachOrdered(properties::add);
+
+        callContributors(domainType, HalFormsPayloadMetadataContributor::contributeToSearchForm)
+                .forEachOrdered(properties::add);
 
         return new ClassnameI18nedPayloadMetadata(domainType, properties);
     }
