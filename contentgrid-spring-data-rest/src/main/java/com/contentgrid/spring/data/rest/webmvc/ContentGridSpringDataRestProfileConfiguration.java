@@ -1,6 +1,7 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
 import com.contentgrid.spring.data.rest.mapping.ContentGridDomainTypeMappingConfiguration;
+import java.util.Collection;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,5 +26,14 @@ public class ContentGridSpringDataRestProfileConfiguration {
                 domainTypeToHalFormsPayloadMetadataConverter, objectMapper);
     }
 
+
+    @Bean
+    DomainTypeToHalFormsPayloadMetadataConverter defaultDomainTypeToHalFormsPayloadMetadataConverter(
+            Collection<HalFormsPayloadMetadataContributor> contributors
+    ) {
+        return new DefaultDomainTypeToHalFormsPayloadMetadataConverter(
+                contributors
+        );
+    }
 
 }
