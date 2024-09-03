@@ -184,16 +184,15 @@ public class Text {
      * Filters items down to only items starting with the supplied value
      * in a case-insensitive, accent-insensitive, NFKC normalized way.
      * <p>
-     * Requires Postgres extension {@code unaccent} and
-     * a function named {@code contentgrid_prefix_search_normalize}:
+     * Requires Postgres extension {@code unaccent} and a function named
+     * {@code contentgrid_prefix_search_normalize} defined in a schema named {@code extensions}:
      * <pre><code>
      * CREATE SCHEMA extensions;
      * CREATE EXTENSION unaccent SCHEMA extensions;
-     * SET search_path TO public, extensions;
-     * CREATE OR REPLACE FUNCTION extensions.contentgrid_prefix_search_normalize(text)
+     * CREATE OR REPLACE FUNCTION extensions.contentgrid_prefix_search_normalize(arg text)
      *   RETURNS text
      *   LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
-     * RETURN extensions.unaccent('extensions.unaccent', lower(normalize($1, NFKC)));
+     * RETURN extensions.unaccent('extensions.unaccent', lower(normalize(arg, NFKC)));
      * </code></pre>
      * This predicate only supports {@link String}s, and can not be used with other types.
      */

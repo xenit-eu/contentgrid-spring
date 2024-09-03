@@ -9,6 +9,6 @@ public class PostgresNormalizeFunctionContributor implements FunctionContributor
     public void contributeFunctions(FunctionContributions functionContributions) {
         var returnType = functionContributions.getTypeConfiguration().getBasicTypeForJavaType(String.class);
         functionContributions.getFunctionRegistry().registerPattern("normalize", "normalize(?1, NFKC)", returnType);
-        functionContributions.getFunctionRegistry().registerPattern("contentgrid_normalize", "contentgrid_prefix_search_normalize(?1)", returnType);
+        functionContributions.getFunctionRegistry().registerPattern("contentgrid_normalize", "extensions.contentgrid_prefix_search_normalize(?1)", returnType);
     }
 }
