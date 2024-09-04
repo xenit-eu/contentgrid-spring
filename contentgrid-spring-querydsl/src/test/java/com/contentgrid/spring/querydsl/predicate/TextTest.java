@@ -36,7 +36,7 @@ class TextTest {
                 Text.StartsWithIgnoreCase.class,
                 Text.StartsWithNormalized.class,
                 Text.StartsWithIgnoreCaseNormalized.class,
-                Text.StartsWithIgnoreCaseAccentNormalized.class
+                Text.ContentGridPrefixSearch.class
         );
     }
 
@@ -56,8 +56,9 @@ class TextTest {
         BiFunction<StringPath, String, BooleanExpression> startsWithIgnoreCaseNormalized = (expr, value) -> {
             return Text.postgresNormalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFKC));
         };
-        BiFunction<StringPath, String, BooleanExpression> startsWithContentGridNormalized = (expr, value) -> {
-            return Text.contentgridNormalize(expr).like(Text.contentgridNormalizePattern(ConstantImpl.create(value), "{0%}"));
+        BiFunction<StringPath, String, BooleanExpression> contentGridPrefixSearch = (expr, value) -> {
+            return Text.contentGridPrefixSearchNormalize(expr)
+                    .like(Text.contentGridPrefixSearchNormalizePattern(ConstantImpl.create(value), "{0%}"));
         };
 
         return Stream.of(
@@ -68,7 +69,7 @@ class TextTest {
                 Arguments.of(new Text.StartsWithIgnoreCase(), startsWithIgnoreCase, null),
                 Arguments.of(new Text.StartsWithNormalized(), startsWithNormalized, null),
                 Arguments.of(new Text.StartsWithIgnoreCaseNormalized(), startsWithIgnoreCaseNormalized, null),
-                Arguments.of(new Text.StartsWithIgnoreCaseAccentNormalized(), startsWithContentGridNormalized, null)
+                Arguments.of(new Text.ContentGridPrefixSearch(), contentGridPrefixSearch, null)
         );
     }
 

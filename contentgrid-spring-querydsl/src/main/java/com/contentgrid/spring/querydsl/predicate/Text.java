@@ -186,22 +186,22 @@ public class Text {
      * <p>
      * Requires Postgres extension {@code unaccent} and a function named
      * {@code contentgrid_prefix_search_normalize} defined in a schema named {@code extensions}:
-     * <pre><code>
+     * <code>
      * CREATE SCHEMA extensions;
      * CREATE EXTENSION unaccent SCHEMA extensions;
      * CREATE OR REPLACE FUNCTION extensions.contentgrid_prefix_search_normalize(arg text)
      *   RETURNS text
      *   LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
      * RETURN extensions.unaccent('extensions.unaccent', lower(normalize(arg, NFKC)));
-     * </code></pre>
+     * </code>
      * This predicate only supports {@link String}s, and can not be used with other types.
      */
-    public static class StartsWithIgnoreCaseAccentNormalized extends AbstractStringPredicateFactory {
+    public static class ContentGridPrefixSearch extends AbstractStringPredicateFactory {
 
-        protected StartsWithIgnoreCaseAccentNormalized() {
+        protected ContentGridPrefixSearch() {
             // Using like() and manually append '%' to inner expression because startsWith() appends '%' to outer expression
-            super((expr, value) -> contentgridNormalize(expr)
-                    .like(contentgridNormalizePattern(ConstantImpl.create(value), "{0%}")));
+            super((expr, value) -> contentGridPrefixSearchNormalize(expr)
+                    .like(contentGridPrefixSearchNormalizePattern(ConstantImpl.create(value), "{0%}")));
         }
     }
 
@@ -209,12 +209,12 @@ public class Text {
         return Expressions.stringTemplate("normalize({0s})", expr);
     }
 
-    static StringExpression contentgridNormalize(Expression<String> expr) {
-        return contentgridNormalizePattern(expr, "{0s}");
+    static StringExpression contentGridPrefixSearchNormalize(Expression<String> expr) {
+        return contentGridPrefixSearchNormalizePattern(expr, "{0s}");
     }
 
-    static StringExpression contentgridNormalizePattern(Expression<String> expr, String pattern) {
-        return Expressions.stringTemplate("contentgrid_normalize(%s)".formatted(pattern), expr);
+    static StringExpression contentGridPrefixSearchNormalizePattern(Expression<String> expr, String pattern) {
+        return Expressions.stringTemplate("contentgrid_prefix_search_normalize(%s)".formatted(pattern), expr);
     }
 
 }
