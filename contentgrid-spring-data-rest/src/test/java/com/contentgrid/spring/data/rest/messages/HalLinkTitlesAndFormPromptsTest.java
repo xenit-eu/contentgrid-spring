@@ -83,7 +83,64 @@ class HalLinkTitlesAndFormPromptsTest {
                                             type: "text"
                                         },
                                         { name: "content.size", type: "number" }, { name: "content.mimetype", type: "text" }, { name: "content.filename", type: "text" },
-                                        { name: "invoices.number", type: "text" }, { name: "invoices.paid", type: "checkbox" }, { name: "invoices.orders.id" }, { name: "invoices.content.length", type: "number" }
+                                        { name: "invoices.number", type: "text" }, { name: "invoices.paid", type: "checkbox" }, { name: "invoices.orders.id" }, { name: "invoices.content.length", type: "number" },
+                                        {
+                                            name: "sort",
+                                            options: {
+                                                promptField: "prompt",
+                                                valueField: "value",
+                                                inline: [
+                                                    {
+                                                        value: "vat,asc",
+                                                        prompt: "VAT number ASC" # Note that the field value is replaced with the proper translation
+                                                    },
+                                                    {
+                                                        value: "vat,desc",
+                                                        prompt: "VAT number DESC"
+                                                    },
+                                                    {
+                                                        value: "birthday,asc",
+                                                        prompt: "birthday ASC"
+                                                    },
+                                                    {
+                                                        value: "birthday,desc",
+                                                        prompt: "birthday DESC"
+                                                    },
+                                                    {
+                                                        value: "gender,asc",
+                                                        prompt: "gender ASC"
+                                                    },
+                                                    {
+                                                        value: "gender,desc",
+                                                        prompt: "gender DESC"
+                                                    },
+                                                    {
+                                                        value: "content.size,asc",
+                                                        prompt: "content.size ASC"
+                                                    },
+                                                    {
+                                                        value: "content.size,desc",
+                                                        prompt: "content.size DESC"
+                                                    },
+                                                    {
+                                                        value: "content.mimetype,asc",
+                                                        prompt: "Customer Document Mimetype ASC"
+                                                    },
+                                                    {
+                                                        value: "content.mimetype,desc",
+                                                        prompt: "Customer Document Mimetype DESC"
+                                                    },
+                                                    {
+                                                        value: "content.filename,asc",
+                                                        prompt: "Customer Document Filename ASC"
+                                                    },
+                                                    {
+                                                        value: "content.filename,desc",
+                                                        prompt: "Customer Document Filename DESC"
+                                                    }
+                                                ]
+                                            }
+                                        }
                                     ]
                                 },
                                 create-form: {

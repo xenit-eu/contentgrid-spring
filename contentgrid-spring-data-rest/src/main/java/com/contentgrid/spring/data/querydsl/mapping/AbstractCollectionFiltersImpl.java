@@ -1,5 +1,6 @@
 package com.contentgrid.spring.data.querydsl.mapping;
 
+import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
 import com.contentgrid.spring.querydsl.mapping.CollectionFilters;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Order;
@@ -20,6 +21,14 @@ abstract class AbstractCollectionFiltersImpl implements CollectionFilters {
         return new PredicateCollectionFiltersImpl(
                 this,
                 cf -> !isCrossRelation(cf.getPath()) && cf.createOrderSpecifier(Order.ASC).isPresent()
+        );
+    }
+
+    @Override
+    public CollectionFilters documented() {
+        return new PredicateCollectionFiltersImpl(
+                this,
+                CollectionFilter::isDocumented
         );
     }
 

@@ -8,6 +8,8 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.RepositoryRestHandlerAdapter;
 import org.springframework.data.rest.webmvc.config.ResourceMetadataHandlerMethodArgumentResolver;
 import org.springframework.data.rest.webmvc.json.MappingAwareDefaultedPageableArgumentResolver;
@@ -17,6 +19,7 @@ import org.springframework.data.util.Lazy;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.SortArgumentResolver;
 import org.springframework.data.web.SortHandlerMethodArgumentResolver;
+import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.lang.Nullable;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
@@ -88,5 +91,23 @@ public class ContentGridCollectionFilterSortConfiguration {
                 return bean;
             }
         };
+    }
+
+    @Bean
+    CollectionFilterSortHalFormsPayloadMetadataContributor collectionFilterSortHalFormsPayloadMetadataContributor(
+            CollectionFiltersMapping collectionFiltersMapping,
+            Repositories repositories,
+            MessageResolver messageResolver,
+            RepositoryRestConfiguration repositoryRestConfiguration
+    ) {
+        var contributor = new CollectionFilterSortHalFormsPayloadMetadataContributor(
+                collectionFiltersMapping,
+                repositories,
+                messageResolver
+        );
+
+        contributor.setSortParameter(repositoryRestConfiguration.getSortParamName());
+
+        return contributor;
     }
 }

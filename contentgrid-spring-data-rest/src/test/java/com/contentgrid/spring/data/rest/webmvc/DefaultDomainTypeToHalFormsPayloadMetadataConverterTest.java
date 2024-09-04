@@ -148,7 +148,8 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 "invoices.content.length",
                         /*"invoices.content.length.lt",
                         "invoices.content.length.gt"*/
-                "invoices.orders.id"
+                "invoices.orders.id",
+                "sort"
         );
     }
 
@@ -163,7 +164,8 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 "customer.content.size",
                 "customer.content.mimetype",
                 "customer.content.filename",
-                "shipping_address.zip"
+                "shipping_address.zip",
+                "sort"
         );
     }
 
@@ -177,7 +179,8 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 "content.length",
                 /*"content.length.lt",
                 "content.length.gt"*/
-                "orders.id"
+                "orders.id",
+                "sort"
         );
     }
 }
