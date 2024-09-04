@@ -92,51 +92,51 @@ class HalLinkTitlesAndFormPromptsTest {
                                                 inline: [
                                                     {
                                                         value: "vat,asc",
-                                                        prompt: "VAT number ASC" # Note that the field value is replaced with the proper translation
+                                                        prompt: "VAT number A🡲Z" # Note that the field value is replaced with the proper translation
                                                     },
                                                     {
                                                         value: "vat,desc",
-                                                        prompt: "VAT number DESC"
+                                                        prompt: "VAT number Z🡲A"
                                                     },
                                                     {
                                                         value: "birthday,asc",
-                                                        prompt: "birthday ASC"
+                                                        prompt: "birthday oldest first"
                                                     },
                                                     {
                                                         value: "birthday,desc",
-                                                        prompt: "birthday DESC"
+                                                        prompt: "birthday newest first"
                                                     },
                                                     {
                                                         value: "gender,asc",
-                                                        prompt: "gender ASC"
+                                                        prompt: "gender A🡲Z"
                                                     },
                                                     {
                                                         value: "gender,desc",
-                                                        prompt: "gender DESC"
+                                                        prompt: "gender Z🡲A"
                                                     },
                                                     {
                                                         value: "content.size,asc",
-                                                        prompt: "content.size ASC"
+                                                        prompt: "content.size 0🡲9"
                                                     },
                                                     {
                                                         value: "content.size,desc",
-                                                        prompt: "content.size DESC"
+                                                        prompt: "content.size 9🡲0"
                                                     },
                                                     {
                                                         value: "content.mimetype,asc",
-                                                        prompt: "Customer Document Mimetype ASC"
+                                                        prompt: "Customer Document Mimetype A🡲Z"
                                                     },
                                                     {
                                                         value: "content.mimetype,desc",
-                                                        prompt: "Customer Document Mimetype DESC"
+                                                        prompt: "Customer Document Mimetype Z🡲A"
                                                     },
                                                     {
                                                         value: "content.filename,asc",
-                                                        prompt: "Customer Document Filename ASC"
+                                                        prompt: "Customer Document Filename A🡲Z"
                                                     },
                                                     {
                                                         value: "content.filename,desc",
-                                                        prompt: "Customer Document Filename DESC"
+                                                        prompt: "Customer Document Filename Z🡲A"
                                                     }
                                                 ]
                                             }

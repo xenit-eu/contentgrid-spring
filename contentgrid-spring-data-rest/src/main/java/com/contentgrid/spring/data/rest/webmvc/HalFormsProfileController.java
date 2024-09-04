@@ -41,6 +41,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RequiredArgsConstructor
 @BasePathAwareController
@@ -109,6 +110,7 @@ public class HalFormsProfileController implements InitializingBean {
         model.add(itemLink);
 
         response.setContentType(MediaTypes.HAL_FORMS_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
         objectMapper.writeValue(response.getWriter(), model);
     }
 
