@@ -5,6 +5,7 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
+import java.lang.reflect.AnnotatedElement;
 import java.util.Collection;
 import java.util.Optional;
 import lombok.Builder;
@@ -23,10 +24,17 @@ public class TestCollectionFilter<T> implements CollectionFilter<T> {
     @NonNull
     private final Path<T> path;
 
-    @NonNull
-    private final Class<T> parameterType;
-
     private Collection<T> lastParameters;
+
+    @Override
+    public AnnotatedElement getAnnotatedElement() {
+        return path.getAnnotatedElement();
+    }
+
+    @Override
+    public Class<T> getParameterType() {
+        return (Class<T>) path.getType();
+    }
 
     @Override
     public Optional<Predicate> createPredicate(Collection<T> parameters) {
