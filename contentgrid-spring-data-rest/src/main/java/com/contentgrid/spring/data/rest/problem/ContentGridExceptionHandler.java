@@ -20,12 +20,11 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.rest.core.RepositoryConstraintViolationException;
-import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
-import org.springframework.data.web.SortHandlerMethodArgumentResolver;
 import org.springframework.hateoas.mediatype.problem.Problem;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -101,6 +100,26 @@ public class ContentGridExceptionHandler {
     }
 
     @ExceptionHandler
+    ResponseEntity<Problem> handleHttpMessageReadException(@NonNull HttpMessageNotReadableException exception) {
+        Throwable currentException = exception;
+
+        while (currentException != null) {
+            if (currentException instanceof JsonMappingException mappingException) {
+                return handleMappingException(mappingException);
+            } else if (currentException instanceof JsonParseException parseException) {
+                return handleJsonParseException(parseException);
+            }
+            currentException = currentException.getCause();
+        }
+
+        // Fallback handler: just a generic bad request
+        return responseEntityFactory.createResponse(
+                problemFactory.createProblem(ProblemType.INVALID_REQUEST_BODY)
+                        .withStatus(HttpStatus.BAD_REQUEST)
+                        .withDetail(exception.getMessage())
+        );
+    }
+
     ResponseEntity<Problem> handleMappingException(JsonMappingException exception) {
         var problem = problemFactory.createProblem(ProblemType.INVALID_REQUEST_BODY_TYPE)
                 .withStatus(HttpStatus.BAD_REQUEST);
@@ -115,7 +134,6 @@ public class ContentGridExceptionHandler {
         }
     }
 
-    @ExceptionHandler
     ResponseEntity<Problem> handleJsonParseException(JsonParseException exception) {
         return responseEntityFactory.createResponse(
                 problemFactory.createProblem(ProblemType.INVALID_REQUEST_BODY_JSON)
