@@ -92,11 +92,11 @@ class HalLinkTitlesAndFormPromptsTest {
                                                 inline: [
                                                     {
                                                         value: "vat,asc",
-                                                        prompt: "VAT number A🡲Z" # Note that the field value is replaced with the proper translation
+                                                        prompt: "VAT number A→Z" # Note that the field value is replaced with the proper translation
                                                     },
                                                     {
                                                         value: "vat,desc",
-                                                        prompt: "VAT number Z🡲A"
+                                                        prompt: "VAT number Z→A"
                                                     },
                                                     {
                                                         value: "birthday,asc",
@@ -108,35 +108,35 @@ class HalLinkTitlesAndFormPromptsTest {
                                                     },
                                                     {
                                                         value: "gender,asc",
-                                                        prompt: "gender A🡲Z"
+                                                        prompt: "gender A→Z"
                                                     },
                                                     {
                                                         value: "gender,desc",
-                                                        prompt: "gender Z🡲A"
+                                                        prompt: "gender Z→A"
                                                     },
                                                     {
                                                         value: "content.size,asc",
-                                                        prompt: "content.size 0🡲9"
+                                                        prompt: "content.size 0→9"
                                                     },
                                                     {
                                                         value: "content.size,desc",
-                                                        prompt: "content.size 9🡲0"
+                                                        prompt: "content.size 9→0"
                                                     },
                                                     {
                                                         value: "content.mimetype,asc",
-                                                        prompt: "Customer Document Mimetype A🡲Z"
+                                                        prompt: "Customer Document Mimetype A→Z"
                                                     },
                                                     {
                                                         value: "content.mimetype,desc",
-                                                        prompt: "Customer Document Mimetype Z🡲A"
+                                                        prompt: "Customer Document Mimetype Z→A"
                                                     },
                                                     {
                                                         value: "content.filename,asc",
-                                                        prompt: "Customer Document Filename A🡲Z"
+                                                        prompt: "Customer Document Filename A→Z"
                                                     },
                                                     {
                                                         value: "content.filename,desc",
-                                                        prompt: "Customer Document Filename Z🡲A"
+                                                        prompt: "Customer Document Filename Z→A"
                                                     }
                                                 ]
                                             }
