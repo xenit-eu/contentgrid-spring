@@ -1,5 +1,7 @@
 package com.contentgrid.spring.data.rest.messages;
 
+import com.contentgrid.spring.data.rest.messages.HalLinkTitlesAndFormPromptsTest.LocalConfiguration;
+import com.contentgrid.spring.querydsl.annotation.CollectionFilterParam;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
@@ -8,13 +10,26 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerReposito
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.ShippingLabelRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,6 +39,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @SpringBootTest(properties = { "contentgrid.rest.use-multipart-hal-forms=true" })
 @ContextConfiguration(classes = {
         InvoicingApplication.class,
+        LocalConfiguration.class
 })
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @WithMockJwt
@@ -186,6 +202,63 @@ class HalLinkTitlesAndFormPromptsTest {
     }
 
     @Test
+    void sortPropertyFallback() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/entity-with-sort")
+                        .accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _templates: {
+                                search: {
+                                    method: "GET",
+                                    properties: [
+                                        {
+                                            name: "id"
+                                        },
+                                        {
+                                            name: "sort",
+                                            type: "text",
+                                            "options" : {
+                                                "promptField" : "prompt",
+                                                "valueField" : "value",
+                                                "minItems" : 0,
+                                                "inline" : [
+                                                    {
+                                                        "property" : "id",
+                                                        "direction" : "asc",
+                                                        "prompt" : "id ascending",
+                                                        "value" : "id,asc"
+                                                    }, {
+                                                        "property" : "id",
+                                                        "direction" : "desc",
+                                                        "prompt" : "id descending",
+                                                        "value" : "id,desc"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    target: "http://localhost/entity-with-sort"
+                                },
+                                "create-form": {
+                                    method: "POST",
+                                    properties: [
+                                        {
+                                            name: "sort",
+                                            type: "text"
+                                        }
+                                    ],
+                                    target: "http://localhost/entity-with-sort"
+                                }
+                            }
+                        }
+                        """))
+                // Check that options is certainly not present in the create-form field
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.['create-form'].properties[0].options")
+                        .doesNotExist());
+    }
+
+    @Test
     void contentFieldCamelCasedInCreateForm() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/profile/shipping-labels")
                         .accept(MediaTypes.HAL_FORMS_JSON))
@@ -240,7 +313,8 @@ class HalLinkTitlesAndFormPromptsTest {
                                         title: "Client"
                                     },
                                     { name: "invoices" }, { name: "refunds" }, { name: "promotions" },
-                                    { name: "shipping-addresses" }, { name: "shipping-labels" }, { name: "orders" }
+                                    { name: "shipping-addresses" }, { name: "shipping-labels" }, { name: "orders" },
+                                    { name: "entity-with-sort" }
                                 ]
                             }
                         }
@@ -353,4 +427,32 @@ class HalLinkTitlesAndFormPromptsTest {
         ;
     }
 
+
+    @Configuration(proxyBeanMethods = false)
+    @EntityScan(basePackageClasses = {HalLinkTitlesAndFormPromptsTest.class, InvoicingApplication.class})
+    @EnableJpaRepositories(basePackageClasses = {InvoicingApplication.class,
+            HalLinkTitlesAndFormPromptsTest.class}, considerNestedRepositories = true)
+    static class LocalConfiguration {
+
+
+    }
+
+    @Entity
+    public static class EntityWithSort {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.AUTO)
+        @JsonProperty(access = Access.READ_ONLY)
+        @CollectionFilterParam
+        private UUID id;
+
+        private String sort;
+    }
+
+    @RepositoryRestResource(path = "entity-with-sort", collectionResourceRel = "d:entity-with-sort", itemResourceRel = "d:entity-with-sort")
+    public interface EntityWithSortRepository extends
+            JpaRepository<EntityWithSort, UUID>,
+            QuerydslPredicateExecutor<EntityWithSort> {
+
+    }
 }
