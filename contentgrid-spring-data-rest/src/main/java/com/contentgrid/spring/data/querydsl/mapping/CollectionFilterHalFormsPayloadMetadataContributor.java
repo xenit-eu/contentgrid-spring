@@ -27,8 +27,8 @@ public class CollectionFilterHalFormsPayloadMetadataContributor implements HalFo
     @Override
     public Stream<PropertyMetadata> contributeToSearchForm(Class<?> domainType) {
         return collectionFiltersMapping.forDomainType(domainType)
+                .documented()
                 .filters()
-                .filter(CollectionFilter::isDocumented)
                 .map(filter -> new BasicPropertyMetadata(
                                 filter.getFilterName(),
                                 ResolvableType.forClass(filter.getParameterType())
