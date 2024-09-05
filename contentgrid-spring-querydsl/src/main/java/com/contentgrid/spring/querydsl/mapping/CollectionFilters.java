@@ -27,6 +27,15 @@ public interface CollectionFilters {
     }
 
     /**
+     * Restrict filters to those that are documented
+     * @return A reduced set of {@link CollectionFilter} that are documented
+     */
+    default CollectionFilters documented() {
+        return () -> CollectionFilters.this.filters()
+                .filter(CollectionFilter::isDocumented);
+    }
+
+    /**
      * Restricts filters to those that are applicable to a certain QueryDSL {@link Path}
      *
      * @param path The QueryDSL {@link Path} to restrict the filters to

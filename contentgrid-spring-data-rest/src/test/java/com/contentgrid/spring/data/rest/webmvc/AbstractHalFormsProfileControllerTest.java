@@ -91,6 +91,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                         # this is also a static parameter on a field at depth 1, so it is present
                                         {
                                             name: "invoices.orders.id"
+                                        },
+                                        {
+                                            name: "sort"
                                         }
                                     ]
                                 }
@@ -139,6 +142,81 @@ abstract class AbstractHalFormsProfileControllerTest {
                                         # orders.id itself is exposed directly on invoice itself, so it is present
                                         {
                                             name: "orders.id"
+                                        },
+                                        {
+                                            name: "sort",
+                                            options: {
+                                                minItems: 0,
+                                                inline: [
+                                                    {
+                                                        value: "number,asc",
+                                                        property: "number",
+                                                        direction: "asc"
+                                                    },
+                                                    {
+                                                        value: "number,desc",
+                                                        property: "number",
+                                                        direction: "desc"
+                                                    },
+                                                    {
+                                                        value: "paid,asc",
+                                                        property: "paid",
+                                                        direction: "asc"
+                                                    },
+                                                    {
+                                                        value: "paid,desc",
+                                                        property: "paid",
+                                                        direction: "desc"
+                                                    },
+                                                    {
+                                                        value: "content.length,asc",
+                                                        property: "content.length",
+                                                        direction: "asc"
+                                                    },
+                                                    {
+                                                        value: "content.length,desc",
+                                                        property: "content.length",
+                                                        direction: "desc"
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                        """));
+    }
+
+    @Test
+    void profileController_noContent_createForm() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/orders")
+                        .accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _templates: {
+                                "create-form": {
+                                    method: "POST",
+                                    target: "http://localhost/orders",
+                                    contentType: "application/json", # Always JSON, because there is no content property
+                                    properties: [
+                                        {
+                                            name: "customer",
+                                            type: "url"
+                                        },
+                                        {
+                                            name: "shipping_address",
+                                            type: "url"
+                                        },
+                                        # These many-to-many are still present because they are not ignored
+                                        {
+                                            name: "promos",
+                                            type: "url"
+                                        },
+                                        {
+                                            name: "manualPromos",
+                                            type: "url"
                                         }
                                     ]
                                 }
@@ -171,6 +249,8 @@ abstract class AbstractHalFormsProfileControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[8].name",
                         Matchers.is("invoices.content.length")))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[9].name",
-                        Matchers.is("invoices.orders.id")));
+                        Matchers.is("invoices.orders.id")))
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[10].name",
+                        Matchers.is("sort")));
     }
 }

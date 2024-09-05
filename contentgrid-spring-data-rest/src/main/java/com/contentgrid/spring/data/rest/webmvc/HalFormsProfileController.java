@@ -41,6 +41,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RequiredArgsConstructor
 @BasePathAwareController
@@ -99,8 +100,7 @@ public class HalFormsProfileController implements InitializingBean {
                 .afford(HttpMethod.HEAD) // This is to pin down the default affordance, which we don't care about
                 .andAfford(HttpMethod.POST)
                 .withName(IanaLinkRelations.CREATE_FORM_VALUE)
-                .withInput(payloadMeta.payloadMetadata())
-                .withInputMediaType(payloadMeta.mediaType())
+                .withInput(payloadMeta)
                 .andAfford(HttpMethod.PATCH) // This gets mapped to "GET" with the very ugly hack below
                 .withName(IanaLinkRelations.SEARCH_VALUE)
                 .withInput(toHalFormsPayloadMetadataConverter.convertToSearchPayloadMetadata(information.getDomainType()))
@@ -110,6 +110,7 @@ public class HalFormsProfileController implements InitializingBean {
         model.add(itemLink);
 
         response.setContentType(MediaTypes.HAL_FORMS_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
         objectMapper.writeValue(response.getWriter(), model);
     }
 
