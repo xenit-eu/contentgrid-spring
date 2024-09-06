@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
+import com.contentgrid.spring.data.rest.problem.ContentGridProblemDetailsConfigurationIntegrationTest.LocalConfiguration;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
@@ -19,6 +20,12 @@ import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerReposito
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.RefundRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
@@ -31,8 +38,14 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -47,7 +60,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
  * constructed; required attribute/relation missing) - Deletion violations (on delete object is still referenced by
  * required relation) - Database constraint errors (non-validation covered constraints)
  */
-@SpringBootTest(classes = InvoicingApplication.class)
+@SpringBootTest(classes = {
+        InvoicingApplication.class,
+        LocalConfiguration.class
+})
 @EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
 @AutoConfigureMockMvc(printOnlyOnFailure = false)
 @DirtiesContext(classMode = ClassMode.AFTER_CLASS)
@@ -228,6 +244,15 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                             )
                     )
             ;
+        }
+
+        @Test
+        void serverSideJsonGenerationError_http500() throws Exception {
+            mockMvc.perform(get("/")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(problemDetails()
+                            .withStatusCode(HttpStatus.INTERNAL_SERVER_ERROR)
+                    );
         }
 
         static Stream<Arguments> basicUrls() {
@@ -586,6 +611,35 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     .andExpect(jsonPath("$.invalid_value").value("invalid"))
             ;
         }
+
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @EntityScan(basePackageClasses = {ContentGridProblemDetailsConfigurationIntegrationTest.class,
+            InvoicingApplication.class})
+    @EnableJpaRepositories(basePackageClasses = {InvoicingApplication.class,
+            ContentGridProblemDetailsConfigurationIntegrationTest.class}, considerNestedRepositories = true)
+    static class LocalConfiguration {
+
+
+    }
+
+    @Entity
+    public static class BrokenEntity {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.AUTO)
+        @JsonProperty(access = Access.READ_ONLY)
+        private UUID id;
+
+        private String sort;
+    }
+
+    @RepositoryRestResource(path = "broken-entity")
+    // Note: this is intentionally not supplying the resourceRel parameters
+    public interface BrokenEntityRepository extends
+            JpaRepository<BrokenEntity, UUID>,
+            QuerydslPredicateExecutor<BrokenEntity> {
 
     }
 }
