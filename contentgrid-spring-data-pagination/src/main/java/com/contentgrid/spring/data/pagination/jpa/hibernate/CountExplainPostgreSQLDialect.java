@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.dialect.PostgreSQLDialect;
 
-public class CountExplainWrappingDialectWrapper extends PostgreSQLDialect {
+public class CountExplainPostgreSQLDialect extends PostgreSQLDialect {
 
     public static final String COUNT_EXPLAIN_HINT = "count_explain_estimate";
 

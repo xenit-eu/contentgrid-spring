@@ -38,7 +38,7 @@ public class ExplainEstimateItemCountStrategy implements JpaQuerydslItemCountStr
             query.setCacheMode(CacheMode.IGNORE);
             query.setCacheStoreMode(CacheStoreMode.BYPASS);
             query.setQueryPlanCacheable(false);
-            query.addQueryHint(CountExplainWrappingDialectWrapper.COUNT_EXPLAIN_HINT);
+            query.addQueryHint(CountExplainPostgreSQLDialect.COUNT_EXPLAIN_HINT);
 
             var queryPlan = objectMapper.readValue((String) query.getSingleResult(),
                     new TypeReference<List<RootQueryPlan>>() {

@@ -14,7 +14,7 @@ public class CountExplainDialectResolver implements DialectResolver {
     public Dialect resolveDialect(DialectResolutionInfo info) {
         var dialect = delegate.resolveDialect(info);
         if (dialect instanceof PostgreSQLDialect) {
-            return new CountExplainWrappingDialectWrapper();
+            return new CountExplainPostgreSQLDialect();
         }
         return null;
     }
