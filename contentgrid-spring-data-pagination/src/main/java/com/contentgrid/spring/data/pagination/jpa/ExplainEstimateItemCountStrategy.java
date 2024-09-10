@@ -13,6 +13,7 @@ import jakarta.persistence.CacheStoreMode;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,8 @@ public class ExplainEstimateItemCountStrategy implements JpaQuerydslItemCountStr
 
     @Override
     @SneakyThrows
-    public Optional<ItemCount> countQuery(JPQLQuery<?> jpqlQuery) {
+    public Optional<ItemCount> countQuery(Supplier<JPQLQuery<?>> jpqlQuerySupplier) {
+        var jpqlQuery = jpqlQuerySupplier.get();
         if (jpqlQuery instanceof JPAQuery<?> jq) {
             // We need to select a constant *string*, so hibernate expects
             // a string in return (the query plan returned by 'explain')
