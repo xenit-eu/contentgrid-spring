@@ -1,7 +1,7 @@
 package com.contentgrid.spring.data.pagination.jpa;
 
 import com.contentgrid.spring.data.pagination.ItemCount;
-import com.contentgrid.spring.data.pagination.jpa.hibernate.CountExplainWrappingDialectWrapper;
+import com.contentgrid.spring.data.pagination.jpa.hibernate.CountExplainPostgreSQLDialect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -11,6 +11,8 @@ import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
 import jakarta.persistence.CacheStoreMode;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +29,7 @@ public class ExplainEstimateItemCountStrategy implements JpaQuerydslItemCountStr
 
     @Override
     @SneakyThrows
-    public ItemCount countQuery(JPQLQuery<?> jpqlQuery) {
+    public Optional<ItemCount> countQuery(JPQLQuery<?> jpqlQuery) {
         if (jpqlQuery instanceof JPAQuery<?> jq) {
             // We need to select a constant *string*, so hibernate expects
             // a string in return (the query plan returned by 'explain')
@@ -40,21 +42,33 @@ public class ExplainEstimateItemCountStrategy implements JpaQuerydslItemCountStr
             query.setQueryPlanCacheable(false);
             query.addQueryHint(CountExplainPostgreSQLDialect.COUNT_EXPLAIN_HINT);
 
-            var queryPlan = objectMapper.readValue((String) query.getSingleResult(),
+            String queryPlanString = null;
+            try (var resultScroller = query.scroll()) {
+                resultScroller.setFetchSize(1);
+                while (resultScroller.next()) {
+                    queryPlanString = (String) resultScroller.get();
+                    if (Objects.equals(PLACEHOLDER, queryPlanString)) {
+                        // We got a placeholder instead of a query plan; we can't do anything with this
+                        log.warn("Count explain hibernate dialect is not installed. Can not perform an estimate count");
+                        return Optional.empty();
+                    }
+                }
+            }
+            if (queryPlanString == null) {
+                log.warn("No query plan was returned from query. Can not perform estimate count");
+                return Optional.empty();
+            }
+
+            var queryPlan = objectMapper.readValue(queryPlanString,
                     new TypeReference<List<RootQueryPlan>>() {
                     });
 
-            return new ItemCount(
+            return Optional.of(new ItemCount(
                     queryPlan.get(0).plan().planRows(),
                     true
-            );
+            ));
         }
-
-        log.warn("No estimated count available, performing a full count for query {}", jpqlQuery);
-        return new ItemCount(
-                jpqlQuery.fetchCount(),
-                false
-        );
+        return Optional.empty();
     }
 
 
