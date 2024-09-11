@@ -79,12 +79,7 @@ public class ContentGridPaginationQuerydslJpaPredicateExecutor<T> extends Queryd
                 results,
                 pageable,
                 hasNext,
-                hasNext ?
-                        countingStrategy.countQuery(() -> createQuery(predicate).select(path))
-                                // Worst-case fallback when we can't get a count: there is at least one more item left after this page
-                                .orElseGet(() -> ItemCount.estimated(pageable.getOffset() + results.size() + 1)) :
-                        // No need to perform count query if this is the last page
-                        ItemCount.exact(pageable.getOffset() + results.size())
+                () -> countingStrategy.countQuery(() -> createQuery(predicate).select(path))
         );
     }
 }

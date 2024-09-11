@@ -1,6 +1,6 @@
 package com.contentgrid.spring.data.pagination.jpa;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.contentgrid.spring.data.pagination.ItemCount;
 import com.contentgrid.spring.data.pagination.ItemCountPage;
@@ -9,7 +9,6 @@ import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.model.QCustomer;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
-import com.querydsl.core.types.dsl.Expressions;
 import java.util.Optional;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
@@ -51,7 +50,7 @@ class ContentGridPaginationQuerydslJpaPredicateExecutorTest {
     }
 
     @Test
-    void providesExactCountForEmptySet() {
+    void noResults() {
         Mockito.when(mockCountingStrategy.countQuery(Mockito.any()))
                 .thenReturn(Optional.empty());
 
@@ -65,7 +64,7 @@ class ContentGridPaginationQuerydslJpaPredicateExecutorTest {
     }
 
     @Test
-    void providesExactCountForPartialResultSet() {
+    void resultsOnSinglePage() {
         Mockito.when(mockCountingStrategy.countQuery(Mockito.any()))
                 .thenReturn(Optional.empty());
 
@@ -80,31 +79,51 @@ class ContentGridPaginationQuerydslJpaPredicateExecutorTest {
     }
 
     @Test
-    void providesEstimatedMinimumCountWhenHasNextPage() {
+    void resultsOnNextPage() {
         Mockito.when(mockCountingStrategy.countQuery(Mockito.any()))
                 .thenReturn(Optional.empty());
 
-        var result = customerRepository.findAll(Expressions.TRUE, Pageable.ofSize(10));
+        Page<Customer> firstPage = customerRepository.findAll(QCustomer.customer.vat.startsWith("VAT"),
+                Pageable.ofSize(10));
+        Page<Customer> nextPage = customerRepository.findAll(QCustomer.customer.vat.startsWith("VAT"),
+                firstPage.nextPageable());
+        Page<Customer> lastPage = customerRepository.findAll(QCustomer.customer.vat.startsWith("VAT"),
+                nextPage.nextPageable());
 
-        assertThat(result).isInstanceOfSatisfying(ItemCountPage.class, page -> {
-            assertThat(page.getTotalItemCount().estimate()).isTrue();
-            // There is a next page, so there are more than 10 results
+        assertThat(firstPage).isInstanceOfSatisfying(ItemCountPage.class, page -> {
             assertThat(page.hasNext()).isTrue();
-            assertThat(page.getTotalItemCount().count()).isGreaterThan(10);
+            assertThat(page.hasPrevious()).isFalse();
+            // Count is estimated (there is a next page, so at least 11 results)
+            assertThat(page.getTotalItemCount()).isEqualTo(ItemCount.estimated(11));
+        });
+
+        assertThat(nextPage).isInstanceOfSatisfying(ItemCountPage.class, page -> {
+            assertThat(page.hasNext()).isTrue();
+            assertThat(page.hasPrevious()).isTrue();
+            // Count is estimated (there is a next page, so at least 21 results)
+            assertThat(page.getTotalItemCount()).isEqualTo(ItemCount.estimated(21));
+        });
+
+        assertThat(lastPage).isInstanceOfSatisfying(ItemCountPage.class, page -> {
+            assertThat(page.hasNext()).isFalse();
+            assertThat(page.hasPrevious()).isTrue();
+            // Count is exactly known (there is no next page; 2 pages before us, and there are a couple of results on this page)
+            assertThat(page.getTotalItemCount()).isEqualTo(ItemCount.exact(25));
         });
     }
 
     @Test
-    void handlesUnpagedRequest() {
+    void resultsOnEmptyPage() {
         Mockito.when(mockCountingStrategy.countQuery(Mockito.any()))
                 .thenReturn(Optional.empty());
 
-        var result = customerRepository.findAll(Expressions.TRUE, Pageable.unpaged());
-
-        assertThat(result).isInstanceOfSatisfying(Page.class, page -> {
-            // Unpaged query, so all results are in
+        // Going to an arbitrary page somewhere far away, where there is no data anymore
+        Page<Customer> result = customerRepository.findAll(QCustomer.customer.vat.startsWith("VAT"),
+                Pageable.ofSize(10).withPage(8));
+        assertThat(result).isInstanceOfSatisfying(ItemCountPage.class, page -> {
+            assertThat(page.getTotalItemCount()).isEqualTo(ItemCount.estimated(80));
             assertThat(page.hasNext()).isFalse();
-            assertThat(page.getTotalElements()).isEqualTo(25);
+            assertThat(page.hasPrevious()).isTrue();
         });
     }
 

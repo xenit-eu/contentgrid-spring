@@ -1,7 +1,9 @@
 package com.contentgrid.spring.data.pagination;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,16 @@ public class ItemCountPage<T> extends SliceImpl<T> implements Page<T> {
     private final ItemCount totalItemCount;
 
     public ItemCountPage(
+            List<T> content,
+            Pageable pageable,
+            boolean hasNext,
+            Supplier<Optional<ItemCount>> itemCountSupplier
+    ) {
+        super(content, pageable, hasNext);
+        this.totalItemCount = adjustItemCount(calculateItemCount(itemCountSupplier));
+    }
+
+    private ItemCountPage(
             List<T> content,
             Pageable pageable,
             boolean hasNext,
@@ -42,29 +54,44 @@ public class ItemCountPage<T> extends SliceImpl<T> implements Page<T> {
 
     @Override
     public long getTotalElements() {
-        var totalResult = totalItemCount.count();
+        return totalItemCount.count();
+    }
 
+    private ItemCount adjustItemCount(ItemCount cr) {
         return getPageable().toOptional()
                 .map(page -> {
-                    var countForItemOnNextPage = page.getOffset() + page.getPageSize() + 1;
                     if (hasNext()) {
                         // There has to be a next page, so adjust count to have at least one item on the next page
-                        return Math.max(totalResult, countForItemOnNextPage);
-                    } else {
+                        var countForItemOnNextPage = page.getOffset() + page.getPageSize() + 1;
+                        return cr.orMinimally(countForItemOnNextPage);
+                    } else if (hasPrevious()) {
                         // This is the last page, adjust count to amount on this page
-                        return page.getOffset() + getContent().size();
+                        return cr.orMaximally(page.getOffset() + getContent().size());
+                    } else {
+                        // This is the only page; we know exactly the count on this page
+                        return ItemCount.exact(getContent().size());
                     }
                 })
-                .orElse(totalResult);
+                .orElse(cr);
     }
 
-    @Override
-    public Pageable nextOrLastPageable() {
-        return super.nextOrLastPageable();
+    private ItemCount calculateItemCount(Supplier<Optional<ItemCount>> supplier) {
+        return staticallyDerivedItemCount()
+                .or(supplier)
+                .orElseGet(ItemCount::unknown);
     }
 
-    @Override
-    public Pageable previousOrFirstPageable() {
-        return super.previousOrFirstPageable();
+    private Optional<ItemCount> staticallyDerivedItemCount() {
+        if (hasNext()) {
+            // There is a next page, have the actual count result be resolved
+            return Optional.empty();
+        }
+        if (!hasContent() && hasPrevious()) {
+            // The resultset is empty; we don't know if there will be things on the page directly before this one
+            return Optional.empty();
+        }
+
+        // If this is exactly the last page with results: we know the exact size, no need for counting
+        return Optional.of(ItemCount.exact(getPageable().getOffset() + getContent().size()));
     }
 }
