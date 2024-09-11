@@ -22,10 +22,7 @@ public class TimedDirectCountItemCountStrategy implements JpaQuerydslItemCountSt
 
             try {
                 long count = (long) query.getSingleResult();
-                return Optional.of(new ItemCount(
-                        count,
-                        false
-                ));
+                return Optional.of(ItemCount.exact(count));
             } catch (QueryTimeoutException ex) {
                 // Query timed out; no count (return below)
             }

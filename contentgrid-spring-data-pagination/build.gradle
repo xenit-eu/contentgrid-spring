@@ -31,7 +31,7 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
-    testImplementation project(':contentgrid-spring-boot-starter')
+    testImplementation testFixtures(project(':contentgrid-spring-data-rest'))
 }
 
 tasks.named('test') {

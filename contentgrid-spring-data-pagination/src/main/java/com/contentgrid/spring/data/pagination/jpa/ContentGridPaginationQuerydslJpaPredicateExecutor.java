@@ -52,24 +52,27 @@ public class ContentGridPaginationQuerydslJpaPredicateExecutor<T> extends Queryd
         Assert.notNull(predicate, "Predicate must not be null");
         Assert.notNull(pageable, "Pageable must not be null");
 
+        // Unpaged means everything will be on the first 'page' anyways.
+        // Counts there are automatically done based on size of resultset, without
+        // an additional count query.
+        if (pageable.isUnpaged()) {
+            return super.findAll(predicate, pageable);
+        }
+
         JPQLQuery<T> query = querydsl.applyPagination(pageable, createQuery(predicate).select(path));
 
         boolean hasNext = false;
         List<T> results;
 
-        if (pageable.isPaged()) {
-            // Limit one more than the page size, so we can determine if there is a next page
-            query.limit(pageable.getPageSize() + 1);
-            var queryResult = query.fetch();
-            if (queryResult.size() > pageable.getPageSize()) {
-                hasNext = true;
-                // Strip off the last item from the result list, so it's not returned as part of the page
-                results = queryResult.subList(0, pageable.getPageSize());
-            } else {
-                results = queryResult;
-            }
+        // Limit one more than the page size, so we can determine if there is a next page
+        query.limit(pageable.getPageSize() + 1);
+        var queryResult = query.fetch();
+        if (queryResult.size() > pageable.getPageSize()) {
+            hasNext = true;
+            // Strip off the last item from the result list, so it's not returned as part of the page
+            results = queryResult.subList(0, pageable.getPageSize());
         } else {
-            results = query.fetch();
+            results = queryResult;
         }
 
         return new ItemCountPage<>(
@@ -79,9 +82,9 @@ public class ContentGridPaginationQuerydslJpaPredicateExecutor<T> extends Queryd
                 hasNext ?
                         countingStrategy.countQuery(() -> createQuery(predicate).select(path))
                                 // Worst-case fallback when we can't get a count: there is at least one more item left after this page
-                                .orElseGet(() -> new ItemCount(pageable.getOffset() + results.size() + 1, true)) :
+                                .orElseGet(() -> ItemCount.estimated(pageable.getOffset() + results.size() + 1)) :
                         // No need to perform count query if this is the last page
-                        new ItemCount(pageable.getOffset() + results.size(), false)
+                        ItemCount.exact(pageable.getOffset() + results.size())
         );
     }
 }

@@ -2,12 +2,14 @@ package com.contentgrid.spring.data.pagination;
 
 import java.util.List;
 import java.util.function.Function;
+import lombok.Getter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
 
 public class ItemCountPage<T> extends SliceImpl<T> implements Page<T> {
 
+    @Getter
     private final ItemCount totalItemCount;
 
     public ItemCountPage(

@@ -65,10 +65,7 @@ public class ExplainEstimateItemCountStrategy implements JpaQuerydslItemCountStr
                     new TypeReference<List<RootQueryPlan>>() {
                     });
 
-            return Optional.of(new ItemCount(
-                    queryPlan.get(0).plan().planRows(),
-                    true
-            ));
+            return Optional.of(ItemCount.estimated(queryPlan.get(0).plan().planRows()));
         }
         return Optional.empty();
     }

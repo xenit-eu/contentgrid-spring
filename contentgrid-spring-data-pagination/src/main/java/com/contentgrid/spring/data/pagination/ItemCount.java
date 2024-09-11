@@ -5,4 +5,11 @@ public record ItemCount(
         boolean estimate
 ) {
 
+    public static ItemCount exact(long count) {
+        return new ItemCount(count, false);
+    }
+
+    public static ItemCount estimated(long estimate) {
+        return new ItemCount(estimate, true);
+    }
 }
