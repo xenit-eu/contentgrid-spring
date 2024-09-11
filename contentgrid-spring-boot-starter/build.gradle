@@ -17,6 +17,7 @@ dependencies {
     implementation project(':contentgrid-automations-rest')
     implementation project(':contentgrid-spring-swagger-ui')
     implementation project(':contentgrid-spring-audit-logging')
+    implementation project(':contentgrid-spring-data-pagination')
     implementation 'io.cloudevents:cloudevents-spring'
 
     api 'org.springframework.boot:spring-boot-starter-integration'
