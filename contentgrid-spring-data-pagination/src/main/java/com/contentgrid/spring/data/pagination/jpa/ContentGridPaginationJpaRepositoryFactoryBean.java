@@ -1,5 +1,6 @@
 package com.contentgrid.spring.data.pagination.jpa;
 
+import com.contentgrid.spring.data.pagination.jpa.strategy.JpaQuerydslItemCountStrategy;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.ObjectProvider;

@@ -1,4 +1,4 @@
-package com.contentgrid.spring.data.pagination.jpa;
+package com.contentgrid.spring.data.pagination.jpa.strategy;
 
 import com.contentgrid.spring.data.pagination.ItemCount;
 import com.contentgrid.spring.data.pagination.jpa.hibernate.CountExplainPostgreSQLDialect;

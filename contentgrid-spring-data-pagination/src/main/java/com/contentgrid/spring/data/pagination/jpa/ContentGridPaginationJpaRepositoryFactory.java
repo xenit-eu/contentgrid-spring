@@ -2,6 +2,7 @@ package com.contentgrid.spring.data.pagination.jpa;
 
 import static org.springframework.data.querydsl.QuerydslUtils.QUERY_DSL_PRESENT;
 
+import com.contentgrid.spring.data.pagination.jpa.strategy.JpaQuerydslItemCountStrategy;
 import jakarta.persistence.EntityManager;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.jpa.repository.support.CrudMethodMetadata;

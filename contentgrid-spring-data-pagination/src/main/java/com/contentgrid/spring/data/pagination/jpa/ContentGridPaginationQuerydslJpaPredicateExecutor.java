@@ -2,6 +2,7 @@ package com.contentgrid.spring.data.pagination.jpa;
 
 import com.contentgrid.spring.data.pagination.ItemCount;
 import com.contentgrid.spring.data.pagination.ItemCountPage;
+import com.contentgrid.spring.data.pagination.jpa.strategy.JpaQuerydslItemCountStrategy;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.PathBuilder;
