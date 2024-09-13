@@ -1,7 +1,6 @@
 package com.contentgrid.spring.data.pagination.jpa;
 
-import com.contentgrid.spring.data.pagination.ItemCount;
-import com.contentgrid.spring.data.pagination.ItemCountPage;
+import com.contentgrid.spring.data.pagination.ItemCountPageImpl;
 import com.contentgrid.spring.data.pagination.jpa.strategy.JpaQuerydslItemCountStrategy;
 import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Predicate;
@@ -75,7 +74,7 @@ public class ContentGridPaginationQuerydslJpaPredicateExecutor<T> extends Queryd
             results = queryResult;
         }
 
-        return new ItemCountPage<>(
+        return new ItemCountPageImpl<>(
                 results,
                 pageable,
                 hasNext,

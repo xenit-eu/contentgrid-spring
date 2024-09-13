@@ -10,20 +10,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-class ItemCountPageTest {
+class ItemCountPageImplTest {
 
-    private static ItemCountPage<Integer> createPage(Pageable pageable, int actualItems,
-            ItemCount ItemCount) {
+    private static ItemCountPageImpl<Integer> createPage(Pageable pageable, int actualItems, ItemCount countResult) {
         var data = IntStream.rangeClosed(1, actualItems)
                 .skip(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .boxed()
                 .toList();
-        return new ItemCountPage<>(
+        return new ItemCountPageImpl<>(
                 data,
                 pageable,
                 actualItems > pageable.getOffset() + pageable.getPageSize(),
-                () -> Optional.ofNullable(ItemCount)
+                () -> Optional.ofNullable(countResult)
         );
     }
 
