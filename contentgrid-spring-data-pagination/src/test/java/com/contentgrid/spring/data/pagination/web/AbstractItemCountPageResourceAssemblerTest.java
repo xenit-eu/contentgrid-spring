@@ -2,7 +2,6 @@ package com.contentgrid.spring.data.pagination.web;
 
 import com.contentgrid.spring.data.pagination.ItemCount;
 import com.contentgrid.spring.data.pagination.jpa.strategy.JpaQuerydslItemCountStrategy;
-import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,24 +14,18 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@SpringBootTest(
-        classes = InvoicingApplication.class,
-        properties = {
-                "contentgrid.security.unauthenticated.allow=true"
-        }
-)
 @AutoConfigureMockMvc
-class ItemCountPageResourceAssemblerTest {
+abstract class AbstractItemCountPageResourceAssemblerTest {
 
     @Autowired
     MockMvc mvc;
@@ -65,6 +58,8 @@ class ItemCountPageResourceAssemblerTest {
         );
     }
 
+    abstract ResultMatcher[] createLegacyResultMatchers(int expectedItemCount);
+
     @Test
     void emptyPage() throws Exception {
         mvc.perform(MockMvcRequestBuilders.get("/customers")
@@ -74,8 +69,7 @@ class ItemCountPageResourceAssemblerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.number").value(0))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_exact").value(0))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_estimate").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").doesNotExist())
+                .andExpectAll(createLegacyResultMatchers(0))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.first.href").doesNotExist())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.next.href").doesNotExist())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.prev.href").doesNotExist())
@@ -95,8 +89,7 @@ class ItemCountPageResourceAssemblerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.number").value(0))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_exact").doesNotExist())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_estimate").value("~120"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").doesNotExist())
+                .andExpectAll(createLegacyResultMatchers(120))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.first.href").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.next.href").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.prev.href").doesNotExist())
@@ -113,8 +106,7 @@ class ItemCountPageResourceAssemblerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.number").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_exact").value(25))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_estimate").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").doesNotExist())
+                .andExpectAll(createLegacyResultMatchers(25))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.first.href").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.next.href").doesNotExist())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.prev.href").exists())
@@ -135,8 +127,7 @@ class ItemCountPageResourceAssemblerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.number").value(0))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_exact").value(25))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_estimate").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").doesNotExist())
+                .andExpectAll(createLegacyResultMatchers(25))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.first.href").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.next.href").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.prev.href").doesNotExist())
@@ -153,8 +144,7 @@ class ItemCountPageResourceAssemblerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.number").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_exact").value(25))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.page.total_items_estimate").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").doesNotExist())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").doesNotExist())
+                .andExpectAll(createLegacyResultMatchers(25))
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.first.href").exists())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.next.href").doesNotExist())
                 .andExpect(MockMvcResultMatchers.jsonPath("$._links.prev.href").exists())
