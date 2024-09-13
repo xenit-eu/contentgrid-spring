@@ -20,6 +20,7 @@ dependencies {
     implementation platform(project(':contentgrid-spring-boot-platform'))
 
     implementation 'org.springframework.data:spring-data-jpa'
+    implementation 'org.springframework.hateoas:spring-hateoas'
     implementation 'com.querydsl:querydsl-core'
     implementation 'com.querydsl:querydsl-jpa::jakarta'
     implementation 'jakarta.persistence:jakarta.persistence-api'

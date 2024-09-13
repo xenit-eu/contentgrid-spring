@@ -6,4 +6,5 @@ import lombok.Data;
 public class ContentGridRestProperties {
     boolean fallbackToDefaultRelationController = false;
     boolean useMultipartHalForms = false;
+    boolean exposeLegacyPageInfo = false;
 }
