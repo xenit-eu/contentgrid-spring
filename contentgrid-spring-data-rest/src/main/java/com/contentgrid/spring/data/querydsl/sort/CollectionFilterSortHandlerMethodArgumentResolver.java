@@ -13,9 +13,12 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.rest.webmvc.config.ResourceMetadataHandlerMethodArgumentResolver;
 import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
 import org.springframework.data.web.SortArgumentResolver;
+import org.springframework.hateoas.TemplateVariables;
+import org.springframework.hateoas.server.mvc.UriComponentsContributor;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @RequiredArgsConstructor
@@ -61,13 +64,22 @@ public class CollectionFilterSortHandlerMethodArgumentResolver extends
         );
     }
 
+    @Override
+    public TemplateVariables getSortTemplateVariables(MethodParameter parameter, UriComponents template) {
+        if (delegate instanceof HateoasSortHandlerMethodArgumentResolver hateoasSortHandlerMethodArgumentResolver) {
+            return hateoasSortHandlerMethodArgumentResolver.getSortTemplateVariables(parameter, template);
+        }
+        return TemplateVariables.NONE;
+    }
 
     @Override
     public void enhance(UriComponentsBuilder builder, MethodParameter parameter, Object value) {
-        if (value instanceof QSortWithOriginalSort qSortWithOriginalSort) {
-            super.enhance(builder, parameter, qSortWithOriginalSort.getOriginalSort());
-        } else {
-            super.enhance(builder, parameter, value);
+        if (delegate instanceof UriComponentsContributor uriComponentsContributor) {
+            if (value instanceof QSortWithOriginalSort qSortWithOriginalSort) {
+                uriComponentsContributor.enhance(builder, parameter, qSortWithOriginalSort.getOriginalSort());
+            } else {
+                uriComponentsContributor.enhance(builder, parameter, value);
+            }
         }
     }
 
