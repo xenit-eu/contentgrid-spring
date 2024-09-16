@@ -5,6 +5,8 @@ import com.contentgrid.spring.data.pagination.InvalidPaginationException;
 import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorContext;
 import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorDecodeException;
 import java.util.Optional;
+import lombok.NonNull;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.data.domain.PageRequest;
@@ -12,25 +14,42 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public class HateoasPageableCursorHandlerMethodArgumentResolver extends HateoasPageableHandlerMethodArgumentResolver {
+public class HateoasPageableCursorHandlerMethodArgumentResolver extends
+        HateoasPageableHandlerMethodArgumentResolver implements
+        InitializingBean {
 
+    @NonNull
     private final HateoasSortHandlerMethodArgumentResolver sortResolver;
+
+    @NonNull
     private final CursorCodec cursorCodec;
+
+    @NonNull
+    private final Iterable<PageableHandlerMethodArgumentResolverCustomizer> customizers;
+
     private Pageable fallbackPageable = PageRequest.of(0, 20);
 
     public HateoasPageableCursorHandlerMethodArgumentResolver(
             HateoasSortHandlerMethodArgumentResolver sortResolver,
-            CursorCodec cursorCodec
+            CursorCodec cursorCodec,
+            Iterable<PageableHandlerMethodArgumentResolverCustomizer> customizers
     ) {
         super(sortResolver);
         this.sortResolver = sortResolver;
         this.cursorCodec = cursorCodec;
+        this.customizers = customizers;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        customizers.forEach(customizer -> customizer.customize(this));
     }
 
     @Override

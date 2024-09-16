@@ -34,7 +34,8 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
     private HateoasPageableCursorHandlerMethodArgumentResolver createHandlerMethodArgumentResolver() {
         return new HateoasPageableCursorHandlerMethodArgumentResolver(
                 new HateoasSortHandlerMethodArgumentResolver(),
-                cursorCodec
+                cursorCodec,
+                List.of()
         );
     }
 

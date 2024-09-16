@@ -28,12 +28,11 @@ public class ContentGridSpringDataPaginationCursorConfiguration {
             @Override
             public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
                 if (bean instanceof HateoasPageableHandlerMethodArgumentResolver) {
-                    var resolver = new HateoasPageableCursorHandlerMethodArgumentResolver(
+                    return new HateoasPageableCursorHandlerMethodArgumentResolver(
                             sortHandlerMethodArgumentResolver,
-                            cursorCodec
+                            cursorCodec,
+                            resolverCustomizers
                     );
-                    resolverCustomizers.forEach(c -> c.customize(resolver));
-                    return resolver;
                 }
                 return bean;
             }
