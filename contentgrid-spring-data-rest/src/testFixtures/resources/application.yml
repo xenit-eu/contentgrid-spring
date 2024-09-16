@@ -1,4 +1,7 @@
 spring:
+  datasource:
+    hikari:
+      connection-timeout: 2000
   jpa:
     show-sql: true
     hibernate:
