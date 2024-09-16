@@ -6,12 +6,15 @@ import org.springframework.data.domain.Pageable;
 public class SimplePageBasedCursorCodec implements CursorCodec {
 
     @Override
-    public Pageable decodeCursor(CursorContext context) {
+    public Pageable decodeCursor(CursorContext context) throws CursorDecodeException {
         int pageNumber;
         try {
             pageNumber = Integer.parseInt(context.cursor());
+            if (pageNumber < 0) {
+                throw new CursorDecodeException("may not be negative");
+            }
         } catch (NumberFormatException ex) {
-            pageNumber = 0;
+            throw new CursorDecodeException("must be a number", ex);
         }
         return PageRequest.of(pageNumber, context.pageSize(), context.sort());
     }
@@ -23,4 +26,5 @@ public class SimplePageBasedCursorCodec implements CursorCodec {
                 pageable.getPageSize(), pageable.getSort()
         );
     }
+
 }

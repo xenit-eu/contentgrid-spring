@@ -1,6 +1,9 @@
 package com.contentgrid.spring.data.pagination.cursor;
 
+import com.contentgrid.spring.data.pagination.InvalidPageSizeException;
+import com.contentgrid.spring.data.pagination.InvalidPaginationException;
 import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorContext;
+import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorDecodeException;
 import java.util.Optional;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.MergedAnnotations;
@@ -44,10 +47,15 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends HateoasP
                     }
                 });
 
-        var cursor = webRequest.getParameter(getParameterNameToUse(getPageParameterName(), methodParameter));
+        var cursorParameterName = getParameterNameToUse(getPageParameterName(), methodParameter);
+        var cursor = webRequest.getParameter(cursorParameterName);
         var sort = sortResolver.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
 
-        return cursorCodec.decodeCursor(new CursorContext(cursor, pageSize, sort));
+        try {
+            return cursorCodec.decodeCursor(new CursorContext(cursor, pageSize, sort));
+        } catch (CursorDecodeException e) {
+            throw new InvalidPaginationException(cursorParameterName, e);
+        }
     }
 
     private Optional<Integer> parsePageSize(String pageSizeParam) {
@@ -56,8 +64,8 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends HateoasP
         }
         try {
             var size = Integer.parseInt(pageSizeParam);
-            if (size < 0) {
-                return Optional.empty();
+            if (size <= 0) {
+                throw InvalidPageSizeException.mustBePositive(getSizeParameterName());
             }
 
             if (size < getMaxPageSize()) {
@@ -66,7 +74,7 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends HateoasP
                 return Optional.of(getMaxPageSize());
             }
         } catch (NumberFormatException e) {
-            return Optional.empty();
+            throw new InvalidPageSizeException(getSizeParameterName(), e);
         }
     }
 

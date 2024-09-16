@@ -1,11 +1,12 @@
 package com.contentgrid.spring.data.pagination.cursor;
 
+import lombok.experimental.StandardException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 public interface CursorCodec {
 
-    Pageable decodeCursor(CursorContext context);
+    Pageable decodeCursor(CursorContext context) throws CursorDecodeException;
 
     CursorContext encodeCursor(Pageable pageable);
 
@@ -14,6 +15,11 @@ public interface CursorCodec {
             int pageSize,
             Sort sort
     ) {
+
+    }
+
+    @StandardException
+    class CursorDecodeException extends Exception {
 
     }
 }
