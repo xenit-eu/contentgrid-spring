@@ -1,7 +1,9 @@
 package com.contentgrid.spring.data.pagination.web;
 
 import com.contentgrid.spring.data.pagination.ItemCountPage;
+import com.contentgrid.spring.data.pagination.cursor.CursorCodec;
 import org.springframework.data.domain.Page;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.IanaLinkRelations;
@@ -13,10 +15,14 @@ import org.springframework.hateoas.server.RepresentationModelAssembler;
 
 public class ItemCountPageResourceAssembler<T> extends PagedResourcesAssembler<T> {
 
+    private final Lazy<CursorCodec> lazyCursorCodec;
+
     public ItemCountPageResourceAssembler(
-            HateoasPageableHandlerMethodArgumentResolver resolver
+            HateoasPageableHandlerMethodArgumentResolver resolver,
+            Lazy<CursorCodec> lazyCursorCodec
     ) {
         super(resolver, null);
+        this.lazyCursorCodec = lazyCursorCodec;
     }
 
     @Override
@@ -54,9 +60,21 @@ public class ItemCountPageResourceAssembler<T> extends PagedResourcesAssembler<T
 
     private PageMetadata maybeWrapMetadata(Page<?> page, PageMetadata metadata) {
         if (page instanceof ItemCountPage<?> itemCountPage) {
-            return new ItemCountPageMetadata(metadata, itemCountPage.getTotalItemCount());
+            return new ItemCountPageMetadata(
+                    metadata,
+                    itemCountPage.getTotalItemCount(),
+                    createCursorMetadata(page)
+            );
         }
         return metadata;
+    }
+
+    private CursorPageMetadata createCursorMetadata(Page<?> page) {
+        return lazyCursorCodec.getOptional().map(cursorCodec -> {
+            var prevCursor = page.hasPrevious() ? cursorCodec.encodeCursor(page.previousPageable()).cursor() : null;
+            var nextCursor = page.hasNext() ? cursorCodec.encodeCursor(page.nextPageable()).cursor() : null;
+            return new CursorPageMetadata(prevCursor, nextCursor);
+        }).orElseGet(() -> new CursorPageMetadata(null, null));
     }
 
 }

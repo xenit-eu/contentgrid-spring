@@ -1,5 +1,6 @@
 package com.contentgrid.spring.boot.autoconfigure.data.pagination;
 
+import com.contentgrid.spring.data.pagination.cursor.ContentGridSpringDataPaginationCursorConfiguration;
 import com.contentgrid.spring.data.pagination.web.ContentGridSpringDataPaginationWebConfiguration;
 import com.contentgrid.spring.data.pagination.web.ItemCountPageMetadata;
 import com.contentgrid.spring.data.pagination.web.ItemCountPageMetadataOmitLegacyPropertiesMixin;
@@ -14,7 +15,12 @@ import org.springframework.data.web.PagedResourcesAssembler;
 
 
 @AutoConfiguration
-@Import(ContentGridSpringDataPaginationWebConfiguration.class)
+@Import(
+        {
+                ContentGridSpringDataPaginationWebConfiguration.class,
+                ContentGridSpringDataPaginationCursorConfiguration.class
+        }
+)
 @ConditionalOnClass({
         ContentGridSpringDataPaginationWebConfiguration.class,
         PagedResourcesAssembler.class
