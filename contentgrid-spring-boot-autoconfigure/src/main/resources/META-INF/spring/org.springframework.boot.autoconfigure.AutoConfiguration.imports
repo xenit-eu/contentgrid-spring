@@ -4,6 +4,7 @@ com.contentgrid.spring.boot.autoconfigure.data.audit.JpaAuditingAutoConfiguratio
 com.contentgrid.spring.boot.autoconfigure.data.audit.JwtAuditorAwareAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.data.pagination.JpaPaginationAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.data.pagination.WebPaginationAutoConfiguration
+com.contentgrid.spring.boot.autoconfigure.data.pagination.RestWebmvcPaginationAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.data.web.ContentGridSpringDataRestAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration
 com.contentgrid.spring.boot.autoconfigure.s3.S3AutoConfiguration
