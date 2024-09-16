@@ -19,13 +19,8 @@ public class ItemCountPageMetadata extends PageMetadata {
     }
 
     @JsonProperty("total_items_estimate")
-    @JsonInclude(Include.NON_NULL)
-    public String getEstimatedTotalItems() {
-        if (totalItemCount.isEstimated()) {
-            return "~" + totalItemCount.count();
-        }
-
-        return null;
+    public long getEstimatedTotalItems() {
+        return totalItemCount.count();
     }
 
     @JsonProperty("total_items_exact")
