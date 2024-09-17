@@ -28,7 +28,13 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.hamcrest.Description;
+import org.hamcrest.Matchers;
+import org.hamcrest.TypeSafeMatcher;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -48,8 +54,13 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.web.SortArgumentResolver;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.UriTemplate;
 import org.springframework.hateoas.server.mvc.UriComponentsContributor;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.util.UriComponents;
@@ -230,6 +241,53 @@ class CollectionFilterSortHandlerMethodArgumentResolverTest {
 
     }
 
+    @Nested
+    @SpringBootTest(classes = {InvoicingApplication.class, LocalConfiguration.class}, properties = {
+            "contentgrid.security.unauthenticated.allow=true",
+            "spring.data.rest.sort-param-name=_sort"
+    })
+    @EnableAutoConfiguration(exclude = EventsAutoConfiguration.class)
+    @AutoConfigureMockMvc(printOnlyOnFailure = false)
+    class WithOverriddenSortParam {
+
+        @Autowired
+        MockMvc mockMvc;
+
+        @Test
+        void rootLinksUseSortParam() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.get("/"))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$._links.['cg:entity'][*].href")
+                            .value(Matchers.everyItem(Matchers.allOf(
+                                    new UriTemplateVariableMatcher("_sort"),
+                                    Matchers.not(new UriTemplateVariableMatcher("sort"))
+                            ))));
+        }
+
+        @Test
+        void halFormsUseSortParam() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.get("/profile/invoices")
+                            .accept(MediaTypes.HAL_FORMS_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[?(@.name == '_sort')]")
+                            .exists())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[?(@.name == 'sort')]")
+                            .doesNotExist());
+        }
+
+        @Test
+        void collectionUsesSortParam() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.get("/invoices?_sort=number,asc"))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$._links.self.href")
+                            .value(Matchers.allOf(
+                                    new UriQueryParamMatcher("_sort", "number,asc"),
+                                    Matchers.not(new UriQueryParamMatcher("sort", null))
+                            )));
+        }
+
+    }
+
     @Configuration(proxyBeanMethods = false)
     @EntityScan(basePackageClasses = {CollectionFilterSortHandlerMethodArgumentResolverTest.class,
             InvoicingApplication.class})
@@ -266,11 +324,53 @@ class CollectionFilterSortHandlerMethodArgumentResolverTest {
         private Invoice invoice;
     }
 
-    @RepositoryRestResource(path = "entity-with-weird-filter-params")
+    @RepositoryRestResource(path = "entity-with-weird-filter-params", itemResourceRel = "d:entity-with-weird-filter-params", collectionResourceRel = "d:entities-with-weird-filter-params")
     public interface EntityWithWeirdFilterParamsRepository extends
             JpaRepository<EntityWithWeirdFilterParams, UUID>,
             QuerydslPredicateExecutor<EntityWithWeirdFilterParams> {
 
     }
 
+    @RequiredArgsConstructor
+    private static class UriTemplateVariableMatcher extends TypeSafeMatcher<String> {
+
+        private final String variable;
+
+        @Override
+        protected boolean matchesSafely(String item) {
+            var template = UriTemplate.of(item);
+            return template.getVariableNames().contains(variable);
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("is a uri template containing variable ").appendValue(variable);
+        }
+
+    }
+
+    @RequiredArgsConstructor
+    private static class UriQueryParamMatcher extends TypeSafeMatcher<String> {
+
+        private final String name;
+        private final String value;
+
+        @Override
+        protected boolean matchesSafely(String item) {
+            var uriComponents = UriComponentsBuilder.fromUriString(item).build();
+            if (value == null) {
+                return uriComponents.getQueryParams().containsKey(name);
+            }
+            return Objects.equals(uriComponents.getQueryParams().getFirst(name), value);
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendValue("has query parameter ").appendValue(name);
+            if (value != null) {
+                description.appendValue("with value ")
+                        .appendValue(value);
+            }
+        }
+    }
 }
