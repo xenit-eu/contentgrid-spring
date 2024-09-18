@@ -223,7 +223,7 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
     }
 
     @Test
-    void fillsTemplateParametersForNullCursor() {
+    void fillsTemplateParametersForNullCursor_fails() {
         var pageRequest = PageRequest.of(0, 13, Sort.by("abc"));
         Mockito.when(cursorCodec.encodeCursor(Mockito.eq(pageRequest), Mockito.any()))
                 .thenReturn(new CursorContext(null, 15, Sort.unsorted()));
@@ -231,12 +231,11 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
         var resolver = createHandlerMethodArgumentResolver();
 
         var builder = UriComponentsBuilder.newInstance();
-        resolver.enhance(builder, Sample.DEFAULT_PAGEABLE, pageRequest);
 
-        assertThat(builder.build().getQueryParams())
-                .doesNotContainKey("page")
-                .containsEntry("size", List.of("15"))
-                .doesNotContainKey("sort");
+        // Not having the cursor filled in is an error
+        assertThatThrownBy(() -> {
+            resolver.enhance(builder, Sample.DEFAULT_PAGEABLE, pageRequest);
+        }).isInstanceOf(IllegalStateException.class);
     }
 
     @Test

@@ -25,11 +25,8 @@ public class SimplePageBasedCursorCodec implements CursorCodec {
 
     @Override
     public CursorContext encodeCursor(Pageable pageable, UriComponents uriComponents) {
-        String encodedCursor = null;
-        if (pageable.getPageNumber() > 0) {
-            encodedCursor = Integer.toString(pageable.getPageNumber());
-        }
-        return new CursorContext(encodedCursor, pageable.getPageSize(), pageable.getSort());
+        return new CursorContext(Integer.toString(pageable.getPageNumber()), pageable.getPageSize(),
+                pageable.getSort());
     }
 
 }

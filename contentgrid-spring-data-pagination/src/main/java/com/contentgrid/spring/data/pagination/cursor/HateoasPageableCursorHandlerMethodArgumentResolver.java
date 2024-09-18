@@ -125,12 +125,15 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends
 
         var context = cursorCodec.encodeCursor(pageable, builder.build());
 
+        if (context.cursor() == null) {
+            // Cursor must always be present, else the next_cursor/prev_cursor property will be absent from the page information
+            throw new IllegalStateException("CursorCoded#encodeCursor() must always be encode a cursor");
+        }
+
         if (context.pageSize() != getDefaultPageSize(parameter)) {
             builder.replaceQueryParam(pageSizePropertyName, context.pageSize());
         }
-        if (context.cursor() != null) {
-            builder.replaceQueryParam(cursorPropertyName, context.cursor());
-        }
+        builder.replaceQueryParam(cursorPropertyName, context.cursor());
 
         sortResolver.enhance(builder, parameter, context.sort());
     }

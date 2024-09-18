@@ -64,7 +64,7 @@ class SimplePageBasedCursorCodecTest {
     void encodeCursorFirstPage() {
         var cursor = codec.encodeCursor(PageRequest.of(0, 34).withSort(SORT), URI_COMPONENTS);
 
-        assertThat(cursor.cursor()).isNull();
+        assertThat(cursor.cursor()).isEqualTo("0");
         assertThat(cursor.pageSize()).isEqualTo(34);
         assertThat(cursor.sort()).isEqualTo(SORT);
     }
