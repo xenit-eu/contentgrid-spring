@@ -4,6 +4,7 @@ import com.contentgrid.spring.data.pagination.InvalidPageSizeException;
 import com.contentgrid.spring.data.pagination.InvalidPaginationException;
 import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorContext;
 import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorDecodeException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import lombok.NonNull;
 import org.springframework.beans.factory.InitializingBean;
@@ -15,15 +16,18 @@ import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver
 import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class HateoasPageableCursorHandlerMethodArgumentResolver extends
         HateoasPageableHandlerMethodArgumentResolver implements
-        InitializingBean {
+        InitializingBean,
+        CursorEncoder {
 
     @NonNull
     private final HateoasSortHandlerMethodArgumentResolver sortResolver;
@@ -55,23 +59,24 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends
     @Override
     public Pageable resolveArgument(MethodParameter methodParameter, ModelAndViewContainer mavContainer,
             NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
-        var defaults = MergedAnnotations.from(methodParameter.getParameterAnnotations()).get(PageableDefault.class);
-        var pageSize = parsePageSize(
-                webRequest.getParameter(getParameterNameToUse(getSizeParameterName(), methodParameter)))
-                .orElseGet(() -> {
-                    if (defaults.isPresent()) {
-                        return defaults.getInt("size");
-                    } else {
-                        return fallbackPageable.getPageSize();
-                    }
-                });
+        var pageSizeParameterName = getParameterNameToUse(getSizeParameterName(), methodParameter);
+        var pageSize = parsePageSize(webRequest.getParameter(pageSizeParameterName))
+                .orElseGet(() -> getDefaultPageSize(methodParameter));
 
         var cursorParameterName = getParameterNameToUse(getPageParameterName(), methodParameter);
         var cursor = webRequest.getParameter(cursorParameterName);
         var sort = sortResolver.resolveArgument(methodParameter, mavContainer, webRequest, binderFactory);
 
+        var uriComponentsBuilder = Optional.ofNullable(webRequest.getNativeRequest(HttpServletRequest.class))
+                .map(ServletUriComponentsBuilder::fromRequest)
+                .orElseGet(ServletUriComponentsBuilder::fromCurrentRequest);
+
+        // Clear out cursor & page size
+        uriComponentsBuilder.replaceQueryParam(cursorParameterName);
+        uriComponentsBuilder.replaceQueryParam(pageSizeParameterName);
+
         try {
-            return cursorCodec.decodeCursor(new CursorContext(cursor, pageSize, sort));
+            return cursorCodec.decodeCursor(new CursorContext(cursor, pageSize, sort), uriComponentsBuilder.build());
         } catch (CursorDecodeException e) {
             throw new InvalidPaginationException(cursorParameterName, e);
         }
@@ -99,7 +104,7 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends
 
 
     @Override
-    public void enhance(UriComponentsBuilder builder, MethodParameter parameter, Object value) {
+    public void enhance(UriComponentsBuilder builder, @Nullable MethodParameter parameter, Object value) {
         if (!(value instanceof Pageable pageable)) {
             return;
         }
@@ -111,17 +116,47 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends
         var cursorPropertyName = getParameterNameToUse(getPageParameterName(), parameter);
         var pageSizePropertyName = getParameterNameToUse(getSizeParameterName(), parameter);
 
-        var context = cursorCodec.encodeCursor(pageable);
+        // Clear out cursor & page size
+        builder.replaceQueryParam(cursorPropertyName);
+        builder.replaceQueryParam(pageSizePropertyName);
 
-        builder.replaceQueryParam(pageSizePropertyName, context.pageSize());
-        builder.replaceQueryParam(cursorPropertyName, context.cursor());
+        var context = cursorCodec.encodeCursor(pageable, builder.build());
+
+        if (context.pageSize() != getDefaultPageSize(parameter)) {
+            builder.replaceQueryParam(pageSizePropertyName, context.pageSize());
+        }
+        if (context.cursor() != null) {
+            builder.replaceQueryParam(cursorPropertyName, context.cursor());
+        }
 
         sortResolver.enhance(builder, parameter, context.sort());
+    }
+
+    @Override
+    public String encodeCursor(Pageable pageable, String referenceUrl) {
+        var componentsBuilder = UriComponentsBuilder.fromHttpUrl(referenceUrl);
+        enhance(componentsBuilder, null, pageable);
+
+        return componentsBuilder.build().getQueryParams()
+                .getFirst(getParameterNameToUse(getPageParameterName(), null));
     }
 
     @Override
     public void setFallbackPageable(Pageable fallbackPageable) {
         this.fallbackPageable = fallbackPageable;
         super.setFallbackPageable(fallbackPageable);
+    }
+
+    private int getDefaultPageSize(@Nullable MethodParameter methodParameter) {
+        if (methodParameter == null) {
+            return fallbackPageable.getPageSize();
+        }
+        var defaults = MergedAnnotations.from(methodParameter.getParameterAnnotations()).get(PageableDefault.class);
+
+        if (defaults.isPresent()) {
+            return defaults.getInt("size");
+        } else {
+            return fallbackPageable.getPageSize();
+        }
     }
 }

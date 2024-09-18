@@ -1,7 +1,6 @@
 package com.contentgrid.spring.data.pagination.web;
 
-import com.contentgrid.spring.data.pagination.cursor.CursorCodec;
-import java.util.function.Supplier;
+import com.contentgrid.spring.data.pagination.cursor.CursorEncoder;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -18,7 +17,7 @@ public class ContentGridSpringDataPaginationWebConfiguration {
     @Bean
     static BeanPostProcessor replacePagedResourceAssemblerBeanPostProcessor(
             @Lazy HateoasPageableHandlerMethodArgumentResolver pageableHandlerMethodArgumentResolver,
-            ObjectProvider<CursorCodec> cursorCodec
+            ObjectProvider<CursorEncoder> cursorEncoder
     ) {
         return new BeanPostProcessor() {
             @Override
@@ -26,7 +25,7 @@ public class ContentGridSpringDataPaginationWebConfiguration {
                 if (bean instanceof PagedResourcesAssembler<?>) {
                     return new ItemCountPageResourceAssembler<>(
                             pageableHandlerMethodArgumentResolver,
-                            org.springframework.data.util.Lazy.of(cursorCodec::getIfUnique)
+                            org.springframework.data.util.Lazy.of(cursorEncoder::getIfUnique)
                     );
                 }
                 return bean;

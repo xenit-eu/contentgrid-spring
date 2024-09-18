@@ -7,6 +7,7 @@ import com.contentgrid.spring.data.pagination.InvalidPageSizeException;
 import com.contentgrid.spring.data.pagination.InvalidPaginationException;
 import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorContext;
 import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorDecodeException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -25,6 +26,8 @@ import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 class HateoasPageableCursorHandlerMethodArgumentResolverTest {
@@ -48,14 +51,19 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
 
     private static ServletWebRequest createRequest(Consumer<MockHttpServletRequest> servletRequestConsumer) {
         var mockRequest = new MockHttpServletRequest();
+        mockRequest.setRequestURI("/test-request");
         servletRequestConsumer.accept(mockRequest);
         return new ServletWebRequest(mockRequest);
+    }
+
+    private static UriComponents createFromRequest(ServletWebRequest webRequest) {
+        return ServletUriComponentsBuilder.fromRequest(webRequest.getNativeRequest(HttpServletRequest.class)).build();
     }
 
     @BeforeEach
     void setUp() throws CursorDecodeException {
         cursorCodec = Mockito.mock(CursorCodec.class);
-        Mockito.when(cursorCodec.decodeCursor(Mockito.any()))
+        Mockito.when(cursorCodec.decodeCursor(Mockito.any(), Mockito.any()))
                 .thenAnswer(answerFromCursor(ctx -> PageRequest.ofSize(ctx.pageSize())
                         .withSort(ctx.sort())
                 ));
@@ -65,10 +73,13 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
     void pageableWithoutParameters() throws CursorDecodeException {
         var resolver = createHandlerMethodArgumentResolver();
 
-        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, createRequest(w -> {
-        }), null);
+        var request = createRequest(w -> {
+        });
 
-        Mockito.verify(cursorCodec).decodeCursor(new CursorContext(null, 20, Sort.unsorted()));
+        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, request, null);
+
+        Mockito.verify(cursorCodec)
+                .decodeCursor(new CursorContext(null, 20, Sort.unsorted()), createFromRequest(request));
         Mockito.verifyNoMoreInteractions(cursorCodec);
     }
 
@@ -76,11 +87,13 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
     void pageableWithSize() throws CursorDecodeException {
         var resolver = createHandlerMethodArgumentResolver();
 
-        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, createRequest(req -> {
+        var request = createRequest(req -> {
             req.addParameter("size", "50");
-        }), null);
+        });
+        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, request, null);
 
-        Mockito.verify(cursorCodec).decodeCursor(new CursorContext(null, 50, Sort.unsorted()));
+        Mockito.verify(cursorCodec)
+                .decodeCursor(new CursorContext(null, 50, Sort.unsorted()), createFromRequest(request));
         Mockito.verifyNoMoreInteractions(cursorCodec);
     }
 
@@ -90,11 +103,13 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
 
         resolver.setMaxPageSize(100);
 
-        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, createRequest(req -> {
+        var request = createRequest(req -> {
             req.addParameter("size", "5000");
-        }), null);
+        });
+        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, request, null);
 
-        Mockito.verify(cursorCodec).decodeCursor(new CursorContext(null, 100, Sort.unsorted()));
+        Mockito.verify(cursorCodec)
+                .decodeCursor(new CursorContext(null, 100, Sort.unsorted()), createFromRequest(request));
         Mockito.verifyNoMoreInteractions(cursorCodec);
 
     }
@@ -103,12 +118,14 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
     void pageableWithSort() throws CursorDecodeException {
         var resolver = createHandlerMethodArgumentResolver();
 
-        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, createRequest(req -> {
+        var request = createRequest(req -> {
             req.addParameter("sort", "xyz,desc", "abc,asc");
-        }), null);
+        });
+        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, request, null);
 
         Mockito.verify(cursorCodec)
-                .decodeCursor(new CursorContext(null, 20, Sort.by(Order.desc("xyz"), Order.asc("abc"))));
+                .decodeCursor(new CursorContext(null, 20, Sort.by(Order.desc("xyz"), Order.asc("abc"))),
+                        createFromRequest(request));
         Mockito.verifyNoMoreInteractions(cursorCodec);
     }
 
@@ -116,11 +133,13 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
     void pageableWithPage() throws CursorDecodeException {
         var resolver = createHandlerMethodArgumentResolver();
 
-        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, createRequest(req -> {
+        var request = createRequest(req -> {
             req.addParameter("page", "my-value", "my-second-value");
-        }), null);
+        });
+        resolver.resolveArgument(Sample.SUPPORTED_METHOD, null, request, null);
 
-        Mockito.verify(cursorCodec).decodeCursor(new CursorContext("my-value", 20, Sort.unsorted()));
+        Mockito.verify(cursorCodec)
+                .decodeCursor(new CursorContext("my-value", 20, Sort.unsorted()), createFromRequest(request));
         Mockito.verifyNoMoreInteractions(cursorCodec);
     }
 
@@ -128,11 +147,13 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
     void pageableWithDefaultAnnotation() throws CursorDecodeException {
         var resolver = createHandlerMethodArgumentResolver();
 
-        resolver.resolveArgument(Sample.DEFAULT_PAGEABLE, null, createRequest(req -> {
+        var request = createRequest(req -> {
             req.addParameter("page", "my-value");
-        }), null);
+        });
+        resolver.resolveArgument(Sample.DEFAULT_PAGEABLE, null, request, null);
 
-        Mockito.verify(cursorCodec).decodeCursor(new CursorContext("my-value", 10, Sort.unsorted()));
+        Mockito.verify(cursorCodec)
+                .decodeCursor(new CursorContext("my-value", 10, Sort.unsorted()), createFromRequest(request));
         Mockito.verifyNoMoreInteractions(cursorCodec);
     }
 
@@ -169,7 +190,8 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
 
     @Test
     void pageableCursorException() throws CursorDecodeException {
-        Mockito.doThrow(new CursorDecodeException("failed to decode")).when(cursorCodec).decodeCursor(Mockito.any());
+        Mockito.doThrow(new CursorDecodeException("failed to decode")).when(cursorCodec)
+                .decodeCursor(Mockito.any(), Mockito.any());
 
         var resolver = createHandlerMethodArgumentResolver();
 
@@ -186,7 +208,7 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
     @Test
     void fillsTemplateParameters() {
         var pageRequest = PageRequest.of(1, 13, Sort.by("abc"));
-        Mockito.when(cursorCodec.encodeCursor(pageRequest))
+        Mockito.when(cursorCodec.encodeCursor(Mockito.eq(pageRequest), Mockito.any()))
                 .thenReturn(new CursorContext("encoded-cursor", 15, Sort.unsorted()));
 
         var resolver = createHandlerMethodArgumentResolver();
@@ -201,9 +223,43 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
     }
 
     @Test
+    void fillsTemplateParametersForNullCursor() {
+        var pageRequest = PageRequest.of(0, 13, Sort.by("abc"));
+        Mockito.when(cursorCodec.encodeCursor(Mockito.eq(pageRequest), Mockito.any()))
+                .thenReturn(new CursorContext(null, 15, Sort.unsorted()));
+
+        var resolver = createHandlerMethodArgumentResolver();
+
+        var builder = UriComponentsBuilder.newInstance();
+        resolver.enhance(builder, Sample.DEFAULT_PAGEABLE, pageRequest);
+
+        assertThat(builder.build().getQueryParams())
+                .doesNotContainKey("page")
+                .containsEntry("size", List.of("15"))
+                .doesNotContainKey("sort");
+    }
+
+    @Test
+    void fillsTemplateParametersForDefaultSize() {
+        var pageRequest = PageRequest.of(1, 13, Sort.by("abc"));
+        Mockito.when(cursorCodec.encodeCursor(Mockito.eq(pageRequest), Mockito.any()))
+                .thenReturn(new CursorContext("encoded-cursor", 10, Sort.unsorted()));
+
+        var resolver = createHandlerMethodArgumentResolver();
+
+        var builder = UriComponentsBuilder.newInstance();
+        resolver.enhance(builder, Sample.DEFAULT_PAGEABLE, pageRequest);
+
+        assertThat(builder.build().getQueryParams())
+                .containsEntry("page", List.of("encoded-cursor"))
+                .doesNotContainKey("size")
+                .doesNotContainKey("sort");
+    }
+
+    @Test
     void fillsTemplateParametersWithSort() {
         var pageRequest = PageRequest.of(1, 13, Sort.by("abc"));
-        Mockito.when(cursorCodec.encodeCursor(pageRequest))
+        Mockito.when(cursorCodec.encodeCursor(Mockito.eq(pageRequest), Mockito.any()))
                 .thenReturn(new CursorContext("encoded-cursor", 15, Sort.by("abc")));
 
         var resolver = createHandlerMethodArgumentResolver();

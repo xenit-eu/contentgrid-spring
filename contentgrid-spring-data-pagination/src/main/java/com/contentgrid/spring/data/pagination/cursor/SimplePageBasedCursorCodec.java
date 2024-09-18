@@ -3,11 +3,12 @@ package com.contentgrid.spring.data.pagination.cursor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
 
 public class SimplePageBasedCursorCodec implements CursorCodec {
 
     @Override
-    public Pageable decodeCursor(CursorContext context) throws CursorDecodeException {
+    public Pageable decodeCursor(CursorContext context, UriComponents uriComponents) throws CursorDecodeException {
         int pageNumber = 0;
         if (StringUtils.hasText(context.cursor())) {
             try {
@@ -23,11 +24,12 @@ public class SimplePageBasedCursorCodec implements CursorCodec {
     }
 
     @Override
-    public CursorContext encodeCursor(Pageable pageable) {
-        return new CursorContext(
-                Integer.toString(pageable.getPageNumber()),
-                pageable.getPageSize(), pageable.getSort()
-        );
+    public CursorContext encodeCursor(Pageable pageable, UriComponents uriComponents) {
+        String encodedCursor = null;
+        if (pageable.getPageNumber() > 0) {
+            encodedCursor = Integer.toString(pageable.getPageNumber());
+        }
+        return new CursorContext(encodedCursor, pageable.getPageSize(), pageable.getSort());
     }
 
 }
