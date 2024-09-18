@@ -14,11 +14,6 @@ import org.springframework.data.web.config.PageableHandlerMethodArgumentResolver
 public class ContentGridSpringDataPaginationCursorConfiguration {
 
     @Bean
-    CursorCodec simplePageBasedCursorCodec() {
-        return new SimplePageBasedCursorCodec();
-    }
-
-    @Bean
     static BeanPostProcessor replaceHateoasPageableHandlerMethodArgumentResolverBeanPostProcessor(
             @Lazy HateoasSortHandlerMethodArgumentResolver sortHandlerMethodArgumentResolver,
             @Lazy CursorCodec cursorCodec,

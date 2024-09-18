@@ -5,6 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponents;
 
+/**
+ * Page-based cursor: Re-implementation of the standard numeric page-based {@link Pageable}
+ */
 public class SimplePageBasedCursorCodec implements CursorCodec {
 
     @Override
