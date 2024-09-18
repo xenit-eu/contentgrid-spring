@@ -349,7 +349,7 @@ class InvoicingApplicationTests {
                 mockMvc.perform(get("/invoices?sort=draft"))
                         .andExpect(problemDetails()
                                 .withStatusCode(HttpStatus.BAD_REQUEST)
-                                .withType("https://contentgrid.cloud/problems/invalid-filter-parameter/sort")
+                                .withType("https://contentgrid.cloud/problems/invalid-query-parameter/sort")
                         );
             }
 
@@ -358,7 +358,7 @@ class InvoicingApplicationTests {
                 mockMvc.perform(get("/invoices?sort=counterparty.birthday"))
                         .andExpect(problemDetails()
                                 .withStatusCode(HttpStatus.BAD_REQUEST)
-                                .withType("https://contentgrid.cloud/problems/invalid-filter-parameter/sort")
+                                .withType("https://contentgrid.cloud/problems/invalid-query-parameter/sort")
                         );
             }
 

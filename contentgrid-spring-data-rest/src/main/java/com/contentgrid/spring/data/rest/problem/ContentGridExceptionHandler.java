@@ -1,9 +1,12 @@
 package com.contentgrid.spring.data.rest.problem;
 
+import com.contentgrid.spring.data.pagination.InvalidPaginationException;
 import com.contentgrid.spring.data.querydsl.sort.UnsupportedSortPropertyException;
 import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties;
 import com.contentgrid.spring.data.rest.problem.ext.ConstraintViolationProblemProperties.FieldViolationProblemProperties;
 import com.contentgrid.spring.data.rest.problem.ext.InvalidFilterProblemProperties;
+import com.contentgrid.spring.data.rest.problem.ext.InvalidQueryParameterProblemProperties;
+import com.contentgrid.spring.data.rest.problem.ext.MergedProblemProperties;
 import com.contentgrid.spring.data.rest.validation.OnEntityDelete;
 import com.contentgrid.spring.querydsl.converter.CollectionFilterValueConversionException;
 import com.contentgrid.spring.querydsl.mapping.InvalidCollectionFilterValueException;
@@ -209,11 +212,36 @@ public class ContentGridExceptionHandler {
                                 exception.getOrder().getProperty()
                         )
                         .withStatus(HttpStatus.BAD_REQUEST)
-                        .withProperties(new InvalidFilterProblemProperties(
-                                        queryParam.getKey(),
+                        .withProperties(MergedProblemProperties.createFromExtension(
+                                        new InvalidQueryParameterProblemProperties(
+                                                queryParam.getKey(),
+                                                queryParam.getValue().get(0)
+                                        )
+                                ).extendedWith(new InvalidFilterProblemProperties(
+                                        exception.getOrder().getProperty(),
                                         queryParam.getValue().get(0)
-                                )
+                                ))
                         )
+        );
+    }
+
+    @ExceptionHandler
+    ResponseEntity<Problem> handleInvalidPaginationException(
+            InvalidPaginationException exception
+    ) {
+        return responseEntityFactory.createResponse(
+                problemFactory.createProblem(
+                                ProblemType.INVALID_PAGINATION_PARAMETER,
+                                exception.getParameter(),
+                                exception.getInvalidValue(),
+                                exception.getMessage()
+                        )
+                        .withStatus(HttpStatus.BAD_REQUEST)
+                        .withProperties(new InvalidQueryParameterProblemProperties(
+                                exception.getParameter(),
+                                exception.getInvalidValue()
+                        ))
+
         );
     }
 

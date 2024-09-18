@@ -44,6 +44,10 @@ public class MergedProblemProperties {
         }
     }
 
+    public static MergedProblemProperties createFromExtension(Object extension) {
+        return new MergedProblemProperties(extension, null);
+    }
+
     public MergedProblemProperties extendedWith(Object extension) {
         if(extension == null) {
             return new MergedProblemProperties(original, extension);

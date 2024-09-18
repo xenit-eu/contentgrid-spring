@@ -36,6 +36,7 @@ dependencies {
     implementation 'com.contentgrid.thunx:spring-data-querydsl-predicate-injector'
 
     implementation project(':contentgrid-spring-querydsl')
+    implementation project(':contentgrid-spring-data-pagination')
 
     testAnnotationProcessor project(':contentgrid-spring-boot-starter-annotations')
 

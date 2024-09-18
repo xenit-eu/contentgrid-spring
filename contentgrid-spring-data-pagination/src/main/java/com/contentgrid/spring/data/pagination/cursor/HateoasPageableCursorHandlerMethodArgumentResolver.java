@@ -80,7 +80,7 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends
         try {
             return cursorCodec.decodeCursor(new CursorContext(cursor, pageSize, sort), uriComponentsBuilder.build());
         } catch (CursorDecodeException e) {
-            throw new InvalidPaginationException(cursorParameterName, e);
+            throw new InvalidPaginationException(cursorParameterName, cursor, e);
         }
     }
 
@@ -91,7 +91,7 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends
         try {
             var size = Integer.parseInt(pageSizeParam);
             if (size <= 0) {
-                throw InvalidPageSizeException.mustBePositive(getSizeParameterName());
+                throw InvalidPageSizeException.mustBePositive(getSizeParameterName(), pageSizeParam);
             }
 
             if (size < getMaxPageSize()) {
@@ -100,7 +100,7 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends
                 return Optional.of(getMaxPageSize());
             }
         } catch (NumberFormatException e) {
-            throw new InvalidPageSizeException(getSizeParameterName(), e);
+            throw new InvalidPageSizeException(getSizeParameterName(), pageSizeParam, e);
         }
     }
 
