@@ -51,6 +51,13 @@ public interface CursorCodec {
             Sort sort
     ) {
 
+        public CursorContext mapCursor(@NonNull UnaryOperator<@NonNull String> cursorMapper) {
+            if (cursor == null) {
+                return this;
+            }
+            return new CursorContext(cursorMapper.apply(cursor), pageSize, sort);
+        }
+
     }
 
     /**

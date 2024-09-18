@@ -273,6 +273,7 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
                 .containsEntry("sort", List.of("abc,asc"));
     }
 
+
     abstract static class Sample {
 
         public static final MethodParameter SUPPORTED_METHOD;

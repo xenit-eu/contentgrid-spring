@@ -12,6 +12,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
 import org.springframework.data.web.PageableDefault;
@@ -71,9 +72,10 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends
                 .map(ServletUriComponentsBuilder::fromRequest)
                 .orElseGet(ServletUriComponentsBuilder::fromCurrentRequest);
 
-        // Clear out cursor & page size
+        // Clear out cursor, page size and sort parameter
         uriComponentsBuilder.replaceQueryParam(cursorParameterName);
         uriComponentsBuilder.replaceQueryParam(pageSizeParameterName);
+        sortResolver.enhance(uriComponentsBuilder, methodParameter, Sort.unsorted());
 
         try {
             return cursorCodec.decodeCursor(new CursorContext(cursor, pageSize, sort), uriComponentsBuilder.build());
@@ -116,9 +118,10 @@ public class HateoasPageableCursorHandlerMethodArgumentResolver extends
         var cursorPropertyName = getParameterNameToUse(getPageParameterName(), parameter);
         var pageSizePropertyName = getParameterNameToUse(getSizeParameterName(), parameter);
 
-        // Clear out cursor & page size
+        // Clear out cursor, page size & sort
         builder.replaceQueryParam(cursorPropertyName);
         builder.replaceQueryParam(pageSizePropertyName);
+        sortResolver.enhance(builder, parameter, Sort.unsorted());
 
         var context = cursorCodec.encodeCursor(pageable, builder.build());
 
