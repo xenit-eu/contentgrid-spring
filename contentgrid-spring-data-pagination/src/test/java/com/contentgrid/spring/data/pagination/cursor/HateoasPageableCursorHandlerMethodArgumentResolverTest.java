@@ -7,16 +7,26 @@ import com.contentgrid.spring.data.pagination.InvalidPageSizeException;
 import com.contentgrid.spring.data.pagination.InvalidPaginationException;
 import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorContext;
 import com.contentgrid.spring.data.pagination.cursor.CursorCodec.CursorDecodeException;
+import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import lombok.RequiredArgsConstructor;
+import org.hamcrest.Description;
+import org.hamcrest.Matchers;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +34,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.web.HateoasSortHandlerMethodArgumentResolver;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.hateoas.UriTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponents;
@@ -294,4 +308,86 @@ class HateoasPageableCursorHandlerMethodArgumentResolverTest {
         public abstract void defaultPageable(@PageableDefault Pageable pageable);
     }
 
+    @Nested
+    @SpringBootTest(classes = {InvoicingApplication.class}, properties = {
+            "contentgrid.security.unauthenticated.allow=true",
+            "spring.data.rest.page-param-name=_page",
+            "spring.data.rest.limit-param-name=_size"
+    })
+    @AutoConfigureMockMvc
+    class WithOverriddenPaginationParams {
+
+        @Autowired
+        MockMvc mockMvc;
+
+        @Test
+        void rootLinksUseParams() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.get("/"))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$._links.['cg:entity'][*].href")
+                            .value(Matchers.everyItem(Matchers.allOf(
+                                    new UriTemplateVariableMatcher("_page"),
+                                    new UriTemplateVariableMatcher("_size"),
+                                    Matchers.not(new UriTemplateVariableMatcher("page")),
+                                    Matchers.not(new UriTemplateVariableMatcher("size"))
+                            ))));
+        }
+
+        @Test
+        void collectionUseParams() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.get("/invoices?_page=1&_size=13"))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$._links.self.href")
+                            .value(Matchers.allOf(
+                                    new UriQueryParamMatcher("_size", "13"),
+                                    new UriQueryParamMatcher("_page", "1"),
+                                    Matchers.not(new UriQueryParamMatcher("size", null)),
+                                    Matchers.not(new UriQueryParamMatcher("page", null))
+                            )));
+        }
+
+        @RequiredArgsConstructor
+        private static class UriTemplateVariableMatcher extends TypeSafeMatcher<String> {
+
+            private final String variable;
+
+            @Override
+            protected boolean matchesSafely(String item) {
+                var template = UriTemplate.of(item);
+                return template.getVariableNames().contains(variable);
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("is a uri template containing variable ").appendValue(variable);
+            }
+
+        }
+
+        @RequiredArgsConstructor
+        private static class UriQueryParamMatcher extends TypeSafeMatcher<String> {
+
+            private final String name;
+            private final String value;
+
+            @Override
+            protected boolean matchesSafely(String item) {
+                var uriComponents = UriComponentsBuilder.fromUriString(item).build();
+                if (value == null) {
+                    return uriComponents.getQueryParams().containsKey(name);
+                }
+                return Objects.equals(uriComponents.getQueryParams().getFirst(name), value);
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendValue("has query parameter ").appendValue(name);
+                if (value != null) {
+                    description.appendValue("with value ")
+                            .appendValue(value);
+                }
+            }
+        }
+
+    }
 }
