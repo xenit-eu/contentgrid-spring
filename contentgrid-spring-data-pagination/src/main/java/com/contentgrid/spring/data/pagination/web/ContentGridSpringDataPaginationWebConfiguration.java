@@ -25,7 +25,7 @@ public class ContentGridSpringDataPaginationWebConfiguration {
                 if (bean instanceof PagedResourcesAssembler<?>) {
                     return new ItemCountPageResourceAssembler<>(
                             pageableHandlerMethodArgumentResolver,
-                            org.springframework.data.util.Lazy.of(cursorEncoder::getIfUnique)
+                            org.springframework.data.util.Lazy.of(cursorEncoder::getIfAvailable)
                     );
                 }
                 return bean;
