@@ -266,7 +266,7 @@ class InvoicingApplicationTests {
                         .andExpect(jsonPath("$.page.number").value(0))
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(2))
                         .andExpect(jsonPath("$._embedded.['item'][0].number").exists())
-                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/invoices?page=0&size=20"))
+                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/invoices?page=0"))
                         .andExpect(jsonPath("$._links.curies").value(curies()));
             }
 
@@ -296,7 +296,7 @@ class InvoicingApplicationTests {
                         .andExpect(jsonPath("$.page.total_items_exact").value(0))
                         .andExpect(jsonPath("$.page.number").value(0))
                         .andExpect(jsonPath("$._embedded.['item'].length()").value(0))
-                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/refunds?page=0&size=20"))
+                        .andExpect(jsonPath("$._links.self.href").value("http://localhost/refunds?page=0"))
                         .andExpect(jsonPath("$._links.curies").value(curies()));
             }
 
@@ -334,14 +334,14 @@ class InvoicingApplicationTests {
                         .andExpect(jsonPath("$._embedded.item[0].number").value(INVOICE_NUMBER_1))
                         .andExpect(jsonPath("$._embedded.item[1].number").value(INVOICE_NUMBER_2))
                         .andExpect(jsonPath("$._links.self.href").value(
-                                "http://localhost/invoices?page=0&size=20&sort=number,asc"));
+                                "http://localhost/invoices?page=0&sort=number,asc"));
                 mockMvc.perform(get("/invoices?sort=number,desc")
                                 .accept(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$._embedded.item[0].number").value(INVOICE_NUMBER_2))
                         .andExpect(jsonPath("$._embedded.item[1].number").value(INVOICE_NUMBER_1))
                         .andExpect(jsonPath("$._links.self.href").value(
-                                "http://localhost/invoices?page=0&size=20&sort=number,desc"));
+                                "http://localhost/invoices?page=0&sort=number,desc"));
             }
 
             @Test
@@ -349,7 +349,7 @@ class InvoicingApplicationTests {
                 mockMvc.perform(get("/invoices?sort=draft"))
                         .andExpect(problemDetails()
                                 .withStatusCode(HttpStatus.BAD_REQUEST)
-                                .withType("https://contentgrid.cloud/problems/invalid-filter-parameter/sort")
+                                .withType("https://contentgrid.cloud/problems/invalid-query-parameter/sort")
                         );
             }
 
@@ -358,7 +358,7 @@ class InvoicingApplicationTests {
                 mockMvc.perform(get("/invoices?sort=counterparty.birthday"))
                         .andExpect(problemDetails()
                                 .withStatusCode(HttpStatus.BAD_REQUEST)
-                                .withType("https://contentgrid.cloud/problems/invalid-filter-parameter/sort")
+                                .withType("https://contentgrid.cloud/problems/invalid-query-parameter/sort")
                         );
             }
 
@@ -383,7 +383,7 @@ class InvoicingApplicationTests {
                         .andExpect(jsonPath("$._embedded.item[0].vat").value(ORG_XENIT_VAT))
                         .andExpect(jsonPath("$._embedded.item[1].vat").value(ORG_INBEV_VAT))
                         .andExpect(jsonPath("$._links.self.href").value(
-                                "http://localhost/customers?page=0&size=20&sort=content.size,asc"));
+                                "http://localhost/customers?page=0&sort=content.size,asc"));
 
             }
 

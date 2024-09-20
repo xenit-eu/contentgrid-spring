@@ -21,6 +21,8 @@ dependencies {
 
     implementation 'org.springframework.data:spring-data-jpa'
     implementation 'org.springframework.hateoas:spring-hateoas'
+    implementation 'org.springframework:spring-webmvc'
+    implementation 'jakarta.servlet:jakarta.servlet-api'
     implementation 'com.querydsl:querydsl-core'
     implementation 'com.querydsl:querydsl-jpa::jakarta'
     implementation 'jakarta.persistence:jakarta.persistence-api'
