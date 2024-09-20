@@ -8,7 +8,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 @SpringBootTest(
         classes = InvoicingApplication.class,
         properties = {
-                "contentgrid.security.unauthenticated.allow=true"
+                "contentgrid.security.unauthenticated.allow=true",
+                "contentgrid.rest.expose-legacy-page-info=false"
         }
 )
 public class LegacyDisabledItemCountPageResourceAssemblerTest extends AbstractItemCountPageResourceAssemblerTest{

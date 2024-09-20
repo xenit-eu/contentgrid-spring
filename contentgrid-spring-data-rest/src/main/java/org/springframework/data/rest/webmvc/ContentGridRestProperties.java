@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 public class ContentGridRestProperties {
     boolean fallbackToDefaultRelationController = false;
     boolean useMultipartHalForms = false;
-    boolean exposeLegacyPageInfo = false;
+    boolean exposeLegacyPageInfo = true;
     PaginationType pagination = PaginationType.PAGE_NUMBER;
 
     @Getter
