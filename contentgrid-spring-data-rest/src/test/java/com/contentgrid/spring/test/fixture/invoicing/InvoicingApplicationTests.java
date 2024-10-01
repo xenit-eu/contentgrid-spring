@@ -304,10 +304,7 @@ class InvoicingApplicationTests {
             void listShippingLabels_withLabelsInLoop_http200_ok() throws Exception {
                 // set up the loop of shipping-labels
                 var label1 = shippingLabels.save(new ShippingLabel("a", "b"));
-                label1 = shippingLabels.save(label1);
-
                 var label2 = shippingLabels.save(new ShippingLabel("b", "a"));
-                label2 = shippingLabels.save(label2);
 
                 // Add relations
                 label1.setParent(label2);

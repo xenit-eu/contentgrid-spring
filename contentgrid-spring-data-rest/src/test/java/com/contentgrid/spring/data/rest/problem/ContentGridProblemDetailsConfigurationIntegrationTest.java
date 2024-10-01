@@ -4,6 +4,7 @@ import static com.contentgrid.spring.data.rest.problem.ProblemDetailsMockMvcMatc
 import static com.contentgrid.spring.data.rest.problem.ProblemDetailsMockMvcMatchers.validationConstraintViolation;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -295,6 +296,7 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
         @Test
         void createEntityWithoutRequiredAttribute() throws Exception {
             var customer = createCustomer();
+            // application/json
             mockMvc.perform(post("/invoices")
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
@@ -307,10 +309,21 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     .andExpect(validationConstraintViolation()
                             .withError(error -> error.withProperty("number"))
                     );
+
+            // multipart/form-data
+            mockMvc.perform(multipart(HttpMethod.POST, "/invoices")
+                            .contentType(MediaType.MULTIPART_FORM_DATA)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
+                            .param("counterparty", "/customers/%s".formatted(customer.getId()))
+                    )
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("number"))
+                    );
         }
 
         @Test
         void createEntityWithoutRequiredRelation() throws Exception {
+            // application/json
             mockMvc.perform(post("/invoices")
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
@@ -323,10 +336,21 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                     .andExpect(validationConstraintViolation()
                             .withError(error -> error.withProperty("counterparty"))
                     );
+
+            // multipart/form-data
+            mockMvc.perform(multipart(HttpMethod.POST, "/invoices")
+                            .contentType(MediaType.MULTIPART_FORM_DATA)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
+                            .param("number", UUID.randomUUID().toString())
+                    )
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("counterparty"))
+                    );
         }
 
         @Test
         void createEntityWithAttributeValueNotInAllowedValues() throws Exception {
+            // application/json
             mockMvc.perform(post("/customers")
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
@@ -336,6 +360,17 @@ class ContentGridProblemDetailsConfigurationIntegrationTest {
                                         "gender": "illegal"
                                     }
                                     """.formatted(UUID.randomUUID()))
+                    )
+                    .andExpect(validationConstraintViolation()
+                            .withError(error -> error.withProperty("gender"))
+                    );
+
+            // multipart/form-data
+            mockMvc.perform(multipart(HttpMethod.POST, "/customers")
+                            .contentType(MediaType.MULTIPART_FORM_DATA)
+                            .accept(MediaTypes.HAL_FORMS_JSON, MediaTypes.HAL_JSON)
+                            .param("vat", UUID.randomUUID().toString())
+                            .param("gender", "illegal")
                     )
                     .andExpect(validationConstraintViolation()
                             .withError(error -> error.withProperty("gender"))
