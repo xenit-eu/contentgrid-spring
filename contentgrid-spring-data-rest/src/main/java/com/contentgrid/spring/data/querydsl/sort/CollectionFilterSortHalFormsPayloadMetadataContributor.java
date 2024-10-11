@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -63,8 +64,11 @@ public class CollectionFilterSortHalFormsPayloadMetadataContributor extends
                             messageResolver.resolve(new DirectionMessageSourceResolvable(domainType, filter, dir)),
                             foldIntoExpressions(Sort.by(dir, filter.getFilterName()))
                     ));
-                });
-        return Stream.of(new SortPropertyMetadata(sortOptions.toList()));
+                }).toList();
+
+        return Stream.of(sortOptions)
+                .filter(Predicate.not(List::isEmpty))
+                .map(SortPropertyMetadata::new);
     }
 
     @Override

@@ -164,8 +164,7 @@ class DefaultDomainTypeToHalFormsPayloadMetadataConverterTest {
                 "customer.content.size",
                 "customer.content.mimetype",
                 "customer.content.filename",
-                "shipping_address.zip",
-                "sort"
+                "shipping_address.zip"
         );
     }
 
