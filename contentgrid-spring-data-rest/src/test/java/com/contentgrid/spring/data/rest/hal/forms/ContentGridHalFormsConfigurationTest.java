@@ -132,7 +132,7 @@ class ContentGridHalFormsConfigurationTest {
                                                     maxItems: 1
                                                 }
                                             },
-                                            {},{},{},{},{},{},{}
+                                            {},{},{},{},{},{}
                                         ]
                                     }
                                 }

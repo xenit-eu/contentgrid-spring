@@ -259,6 +259,37 @@ class HalLinkTitlesAndFormPromptsTest {
     }
 
     @Test
+    void noSortPropertyWithoutCollectionFilterParams() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/entity-without-filters")
+                        .accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            _templates: {
+                                search: {
+                                    method: "GET",
+                                    properties: [],
+                                    target: "http://localhost/entity-without-filters"
+                                },
+                                "create-form": {
+                                    method: "POST",
+                                    properties: [
+                                        {
+                                            name: "name",
+                                            type: "text"
+                                        }
+                                    ],
+                                    target: "http://localhost/entity-without-filters"
+                                }
+                            }
+                        }
+                        """))
+                // Check that there are no search or sort parameters present
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties")
+                        .isEmpty());
+    }
+
+    @Test
     void contentFieldCamelCasedInCreateForm() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/profile/shipping-labels")
                         .accept(MediaTypes.HAL_FORMS_JSON))
@@ -314,7 +345,7 @@ class HalLinkTitlesAndFormPromptsTest {
                                     },
                                     { name: "invoices" }, { name: "refunds" }, { name: "promotions" },
                                     { name: "shipping-addresses" }, { name: "shipping-labels" }, { name: "orders" },
-                                    { name: "entity-with-sort" }
+                                    { name: "entity-with-sort" }, { name: "entity-without-filters" }
                                 ]
                             }
                         }
@@ -453,6 +484,24 @@ class HalLinkTitlesAndFormPromptsTest {
     public interface EntityWithSortRepository extends
             JpaRepository<EntityWithSort, UUID>,
             QuerydslPredicateExecutor<EntityWithSort> {
+
+    }
+
+    @Entity
+    public static class EntityWithoutFilters {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.AUTO)
+        @JsonProperty(access = Access.READ_ONLY)
+        private UUID id;
+
+        private String name;
+    }
+
+    @RepositoryRestResource(path = "entity-without-filters", collectionResourceRel = "d:entity-without-filters", itemResourceRel = "d:entity-without-filters")
+    public interface EntityWithoutCollectionFilterParamRepository extends
+            JpaRepository<EntityWithoutFilters, UUID>,
+            QuerydslPredicateExecutor<EntityWithoutFilters> {
 
     }
 }
