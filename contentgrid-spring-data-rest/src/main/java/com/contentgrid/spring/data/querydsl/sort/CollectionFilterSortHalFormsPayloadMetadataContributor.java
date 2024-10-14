@@ -3,19 +3,14 @@ package com.contentgrid.spring.data.querydsl.sort;
 import com.contentgrid.spring.data.rest.webmvc.HalFormsPayloadMetadataContributor;
 import com.contentgrid.spring.querydsl.mapping.CollectionFilter;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
-import lombok.experimental.Accessors;
-import lombok.experimental.FieldDefaults;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.ResolvableType;
 import org.springframework.data.domain.Sort;
@@ -66,9 +61,11 @@ public class CollectionFilterSortHalFormsPayloadMetadataContributor extends
                     ));
                 }).toList();
 
-        return Stream.of(sortOptions)
-                .filter(Predicate.not(List::isEmpty))
-                .map(SortPropertyMetadata::new);
+        if (sortOptions.isEmpty()) {
+            return Stream.empty();
+        } else {
+            return Stream.of(new SortPropertyMetadata(sortOptions));
+        }
     }
 
     @Override
