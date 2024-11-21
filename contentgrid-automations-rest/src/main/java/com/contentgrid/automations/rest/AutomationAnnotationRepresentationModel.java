@@ -1,5 +1,6 @@
 package com.contentgrid.automations.rest;
 
+import com.contentgrid.automations.AutomationLinkRelations;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,7 +15,7 @@ import org.springframework.hateoas.server.core.Relation;
 @Builder(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = true)
-@Relation(collectionRelation = "cg:automation-annotation")
+@Relation(collectionRelation = AutomationLinkRelations.ANNOTATION_STRING)
 public class AutomationAnnotationRepresentationModel extends
         RepresentationModel<AutomationAnnotationRepresentationModel> {
 

@@ -1,12 +1,11 @@
 package com.contentgrid.automations.rest;
 
+import com.contentgrid.automations.AutomationLinkRelations;
 import com.contentgrid.automations.rest.AutomationsModel.AutomationAnnotationModel;
-import com.contentgrid.spring.data.rest.links.ContentGridLinkRelations;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
-import org.springframework.data.rest.core.mapping.RepositoryResourceMappings;
+import org.springframework.data.rest.core.mapping.ResourceMappings;
 import org.springframework.data.rest.webmvc.ProfileController;
-import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;
@@ -17,23 +16,18 @@ public class AutomationAnnotationRepresentationModelAssembler implements
         RepresentationModelAssembler<AutomationAnnotationModel, AutomationAnnotationRepresentationModel> {
 
     private final RepositoryRestConfiguration repositoryRestConfiguration;
-    private final RepositoryResourceMappings mappings;
-    private final RepositoryEntityLinks entityLinks;
+    private final ResourceMappings mappings;
 
     @Override
     public AutomationAnnotationRepresentationModel toModel(AutomationAnnotationModel annotation) {
         return AutomationAnnotationRepresentationModel.from(annotation)
-                .add(getProfileLink(annotation))
-                .add(getCollectionLink(annotation));
+                .add(getTargetEntityLink(annotation));
     }
 
-    private Link getProfileLink(AutomationAnnotationModel annotation) {
-        var mapping = mappings.getMetadataFor(annotation.getEntityClass());
-        return Link.of(ProfileController.getPath(repositoryRestConfiguration, mapping),
-                ContentGridLinkRelations.ENTITY_PROFILE);
-    }
+    private Link getTargetEntityLink(AutomationAnnotationModel annotation) {
+        var profileUrl = ProfileController.getPath(repositoryRestConfiguration,
+                mappings.getMetadataFor(annotation.getEntityClass()));
 
-    private Link getCollectionLink(AutomationAnnotationModel annotation) {
-        return entityLinks.linkToCollectionResource(annotation.getEntityClass()).withRel(ContentGridLinkRelations.ENTITY);
+        return Link.of(profileUrl, AutomationLinkRelations.TARGET_ENTITY);
     }
 }

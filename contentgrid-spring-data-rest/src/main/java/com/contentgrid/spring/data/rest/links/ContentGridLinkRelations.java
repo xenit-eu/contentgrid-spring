@@ -13,7 +13,5 @@ public class ContentGridLinkRelations {
     public static final LinkRelation ENTITY = HalLinkRelation.curied(CURIE, "entity");
     public static final LinkRelation RELATION = HalLinkRelation.curied(CURIE, "relation");
     public static final LinkRelation CONTENT = HalLinkRelation.curied(CURIE, "content");
-    public static final LinkRelation AUTOMATION_ANNOTATION = HalLinkRelation.curied(CURIE, "automation-annotation");
-    public static final LinkRelation ENTITY_PROFILE = HalLinkRelation.curied(CURIE, "entity-profile");
 
 }

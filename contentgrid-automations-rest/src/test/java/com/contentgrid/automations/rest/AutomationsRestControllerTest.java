@@ -192,7 +192,7 @@ class AutomationsRestControllerTest {
                                 foo: "bar"
                             },
                             _embedded: {
-                                "cg:automation-annotation": [ {
+                                "automation:annotation": [ {
                                     id: "${ENTITY_ANNOTATION_ID}",
                                     subject: {
                                         type: "entity",
@@ -202,12 +202,8 @@ class AutomationsRestControllerTest {
                                         color: "blue"
                                     },
                                     _links: {
-                                        "cg:entity-profile": {
+                                        "automation:target-entity": {
                                             href: "http://localhost/profile/customers"
-                                        },
-                                        "cg:entity": {
-                                            href: "http://localhost/customers{?page,size,sort*}",
-                                            templated: true
                                         }
                                     }
                                 },
@@ -222,12 +218,8 @@ class AutomationsRestControllerTest {
                                         type: "input"
                                     },
                                     _links: {
-                                        "cg:entity-profile": {
+                                        "automation:target-entity": {
                                             href: "http://localhost/profile/customers"
-                                        },
-                                        "cg:entity": {
-                                            href: "http://localhost/customers{?page,size,sort*}",
-                                            templated: true
                                         }
                                     }
                                 } ]

@@ -69,6 +69,10 @@ public class ChangeEventPublicationIntegrationTest {
                         {
                             name: "cg",
                             templated: true
+                        },
+                        {
+                            name: "automation",
+                            templated: true
                         }
                     ]
                 }
