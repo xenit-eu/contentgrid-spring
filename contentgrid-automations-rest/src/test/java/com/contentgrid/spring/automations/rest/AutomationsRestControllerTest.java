@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -114,6 +115,23 @@ class AutomationsRestControllerTest {
                                 .build()
                 ))
                 .build());
+    }
+
+    @Test
+    void getRoot_containsLink() throws Exception {
+        mockMvc.perform(get("/").accept(MediaType.APPLICATION_JSON)
+                        .header("X-ABAC-Context", headerEncode(DEFAULT_POLICY))
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {
+                            _links: {
+                                "automation:registrations": {
+                                    href: "http://localhost/.contentgrid/automations"
+                                }
+                            }
+                        }
+                        """));
     }
 
     @Test

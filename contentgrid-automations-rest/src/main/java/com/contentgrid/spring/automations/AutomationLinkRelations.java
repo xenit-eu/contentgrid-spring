@@ -14,5 +14,6 @@ public class AutomationLinkRelations {
     public static final LinkRelation ANNOTATION = HalLinkRelation.curied(CURIE, "annotation");
     public static final String ANNOTATION_STRING = CURIE+":annotation";
     public static final LinkRelation TARGET_ENTITY = HalLinkRelation.curied(CURIE, "target-entity");
+    public static final LinkRelation REGISTRATIONS = HalLinkRelation.curied(CURIE, "registrations");
 
 }
