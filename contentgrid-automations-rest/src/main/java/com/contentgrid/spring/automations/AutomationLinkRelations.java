@@ -1,4 +1,4 @@
-package com.contentgrid.automations;
+package com.contentgrid.spring.automations;
 
 
 import lombok.experimental.UtilityClass;

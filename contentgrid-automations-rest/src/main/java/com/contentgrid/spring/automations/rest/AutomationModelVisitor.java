@@ -1,6 +1,6 @@
-package com.contentgrid.automations.rest;
+package com.contentgrid.spring.automations.rest;
 
-import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationModel;
 import com.contentgrid.thunx.predicates.model.FunctionExpression;
 import com.contentgrid.thunx.predicates.model.Scalar;
 import com.contentgrid.thunx.predicates.model.SymbolicReference;

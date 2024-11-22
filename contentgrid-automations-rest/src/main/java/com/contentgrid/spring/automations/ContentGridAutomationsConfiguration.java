@@ -1,8 +1,8 @@
-package com.contentgrid.automations;
+package com.contentgrid.spring.automations;
 
-import com.contentgrid.automations.rest.AutomationAnnotationRepresentationModelAssembler;
-import com.contentgrid.automations.rest.AutomationRepresentationModelAssembler;
-import com.contentgrid.automations.rest.AutomationsRestController;
+import com.contentgrid.spring.automations.rest.AutomationAnnotationRepresentationModelAssembler;
+import com.contentgrid.spring.automations.rest.AutomationRepresentationModelAssembler;
+import com.contentgrid.spring.automations.rest.AutomationsRestController;
 import com.contentgrid.spring.data.rest.hal.CurieProviderCustomizer;
 import com.contentgrid.thunx.spring.data.context.AbacContextSupplier;
 import org.springframework.context.annotation.Bean;

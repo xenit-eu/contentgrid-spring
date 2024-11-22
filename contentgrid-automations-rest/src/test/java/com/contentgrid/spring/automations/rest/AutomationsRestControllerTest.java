@@ -1,4 +1,4 @@
-package com.contentgrid.automations.rest;
+package com.contentgrid.spring.automations.rest;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -6,9 +6,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationModel;
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
-import com.contentgrid.automations.rest.AutomationsModel.AutomationAnnotationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationAnnotationModel;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.security.WithMockJwt;

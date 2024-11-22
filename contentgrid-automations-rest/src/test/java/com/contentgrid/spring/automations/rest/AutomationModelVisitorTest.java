@@ -1,9 +1,9 @@
-package com.contentgrid.automations.rest;
+package com.contentgrid.spring.automations.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationModel;
 import com.contentgrid.thunx.predicates.model.Comparison;
 import com.contentgrid.thunx.predicates.model.LogicalOperation;
 import com.contentgrid.thunx.predicates.model.Scalar;

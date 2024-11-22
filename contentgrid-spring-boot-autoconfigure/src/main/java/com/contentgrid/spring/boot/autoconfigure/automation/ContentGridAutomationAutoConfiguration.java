@@ -1,6 +1,6 @@
 package com.contentgrid.spring.boot.autoconfigure.automation;
 
-import com.contentgrid.automations.ContentGridAutomationsConfiguration;
+import com.contentgrid.spring.automations.ContentGridAutomationsConfiguration;
 import com.contentgrid.spring.boot.autoconfigure.data.web.ContentGridSpringDataRestAutoConfiguration;
 import com.contentgrid.thunx.predicates.model.ThunkExpression;
 import com.contentgrid.thunx.spring.data.context.AbacContextSupplier;
