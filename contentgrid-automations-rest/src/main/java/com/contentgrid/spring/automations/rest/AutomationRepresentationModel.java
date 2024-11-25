@@ -1,6 +1,6 @@
-package com.contentgrid.automations.rest;
+package com.contentgrid.spring.automations.rest;
 
-import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationModel;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;

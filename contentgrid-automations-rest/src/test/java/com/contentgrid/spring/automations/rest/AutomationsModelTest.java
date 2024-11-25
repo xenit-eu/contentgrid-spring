@@ -1,9 +1,9 @@
-package com.contentgrid.automations.rest;
+package com.contentgrid.spring.automations.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.contentgrid.automations.rest.AutomationsModel.AutomationAnnotationModel;
-import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationAnnotationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationModel;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import java.util.List;
 import java.util.Map;

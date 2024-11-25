@@ -1,6 +1,6 @@
-package com.contentgrid.automations.rest;
+package com.contentgrid.spring.automations.rest;
 
-import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationModel;
 import com.contentgrid.thunx.spring.data.context.AbacContextSupplier;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

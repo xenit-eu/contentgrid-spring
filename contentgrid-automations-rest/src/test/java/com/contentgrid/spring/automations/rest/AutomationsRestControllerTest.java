@@ -1,4 +1,4 @@
-package com.contentgrid.automations.rest;
+package com.contentgrid.spring.automations.rest;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -6,9 +6,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.contentgrid.automations.rest.AutomationsModel.AutomationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationModel;
 import com.contentgrid.spring.boot.autoconfigure.integration.EventsAutoConfiguration;
-import com.contentgrid.automations.rest.AutomationsModel.AutomationAnnotationModel;
+import com.contentgrid.spring.automations.rest.AutomationsModel.AutomationAnnotationModel;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
 import com.contentgrid.spring.test.security.WithMockJwt;
@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -117,6 +118,23 @@ class AutomationsRestControllerTest {
     }
 
     @Test
+    void getRoot_containsLink() throws Exception {
+        mockMvc.perform(get("/").accept(MediaType.APPLICATION_JSON)
+                        .header("X-ABAC-Context", headerEncode(DEFAULT_POLICY))
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {
+                            _links: {
+                                "automation:registrations": {
+                                    href: "http://localhost/.contentgrid/automations"
+                                }
+                            }
+                        }
+                        """));
+    }
+
+    @Test
     void getAutomations_http200() throws Exception {
         mockMvc.perform(get("/.contentgrid/automations")
                         .header("X-ABAC-Context", headerEncode(DEFAULT_POLICY)))
@@ -192,7 +210,7 @@ class AutomationsRestControllerTest {
                                 foo: "bar"
                             },
                             _embedded: {
-                                "cg:automation-annotation": [ {
+                                "automation:annotation": [ {
                                     id: "${ENTITY_ANNOTATION_ID}",
                                     subject: {
                                         type: "entity",
@@ -202,12 +220,8 @@ class AutomationsRestControllerTest {
                                         color: "blue"
                                     },
                                     _links: {
-                                        "cg:entity-profile": {
+                                        "automation:target-entity": {
                                             href: "http://localhost/profile/customers"
-                                        },
-                                        "cg:entity": {
-                                            href: "http://localhost/customers{?page,size,sort*}",
-                                            templated: true
                                         }
                                     }
                                 },
@@ -222,12 +236,8 @@ class AutomationsRestControllerTest {
                                         type: "input"
                                     },
                                     _links: {
-                                        "cg:entity-profile": {
+                                        "automation:target-entity": {
                                             href: "http://localhost/profile/customers"
-                                        },
-                                        "cg:entity": {
-                                            href: "http://localhost/customers{?page,size,sort*}",
-                                            templated: true
                                         }
                                     }
                                 } ]
