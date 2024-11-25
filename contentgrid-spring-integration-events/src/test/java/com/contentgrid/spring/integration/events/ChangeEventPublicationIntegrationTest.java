@@ -57,10 +57,12 @@ public class ChangeEventPublicationIntegrationTest {
                             href: "http://localhost/customers/${#customerId}/orders"
                         }
                     ],
-                    "cg:content": {
-                        name: "content",
-                        href: "http://localhost/customers/${#customerId}/content"
-                    },
+                    "cg:content": [
+                        {
+                            name: "content",
+                            href: "http://localhost/customers/${#customerId}/content"
+                        }
+                    ],
                     "curies": [
                         {
                             name: "d",

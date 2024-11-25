@@ -9,6 +9,8 @@ import com.contentgrid.spring.data.rest.links.ContentGridSpringDataLinksConfigur
 import com.contentgrid.spring.data.rest.problem.ContentGridProblemDetailsConfiguration;
 import com.contentgrid.spring.data.rest.validation.ContentGridSpringDataRestValidationConfiguration;
 import com.contentgrid.spring.data.rest.webmvc.ContentGridSpringDataRestProfileConfiguration;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -22,6 +24,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.rest.webmvc.ContentGridRestProperties;
 import org.springframework.data.rest.webmvc.ContentGridSpringDataRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
+import org.springframework.hateoas.mediatype.MediaTypeConfigurationCustomizer;
+import org.springframework.hateoas.mediatype.MediaTypeConfigurationFactory;
+import org.springframework.hateoas.mediatype.hal.HalConfiguration;
 
 @AutoConfiguration
 @ConditionalOnBean(RepositoryRestMvcConfiguration.class)
@@ -52,6 +57,21 @@ public class ContentGridSpringDataRestAutoConfiguration {
     @ConfigurationProperties("contentgrid.rest")
     ContentGridRestProperties contentGridRestProperties() {
         return new ContentGridRestProperties();
+    }
+
+    @Bean
+    static BeanPostProcessor contentGridApplyHalConfigurationCustomizers(
+            ObjectProvider<MediaTypeConfigurationCustomizer<HalConfiguration>> customizers
+    ) {
+        return new BeanPostProcessor() {
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String beanName) {
+                if (bean instanceof HalConfiguration halConfiguration) {
+                    return new MediaTypeConfigurationFactory<>(() -> halConfiguration, customizers).getConfiguration();
+                }
+                return bean;
+            }
+        };
     }
 
     @ConditionalOnBean(CurieProviderCustomizer.class)

@@ -3,6 +3,7 @@ package com.contentgrid.spring.data.rest.hal.forms;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
@@ -231,6 +232,25 @@ class ContentGridHalFormsConfigurationTest {
                         }
                         """)
         );
+    }
+
+    @Test
+    void relationAndContentIsAlwaysArray() throws Exception {
+        var createdCustomer = mockMvc.perform(
+                        post("/customers").contentType(MediaType.APPLICATION_JSON).content("""
+                                {
+                                    "vat": "BE123"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getHeader("Location");
+
+        mockMvc.perform(get(createdCustomer).accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(jsonPath("$._links['cg:content']").isArray())
+                .andExpect(jsonPath("$._links['cg:relation']").isArray())
+        ;
     }
 
 }
