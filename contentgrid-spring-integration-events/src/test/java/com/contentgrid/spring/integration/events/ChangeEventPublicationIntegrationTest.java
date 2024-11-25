@@ -100,7 +100,6 @@ public class ChangeEventPublicationIntegrationTest {
     @Test
     void entityCreate_emitsEvent() {
         var toCreate = new Customer();
-        toCreate.setId(UUID.randomUUID());
         toCreate.setVat("BE123");
         var customer = customerRepository.save(toCreate);
 
