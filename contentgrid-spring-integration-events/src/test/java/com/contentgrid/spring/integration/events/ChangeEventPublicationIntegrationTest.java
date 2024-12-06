@@ -65,6 +65,10 @@ public class ChangeEventPublicationIntegrationTest {
                     ],
                     "curies": [
                         {
+                            name: "blueprint",
+                            templated: true
+                        },
+                        {
                             name: "d",
                             templated: true
                         },
