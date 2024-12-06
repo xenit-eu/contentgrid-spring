@@ -1,5 +1,7 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
+import com.contentgrid.spring.data.rest.webmvc.blueprint.EntityProfileRepresentationModelAssembler;
+import com.contentgrid.spring.data.rest.webmvc.blueprint.config.EntityModel;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -12,14 +14,15 @@ import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.io.Resource;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.BasePathAwareController;
 import org.springframework.data.rest.webmvc.ProfileController;
@@ -37,11 +40,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 @RequiredArgsConstructor
 @BasePathAwareController
@@ -51,6 +52,8 @@ public class HalFormsProfileController implements InitializingBean {
     private final EntityLinks entityLinks;
     private final DomainTypeToHalFormsPayloadMetadataConverter toHalFormsPayloadMetadataConverter;
     private final ObjectMapper objectMapper;
+    private final EntityProfileRepresentationModelAssembler entityAssembler;
+    private final Map<Class<?>, EntityModel> entities;
 
     private static final Class<?> HAL_FORMS_TEMPLATE_CLASS;
 
@@ -59,6 +62,44 @@ public class HalFormsProfileController implements InitializingBean {
             HAL_FORMS_TEMPLATE_CLASS = Class.forName("org.springframework.hateoas.mediatype.hal.forms.HalFormsTemplate");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public HalFormsProfileController(
+            RepositoryRestConfiguration configuration,
+            EntityLinks entityLinks,
+            DomainTypeToHalFormsPayloadMetadataConverter toHalFormsPayloadMetadataConverter,
+            ObjectMapper objectMapper,
+            EntityProfileRepresentationModelAssembler entityAssembler,
+            Resource resource
+    ) {
+        this.configuration = configuration;
+        this.entityLinks = entityLinks;
+        this.toHalFormsPayloadMetadataConverter = toHalFormsPayloadMetadataConverter;
+        this.objectMapper = objectMapper;
+        this.entityAssembler = entityAssembler;
+        this.entities = loadConfig(resource);
+    }
+
+    private Map<Class<?>, EntityModel> loadConfig(Resource resource) {
+        if (resource.exists()) {
+            try {
+                var result = new HashMap<Class<?>, EntityModel>();
+                var list = objectMapper.readValue(resource.getInputStream(), EntityModel[].class);
+                for (var entity : list) {
+                    try {
+                        var domainType = Class.forName(entity.getDomainType());
+                        result.put(domainType, entity);
+                    } catch (ClassNotFoundException e) {
+                        // Skip entity
+                    }
+                }
+                return result;
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        } else {
+            return Map.of();
         }
     }
 
@@ -76,7 +117,8 @@ public class HalFormsProfileController implements InitializingBean {
     })
     void halFormsProfile(RootResourceInformation information, HttpServletResponse response)
             throws IOException {
-        var model = new RepresentationModel<>();
+        var entity = entities.get(information.getDomainType());
+        RepresentationModel<?> model = entity == null? new RepresentationModel<>() : entityAssembler.toModel(entity);
 
         model.add(Link.of(ProfileController.getPath(configuration, information.getResourceMetadata())));
 
