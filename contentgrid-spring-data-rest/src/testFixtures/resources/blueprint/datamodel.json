@@ -1,0 +1,398 @@
+[
+  {
+    "name": "customer",
+    "title": "Client",
+    "domainType": "com.contentgrid.spring.test.fixture.invoicing.model.Customer",
+    "description": "",
+    "attributes": [
+      {
+        "name": "id",
+        "propertyName": "id",
+        "type": "string",
+        "description": "",
+        "readOnly": true,
+        "constraints": [],
+        "search_params": []
+      },
+      {
+        "name": "audit_metadata",
+        "propertyName": "auditMetadata",
+        "type": "object",
+        "description": "",
+        "readOnly": true,
+        "constraints": [],
+        "search_params": [],
+        "attributes": [
+          {
+            "name": "created_by",
+            "propertyName": "createdBy",
+            "type": "string",
+            "description": "",
+            "readOnly": true,
+            "constraints": [],
+            "search_params": []
+          },
+          {
+            "name": "created_date",
+            "propertyName": "createdDate",
+            "type": "datetime",
+            "description": "",
+            "readOnly": true,
+            "constraints": [],
+            "search_params": []
+          },
+          {
+            "name": "last_modified_by",
+            "propertyName": "createdBy",
+            "type": "string",
+            "description": "",
+            "readOnly": true,
+            "constraints": [],
+            "search_params": []
+          },
+          {
+            "name": "last_modified_date",
+            "propertyName": "lastModifiedDate",
+            "type": "datetime",
+            "description": "",
+            "readOnly": true,
+            "constraints": [],
+            "search_params": []
+          }
+        ]
+      },
+      {
+        "name": "name",
+        "title": "Customer name",
+        "propertyName": "name",
+        "type": "string",
+        "description": "",
+        "constraints": [],
+        "search_params": []
+      },
+      {
+        "name": "vat",
+        "title": "VAT number",
+        "propertyName": "vat",
+        "type": "string",
+        "description": "",
+        "constraints": [
+          {
+            "type": "required"
+          },
+          {
+            "type": "unique"
+          }
+        ],
+        "search_params": [
+          {
+            "name": "vat",
+            "type": "case-insensitive-match"
+          }
+        ]
+      },
+      {
+        "name": "content",
+        "propertyName": "content",
+        "type": "object",
+        "description": "",
+        "constraints": [],
+        "search_params": [],
+        "attributes": [
+          {
+            "name": "length",
+            "propertyName": "length",
+            "type": "long",
+            "description": "",
+            "readOnly": true,
+            "constraints": [],
+            "search_params": [
+              {
+                "name": "content.size",
+                "type": "exact-match"
+              }
+            ]
+          },
+          {
+            "name": "mimetype",
+            "propertyName": "mimetype",
+            "type": "string",
+            "description": "",
+            "constraints": [],
+            "search_params": [
+              {
+                "name": "content.mimetype",
+                "type": "exact-match"
+              }
+            ]
+          },
+          {
+            "name": "filename",
+            "propertyName": "filename",
+            "type": "string",
+            "description": "",
+            "constraints": [],
+            "search_params": [
+              {
+                "name": "content.filename",
+                "type": "exact-match"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "birthday",
+        "propertyName": "birthday",
+        "type": "datetime",
+        "description": "",
+        "constraints": [],
+        "search_params": [
+          {
+            "name": "birthday",
+            "type": "exact-match"
+          }
+        ]
+      },
+      {
+        "name": "gender",
+        "propertyName": "gender",
+        "type": "string",
+        "description": "",
+        "constraints": [
+          {
+            "type": "allowed-values",
+            "values": [
+              "female",
+              "male"
+            ]
+          }
+        ],
+        "search_params": [
+          {
+            "name": "gender",
+            "type": "exact-match"
+          }
+        ]
+      },
+      {
+        "name": "total_spend",
+        "title": "Total Amount Spent",
+        "propertyName": "totalSpend",
+        "type": "long",
+        "description": "",
+        "constraints": [],
+        "search_params": []
+      }
+    ],
+    "relations": [
+      {
+        "name": "orders",
+        "propertyName": "orders",
+        "target_entity": "com.contentgrid.spring.test.fixture.invoicing.model.Order",
+        "description": "",
+        "many_source_per_target": false,
+        "many_target_per_source": true,
+        "search_params": [
+          {
+            "name": "orders.id",
+            "type": "exact-match"
+          }
+        ]
+      },
+      {
+        "name": "invoices",
+        "propertyName": "invoices",
+        "target_entity": "com.contentgrid.spring.test.fixture.invoicing.model.Invoice",
+        "description": "",
+        "many_source_per_target": false,
+        "many_target_per_source": true
+      }
+    ]
+  },
+  {
+    "name": "invoice",
+    "title": "Invoice",
+    "domainType": "com.contentgrid.spring.test.fixture.invoicing.model.Invoice",
+    "description": "",
+    "attributes": [
+      {
+        "name": "id",
+        "propertyName": "id",
+        "type": "string",
+        "description": "",
+        "readOnly": true,
+        "constraints": [],
+        "search_params": []
+      },
+      {
+        "name": "audit_metadata",
+        "propertyName": "auditMetadata",
+        "type": "object",
+        "description": "",
+        "readOnly": true,
+        "constraints": [],
+        "search_params": [],
+        "attributes": [
+          {
+            "name": "created_by",
+            "propertyName": "createdBy",
+            "type": "string",
+            "description": "",
+            "readOnly": true,
+            "constraints": [],
+            "search_params": []
+          },
+          {
+            "name": "created_date",
+            "propertyName": "createdDate",
+            "type": "datetime",
+            "description": "",
+            "readOnly": true,
+            "constraints": [],
+            "search_params": []
+          },
+          {
+            "name": "last_modified_by",
+            "propertyName": "createdBy",
+            "type": "string",
+            "description": "",
+            "readOnly": true,
+            "constraints": [],
+            "search_params": []
+          },
+          {
+            "name": "last_modified_date",
+            "propertyName": "lastModifiedDate",
+            "type": "datetime",
+            "description": "",
+            "readOnly": true,
+            "constraints": [],
+            "search_params": []
+          }
+        ]
+      },
+      {
+        "name": "number",
+        "propertyName": "number",
+        "type": "string",
+        "description": "",
+        "constraints": [
+          {
+            "type": "required"
+          }
+        ],
+        "search_params": [
+          {
+            "name": "number",
+            "type": "case-insensitive-match"
+          }
+        ]
+      },
+      {
+        "name": "draft",
+        "propertyName": "draft",
+        "type": "boolean",
+        "description": "",
+        "constraints": [],
+        "search_params": []
+      },
+      {
+        "name": "paid",
+        "propertyName": "paid",
+        "type": "boolean",
+        "description": "",
+        "constraints": [],
+        "search_params": [
+          {
+            "name": "paid",
+            "type": "exact-match"
+          }
+        ]
+      },
+      {
+        "name": "content_length",
+        "propertyName": "contentLength",
+        "type": "long",
+        "description": "",
+        "readOnly": true,
+        "constraints": [],
+        "search_params": [
+          {
+            "name": "content.length",
+            "type": "exact-match"
+          }
+        ]
+      },
+      {
+        "name": "content_mimetype",
+        "propertyName": "contentMimetype",
+        "type": "string",
+        "description": "",
+        "constraints": [],
+        "search_params": []
+      },
+      {
+        "name": "content_filename",
+        "propertyName": "contentFilename",
+        "type": "string",
+        "description": "",
+        "constraints": [],
+        "search_params": []
+      },
+      {
+        "name": "attachment_length",
+        "propertyName": "attachmentLength",
+        "type": "long",
+        "description": "",
+        "readOnly": true,
+        "constraints": [],
+        "search_params": []
+      },
+      {
+        "name": "attachment_mimetype",
+        "propertyName": "attachmentMimetype",
+        "type": "string",
+        "description": "",
+        "constraints": [],
+        "search_params": []
+      },
+      {
+        "name": "attachment_filename",
+        "propertyName": "attachmentFilename",
+        "type": "string",
+        "description": "",
+        "constraints": [],
+        "search_params": []
+      }
+    ],
+    "relations": [
+      {
+        "name": "counterparty",
+        "title": "Sent by",
+        "propertyName": "counterparty",
+        "target_entity": "com.contentgrid.spring.test.fixture.invoicing.model.Customer",
+        "description": "",
+        "many_source_per_target": true,
+        "many_target_per_source": false,
+        "required": true
+      },
+      {
+        "name": "orders",
+        "propertyName": "orders",
+        "target_entity": "com.contentgrid.spring.test.fixture.invoicing.model.Order",
+        "description": "",
+        "many_source_per_target": false,
+        "many_target_per_source": true
+      },
+      {
+        "name": "refund",
+        "propertyName": "refund",
+        "target_entity": "com.contentgrid.spring.test.fixture.invoicing.model.Refund",
+        "description": "",
+        "many_source_per_target": false,
+        "many_target_per_source": false
+      }
+    ]
+  }
+]
