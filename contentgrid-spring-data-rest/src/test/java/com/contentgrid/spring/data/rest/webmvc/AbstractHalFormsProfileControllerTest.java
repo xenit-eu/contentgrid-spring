@@ -262,7 +262,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                         {
                             name: "customer",
                             title: "Client",
-                            description: "",
+                            description: "Company or person that acts like a client",
                             _embedded: {
                                 "blueprint:attribute": [
                                     {
@@ -302,12 +302,14 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "name",
                                         title: "Customer name",
-                                        type: "string"
+                                        type: "string",
+                                        description: "Full name of the customer"
                                     },
                                     {
                                         name: "vat",
                                         title: "VAT number",
                                         type: "string",
+                                        description: "VAT number of the customer",
                                         required: true,
                                         _embedded: {
                                             "blueprint:constraint": [
@@ -404,7 +406,8 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "total_spend",
                                         title: "Total Amount Spent",
-                                        type: "long"
+                                        type: "long",
+                                        description: "Total amount of money spent (in euros)"
                                     }
                                 ],
                                 "blueprint:relation": [
@@ -442,7 +445,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                         {
                             name: "invoice",
                             title: "Invoice",
-                            description: "",
+                            description: "A bill containing a counterparty and several orders",
                             _embedded: {
                                 "blueprint:attribute": [
                                     {
@@ -482,6 +485,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "number",
                                         type: "string",
+                                        description: "Identifier of the invoice",
                                         required: true,
                                         _embedded: {
                                             "blueprint:constraint": [
@@ -551,6 +555,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                 "blueprint:relation": [
                                     {
                                         name: "counterparty",
+                                        description: "Client that has to pay the invoice",
                                         many_source_per_target: true,
                                         many_target_per_source: false,
                                         required: true,
@@ -562,6 +567,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     },
                                     {
                                         name: "orders",
+                                        description: "Orders of the invoice",
                                         many_source_per_target: false,
                                         many_target_per_source: true,
                                         _links: {
