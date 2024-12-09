@@ -3,7 +3,7 @@
     "name": "customer",
     "title": "Client",
     "domainType": "com.contentgrid.spring.test.fixture.invoicing.model.Customer",
-    "description": "",
+    "description": "Company or person that acts like a client",
     "attributes": [
       {
         "name": "id",
@@ -66,7 +66,7 @@
         "title": "Customer name",
         "propertyName": "name",
         "type": "string",
-        "description": "",
+        "description": "Full name of the customer",
         "constraints": [],
         "search_params": []
       },
@@ -75,7 +75,7 @@
         "title": "VAT number",
         "propertyName": "vat",
         "type": "string",
-        "description": "",
+        "description": "VAT number of the customer",
         "constraints": [
           {
             "type": "required"
@@ -180,7 +180,7 @@
         "title": "Total Amount Spent",
         "propertyName": "totalSpend",
         "type": "long",
-        "description": "",
+        "description": "Total amount of money spent (in euros)",
         "constraints": [],
         "search_params": []
       }
@@ -214,7 +214,7 @@
     "name": "invoice",
     "title": "Invoice",
     "domainType": "com.contentgrid.spring.test.fixture.invoicing.model.Invoice",
-    "description": "",
+    "description": "A bill containing a counterparty and several orders",
     "attributes": [
       {
         "name": "id",
@@ -276,7 +276,7 @@
         "name": "number",
         "propertyName": "number",
         "type": "string",
-        "description": "",
+        "description": "Identifier of the invoice",
         "constraints": [
           {
             "type": "required"
@@ -372,7 +372,7 @@
         "title": "Sent by",
         "propertyName": "counterparty",
         "target_entity": "com.contentgrid.spring.test.fixture.invoicing.model.Customer",
-        "description": "",
+        "description": "Client that has to pay the invoice",
         "many_source_per_target": true,
         "many_target_per_source": false,
         "required": true
@@ -381,7 +381,7 @@
         "name": "orders",
         "propertyName": "orders",
         "target_entity": "com.contentgrid.spring.test.fixture.invoicing.model.Order",
-        "description": "",
+        "description": "Orders of the invoice",
         "many_source_per_target": false,
         "many_target_per_source": true
       },
