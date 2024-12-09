@@ -301,11 +301,30 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     },
                                     {
                                         name: "name",
+                                        title: "Customer name",
                                         type: "string"
                                     },
                                     {
                                         name: "vat",
-                                        type: "string"
+                                        title: "VAT number",
+                                        type: "string",
+                                        required: true,
+                                        _embedded: {
+                                            "blueprint:constraint": [
+                                                {
+                                                    type: required
+                                                },
+                                                {
+                                                    type: unique
+                                                }
+                                            ],
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "vat",
+                                                    type: "case-insensitive-match"
+                                                }
+                                            ]
+                                        }
                                     },
                                     {
                                         name: "content",
@@ -315,29 +334,76 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 {
                                                     name: "length",
                                                     type: "long",
-                                                    readOnly: true
+                                                    readOnly: true,
+                                                    _embedded: {
+                                                        "blueprint:search-param": [
+                                                            {
+                                                                name: "content.size",
+                                                                type: "exact-match"
+                                                            }
+                                                        ]
+                                                    }
                                                 },
                                                 {
                                                     name: "mimetype",
-                                                    type: "string"
+                                                    type: "string",
+                                                    _embedded: {
+                                                        "blueprint:search-param": [
+                                                            {
+                                                                name: "content.mimetype",
+                                                                type: "exact-match"
+                                                            }
+                                                        ]
+                                                    }
                                                 },
                                                 {
                                                     name: "filename",
-                                                    type: "string"
+                                                    type: "string",
+                                                    _embedded: {
+                                                        "blueprint:search-param": [
+                                                            {
+                                                                name: "content.filename",
+                                                                type: "exact-match"
+                                                            }
+                                                        ]
+                                                    }
                                                 }
                                             ]
                                         }
                                     },
                                     {
                                         name: "birthday",
-                                        type: "datetime"
+                                        type: "datetime",
+                                        _embedded: {
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "birthday",
+                                                    type: "exact-match"
+                                                }
+                                            ]
+                                        }
                                     },
                                     {
                                         name: "gender",
-                                        type: "string"
+                                        type: "string",
+                                        _embedded: {
+                                            "blueprint:constraint": [
+                                                {
+                                                    type: "allowed-values",
+                                                    values: ["female", "male"]
+                                                }
+                                            ],
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "gender",
+                                                    type: "exact-match"
+                                                }
+                                            ]
+                                        }
                                     },
                                     {
                                         name: "total_spend",
+                                        title: "Total Amount Spent",
                                         type: "long"
                                     }
                                 ],
@@ -415,7 +481,21 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     },
                                     {
                                         name: "number",
-                                        type: "string"
+                                        type: "string",
+                                        required: true,
+                                        _embedded: {
+                                            "blueprint:constraint": [
+                                                {
+                                                    type: "required"
+                                                }
+                                            ],
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "number",
+                                                    type: "case-insensitive-match"
+                                                }
+                                            ]
+                                        }
                                     },
                                     {
                                         name: "draft",
@@ -423,12 +503,28 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     },
                                     {
                                         name: "paid",
-                                        type: "boolean"
+                                        type: "boolean",
+                                        _embedded: {
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "paid",
+                                                    type: "exact-match"
+                                                }
+                                            ]
+                                        }
                                     },
                                     {
                                         name: "content_length",
                                         type: "long",
-                                        readOnly: true
+                                        readOnly: true,
+                                        _embedded: {
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "content.length",
+                                                    type: "exact-match"
+                                                }
+                                            ]
+                                        }
                                     },
                                     {
                                         name: "content_mimetype",
@@ -457,6 +553,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                         name: "counterparty",
                                         many_source_per_target: true,
                                         many_target_per_source: false,
+                                        required: true,
                                         _links: {
                                             "blueprint:target-entity": {
                                                 href: "http://localhost/profile/customers"
