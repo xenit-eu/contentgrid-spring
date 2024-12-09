@@ -253,4 +253,239 @@ abstract class AbstractHalFormsProfileControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[10].name",
                         Matchers.is("sort")));
     }
+
+    @Test
+    void profileController_entityInformation_withEmbeddedContent() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/customers").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            name: "customer",
+                            title: "Client",
+                            description: "",
+                            _embedded: {
+                                "blueprint:attribute": [
+                                    {
+                                        name: "id",
+                                        type: "string",
+                                        readOnly: true
+                                    },
+                                    {
+                                        name: "audit_metadata",
+                                        type: "object",
+                                        readOnly: true,
+                                        _embedded: {
+                                            "blueprint:attribute": [
+                                                {
+                                                    name: "created_by",
+                                                    type: "string",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "created_date",
+                                                    type: "datetime",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "last_modified_by",
+                                                    type: "string",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "last_modified_date",
+                                                    type: "datetime",
+                                                    readOnly: true
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "name",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "vat",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "content",
+                                        type: "object",
+                                        _embedded: {
+                                            "blueprint:attribute": [
+                                                {
+                                                    name: "length",
+                                                    type: "long",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "mimetype",
+                                                    type: "string"
+                                                },
+                                                {
+                                                    name: "filename",
+                                                    type: "string"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "birthday",
+                                        type: "datetime"
+                                    },
+                                    {
+                                        name: "gender",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "total_spend",
+                                        type: "long"
+                                    }
+                                ],
+                                "blueprint:relation": [
+                                    {
+                                        name: "orders",
+                                        many_source_per_target: false,
+                                        many_target_per_source: true,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/orders"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        name: "invoices",
+                                        many_source_per_target: false,
+                                        many_target_per_source: true,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/invoices"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                        """));
+    }
+
+    @Test
+    void profileController_entityInformation_withInlineContent() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/invoices").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            name: "invoice",
+                            title: "Invoice",
+                            description: "",
+                            _embedded: {
+                                "blueprint:attribute": [
+                                    {
+                                        name: "id",
+                                        type: "string",
+                                        readOnly: true
+                                    },
+                                    {
+                                        name: "audit_metadata",
+                                        type: "object",
+                                        readOnly: true,
+                                        _embedded: {
+                                            "blueprint:attribute": [
+                                                {
+                                                    name: "created_by",
+                                                    type: "string",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "created_date",
+                                                    type: "datetime",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "last_modified_by",
+                                                    type: "string",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "last_modified_date",
+                                                    type: "datetime",
+                                                    readOnly: true
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "number",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "draft",
+                                        type: "boolean"
+                                    },
+                                    {
+                                        name: "paid",
+                                        type: "boolean"
+                                    },
+                                    {
+                                        name: "content_length",
+                                        type: "long",
+                                        readOnly: true
+                                    },
+                                    {
+                                        name: "content_mimetype",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "content_filename",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "attachment_length",
+                                        type: "long",
+                                        readOnly: true
+                                    },
+                                    {
+                                        name: "attachment_mimetype",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "attachment_filename",
+                                        type: "string"
+                                    }
+                                ],
+                                "blueprint:relation": [
+                                    {
+                                        name: "counterparty",
+                                        many_source_per_target: true,
+                                        many_target_per_source: false,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/customers"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        name: "orders",
+                                        many_source_per_target: false,
+                                        many_target_per_source: true,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/orders"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        name: "refund",
+                                        many_source_per_target: false,
+                                        many_target_per_source: false,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/refunds"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                        """));
+    }
 }
