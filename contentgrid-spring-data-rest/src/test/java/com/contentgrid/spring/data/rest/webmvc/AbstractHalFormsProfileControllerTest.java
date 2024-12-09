@@ -591,4 +591,16 @@ abstract class AbstractHalFormsProfileControllerTest {
                         }
                         """));
     }
+
+    @Test
+    void profileController_missingEntityInformation() throws Exception {
+        // If entity is missing in blueprint/datamodel.json, no entity information is shown
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/refunds").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.description").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$._embedded").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates").exists());
+    }
 }
