@@ -253,4 +253,354 @@ abstract class AbstractHalFormsProfileControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$._templates.search.properties[10].name",
                         Matchers.is("sort")));
     }
+
+    @Test
+    void profileController_entityInformation_withEmbeddedContent() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/customers").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            name: "customer",
+                            title: "Client",
+                            description: "Company or person that acts like a client",
+                            _embedded: {
+                                "blueprint:attribute": [
+                                    {
+                                        name: "id",
+                                        type: "string",
+                                        readOnly: true
+                                    },
+                                    {
+                                        name: "audit_metadata",
+                                        type: "object",
+                                        readOnly: true,
+                                        _embedded: {
+                                            "blueprint:attribute": [
+                                                {
+                                                    name: "created_by",
+                                                    type: "string",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "created_date",
+                                                    type: "datetime",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "last_modified_by",
+                                                    type: "string",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "last_modified_date",
+                                                    type: "datetime",
+                                                    readOnly: true
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "name",
+                                        title: "Customer name",
+                                        type: "string",
+                                        description: "Full name of the customer"
+                                    },
+                                    {
+                                        name: "vat",
+                                        title: "VAT number",
+                                        type: "string",
+                                        description: "VAT number of the customer",
+                                        required: true,
+                                        _embedded: {
+                                            "blueprint:constraint": [
+                                                {
+                                                    type: required
+                                                },
+                                                {
+                                                    type: unique
+                                                }
+                                            ],
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "vat",
+                                                    type: "case-insensitive-match"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "content",
+                                        type: "object",
+                                        _embedded: {
+                                            "blueprint:attribute": [
+                                                {
+                                                    name: "length",
+                                                    type: "long",
+                                                    readOnly: true,
+                                                    _embedded: {
+                                                        "blueprint:search-param": [
+                                                            {
+                                                                name: "content.size",
+                                                                type: "exact-match"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                {
+                                                    name: "mimetype",
+                                                    type: "string",
+                                                    _embedded: {
+                                                        "blueprint:search-param": [
+                                                            {
+                                                                name: "content.mimetype",
+                                                                type: "exact-match"
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                {
+                                                    name: "filename",
+                                                    type: "string",
+                                                    _embedded: {
+                                                        "blueprint:search-param": [
+                                                            {
+                                                                name: "content.filename",
+                                                                type: "exact-match"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "birthday",
+                                        type: "datetime",
+                                        _embedded: {
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "birthday",
+                                                    type: "exact-match"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "gender",
+                                        type: "string",
+                                        _embedded: {
+                                            "blueprint:constraint": [
+                                                {
+                                                    type: "allowed-values",
+                                                    values: ["female", "male"]
+                                                }
+                                            ],
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "gender",
+                                                    type: "exact-match"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "total_spend",
+                                        title: "Total Amount Spent",
+                                        type: "long",
+                                        description: "Total amount of money spent (in euros)"
+                                    }
+                                ],
+                                "blueprint:relation": [
+                                    {
+                                        name: "orders",
+                                        many_source_per_target: false,
+                                        many_target_per_source: true,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/orders"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        name: "invoices",
+                                        many_source_per_target: false,
+                                        many_target_per_source: true,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/invoices"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                        """));
+    }
+
+    @Test
+    void profileController_entityInformation_withInlineContent() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/invoices").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            name: "invoice",
+                            title: "Invoice",
+                            description: "A bill containing a counterparty and several orders",
+                            _embedded: {
+                                "blueprint:attribute": [
+                                    {
+                                        name: "id",
+                                        type: "string",
+                                        readOnly: true
+                                    },
+                                    {
+                                        name: "audit_metadata",
+                                        type: "object",
+                                        readOnly: true,
+                                        _embedded: {
+                                            "blueprint:attribute": [
+                                                {
+                                                    name: "created_by",
+                                                    type: "string",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "created_date",
+                                                    type: "datetime",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "last_modified_by",
+                                                    type: "string",
+                                                    readOnly: true
+                                                },
+                                                {
+                                                    name: "last_modified_date",
+                                                    type: "datetime",
+                                                    readOnly: true
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "number",
+                                        type: "string",
+                                        description: "Identifier of the invoice",
+                                        required: true,
+                                        _embedded: {
+                                            "blueprint:constraint": [
+                                                {
+                                                    type: "required"
+                                                }
+                                            ],
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "number",
+                                                    type: "case-insensitive-match"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "draft",
+                                        type: "boolean"
+                                    },
+                                    {
+                                        name: "paid",
+                                        type: "boolean",
+                                        _embedded: {
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "paid",
+                                                    type: "exact-match"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "content_length",
+                                        type: "long",
+                                        readOnly: true,
+                                        _embedded: {
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "content.length",
+                                                    type: "exact-match"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "content_mimetype",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "content_filename",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "attachment_length",
+                                        type: "long",
+                                        readOnly: true
+                                    },
+                                    {
+                                        name: "attachment_mimetype",
+                                        type: "string"
+                                    },
+                                    {
+                                        name: "attachment_filename",
+                                        type: "string"
+                                    }
+                                ],
+                                "blueprint:relation": [
+                                    {
+                                        name: "counterparty",
+                                        description: "Client that has to pay the invoice",
+                                        many_source_per_target: true,
+                                        many_target_per_source: false,
+                                        required: true,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/customers"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        name: "orders",
+                                        description: "Orders of the invoice",
+                                        many_source_per_target: false,
+                                        many_target_per_source: true,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/orders"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        name: "refund",
+                                        many_source_per_target: false,
+                                        many_target_per_source: false,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/refunds"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                        """));
+    }
+
+    @Test
+    void profileController_missingEntityInformation() throws Exception {
+        // If entity is missing in blueprint/datamodel.json, no entity information is shown
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/refunds").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.name").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.title").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.description").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$._embedded").doesNotExist())
+                .andExpect(MockMvcResultMatchers.jsonPath("$._templates").exists());
+    }
 }
