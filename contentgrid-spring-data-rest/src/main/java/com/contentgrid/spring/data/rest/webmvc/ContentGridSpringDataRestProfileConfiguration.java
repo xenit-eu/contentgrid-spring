@@ -1,6 +1,7 @@
 package com.contentgrid.spring.data.rest.webmvc;
 
 import com.contentgrid.spring.data.rest.mapping.ContentGridDomainTypeMappingConfiguration;
+import com.contentgrid.spring.data.rest.webmvc.blueprint.ContentGridSpringBlueprintConfiguration;
 import java.util.Collection;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -11,7 +12,10 @@ import org.springframework.hateoas.server.EntityLinks;
 import org.springframework.hateoas.server.mvc.TypeConstrainedMappingJackson2HttpMessageConverter;
 
 @Configuration(proxyBeanMethods = false)
-@Import(ContentGridDomainTypeMappingConfiguration.class)
+@Import({
+        ContentGridDomainTypeMappingConfiguration.class,
+        ContentGridSpringBlueprintConfiguration.class
+})
 public class ContentGridSpringDataRestProfileConfiguration {
 
     @Bean
