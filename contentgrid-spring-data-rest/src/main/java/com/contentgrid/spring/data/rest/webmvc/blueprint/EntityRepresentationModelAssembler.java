@@ -4,11 +4,15 @@ import com.contentgrid.spring.data.rest.mapping.DomainTypeMapping;
 import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedContainer;
 import com.contentgrid.spring.data.rest.mapping.persistent.ThroughAssociationsContainer;
 import com.contentgrid.spring.data.rest.mapping.rest.DataRestBasedContainer;
+import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.data.rest.core.mapping.ResourceMappings;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
 import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
@@ -20,18 +24,20 @@ public class EntityRepresentationModelAssembler implements
 
     private final DomainTypeMapping domainTypeMapping;
     private final MessageResolver messageResolver;
-//    private final AttributeRepresentationModelAssembler attributeAssembler;
-//    private final RelationRepresentationModelAssembler relationAssembler;
+    private final AttributeRepresentationModelAssembler attributeAssembler;
+    private final RelationRepresentationModelAssembler relationAssembler;
 
-    public EntityRepresentationModelAssembler(Repositories repositories, MessageResolver messageResolver) {
+    public EntityRepresentationModelAssembler(Repositories repositories, MessageResolver messageResolver,
+            RepositoryRestConfiguration repositoryRestConfiguration, ResourceMappings resourceMappings,
+            CollectionFiltersMapping collectionFiltersMapping) {
         this.domainTypeMapping = new DomainTypeMapping(repositories)
                 .wrapWith(container -> new ThroughAssociationsContainer(container, repositories, 1))
                 .wrapWith(DataRestBasedContainer::new)
 //                .wrapWith(JacksonBasedContainer::new)
         ;
         this.messageResolver = messageResolver;
-//        this.attributeAssembler = new AttributeRepresentationModelAssembler(messageResolver, collectionFiltersMapping);
-//        this.relationAssembler = new RelationRepresentationModelAssembler(repositoryRestConfiguration, resourceMappings, messageResolver);
+        this.attributeAssembler = new AttributeRepresentationModelAssembler(collectionFiltersMapping, messageResolver);
+        this.relationAssembler = new RelationRepresentationModelAssembler(repositoryRestConfiguration, resourceMappings, messageResolver);
     }
 
     @Override
@@ -40,6 +46,16 @@ public class EntityRepresentationModelAssembler implements
         var relations = new ArrayList<RelationRepresentationModel>();
 
         var entityContainer = domainTypeMapping.forDomainType(information.getDomainType());
+
+        entityContainer.doWithProperties(property -> {
+            var attribute = attributeAssembler.toModel(information, List.of(property));
+            attribute.ifPresent(attributes::add);
+        });
+
+        entityContainer.doWithAssociations(property -> {
+            var relation = relationAssembler.toModel(information, property);
+            relation.ifPresent(relations::add);
+        });
 
         var name = entityContainer.findAnnotation(Table.class)
                 .map(Table::name)
