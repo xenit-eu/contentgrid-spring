@@ -83,6 +83,7 @@ class CollectionFiltersFactory {
         return boundPaths.stream()
                 .map(boundPath -> new CollectionFilterImpl<>(
                         prefix+getName(property, filterParam),
+                        predicateFactory.getFilterType(),
                         boundPath,
                         filterParam.documented(),
                         propertyPath,

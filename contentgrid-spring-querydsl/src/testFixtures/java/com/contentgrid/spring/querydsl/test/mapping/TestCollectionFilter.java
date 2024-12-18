@@ -18,6 +18,7 @@ public class TestCollectionFilter<T> implements CollectionFilter<T> {
 
     @NonNull
     private final String filterName;
+    private final String filterType;
     @Builder.Default
     private final boolean documented = true;
 

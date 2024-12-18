@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 public class Ordered {
@@ -23,13 +24,15 @@ public class Ordered {
 
         @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
         enum Operation implements BiFunction<Path<?>, Object, Predicate> {
-            LT(ComparableExpression::lt, castedFunction(NumberPath::lt)),
-            LTE(ComparableExpression::loe, castedFunction(NumberPath::loe)),
-            GT(ComparableExpression::gt, castedFunction(NumberPath::gt)),
-            GTE(ComparableExpression::goe, castedFunction(NumberPath::goe));
+            LT(ComparableExpression::lt, castedFunction(NumberPath::lt), "less-than"),
+            LTE(ComparableExpression::loe, castedFunction(NumberPath::loe), "less-than-or-equal"),
+            GT(ComparableExpression::gt, castedFunction(NumberPath::gt), "greater-than"),
+            GTE(ComparableExpression::goe, castedFunction(NumberPath::goe), "greater-than-or-equal");
 
             private final BiFunction<ComparableExpression<Comparable<?>>, Comparable<?>, Predicate> comparableBuilder;
             private final BiFunction<NumberPath<?>, Number, Predicate> numberBuilder;
+            @Getter
+            private final String name;
 
             @SuppressWarnings({"unchecked", "rawtypes"})
             private static <T extends Number & Comparable<T>, A extends Number&Comparable<?>> BiFunction<NumberPath<?>, Number, Predicate> castedFunction(BiFunction<NumberPath<T>, A, Predicate> fn) {
@@ -70,6 +73,11 @@ public class Ordered {
             var lowestValue = valueExtractor.apply(values.stream(), Comparable::compareTo);
 
             return lowestValue.map(value -> operation.apply(path, value));
+        }
+
+        @Override
+        public String getFilterType() {
+            return operation.getName();
         }
     }
 

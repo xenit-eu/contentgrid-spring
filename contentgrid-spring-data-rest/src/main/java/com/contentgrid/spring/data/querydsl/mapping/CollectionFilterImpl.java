@@ -19,6 +19,9 @@ class CollectionFilterImpl<T> implements CollectionFilter<T> {
     private final String filterName;
 
     @Getter
+    private final String filterType;
+
+    @Getter
     private final Path<T> path;
 
     @Getter
