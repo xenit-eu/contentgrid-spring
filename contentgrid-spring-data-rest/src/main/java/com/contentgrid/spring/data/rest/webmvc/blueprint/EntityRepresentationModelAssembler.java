@@ -14,7 +14,9 @@ import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.core.mapping.ResourceMappings;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.hateoas.LinkRelation;
 import org.springframework.hateoas.mediatype.MessageResolver;
+import org.springframework.hateoas.mediatype.hal.HalLinkRelation;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.util.StringUtils;
 
@@ -57,14 +59,10 @@ public class EntityRepresentationModelAssembler implements
             relation.ifPresent(relations::add);
         });
 
-        var name = entityContainer.findAnnotation(Table.class)
-                .map(Table::name)
-                .map(tableName -> tableName.replace("_", "-"))
-                .orElse("");
-        if (name.isEmpty()) {
-            // TODO: still contains camelCase names
-            name = StringUtils.uncapitalize(entityContainer.getTypeInformation().getType().getSimpleName());
-        }
+        var linkRel = information.getResourceMetadata().getItemResourceRel().value();
+
+        // Cut off a potential CURIE prefix from the link relation
+        var name = HalLinkRelation.of(LinkRelation.of(linkRel)).getLocalPart();
 
         return EntityRepresentationModel.builder()
                 .name(name)
