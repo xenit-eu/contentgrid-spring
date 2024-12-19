@@ -10,6 +10,7 @@ public interface Property {
 
     boolean isIgnored();
     boolean isRequired();
+    boolean isUnique();
     boolean isReadOnly();
 
     Optional<Container> nestedContainer();

@@ -35,6 +35,11 @@ public class TypeInformationProperty implements Property {
     }
 
     @Override
+    public boolean isUnique() {
+        return false;
+    }
+
+    @Override
     public Optional<Container> nestedContainer() {
         if(findAnnotation(Embedded.class).isPresent()) {
             return Optional.of(new TypeInformationContainer(typeInformation));

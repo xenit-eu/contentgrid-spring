@@ -38,6 +38,11 @@ public class DataRestBasedProperty implements Property {
     }
 
     @Override
+    public boolean isUnique() {
+        return delegate.isUnique();
+    }
+
+    @Override
     public boolean isReadOnly() {
         return delegate.isReadOnly();
     }

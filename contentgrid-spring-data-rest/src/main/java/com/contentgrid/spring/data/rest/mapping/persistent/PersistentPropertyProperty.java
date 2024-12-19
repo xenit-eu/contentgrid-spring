@@ -46,6 +46,11 @@ public class PersistentPropertyProperty implements Property {
     }
 
     @Override
+    public boolean isUnique() {
+        return findAnnotation(Column.class).map(Column::unique).orElse(false);
+    }
+
+    @Override
     public Optional<Container> nestedContainer() {
         if(findAnnotation(Embedded.class).isPresent()) {
             return Optional.of(new TypeInformationContainer(property.getTypeInformation()));

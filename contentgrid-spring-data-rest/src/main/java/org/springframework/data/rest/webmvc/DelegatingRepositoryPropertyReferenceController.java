@@ -101,6 +101,7 @@ public class DelegatingRepositoryPropertyReferenceController {
                 }
 
                 var idPropertyFilter = collectionFiltersMapping.forProperty(targetType.getType(), mappedBy.get())
+                        .filters().findFirst()
                         .or(() -> collectionFiltersMapping.forIdProperty(targetType.getType(), mappedBy.get()));
 
                 if (idPropertyFilter.isPresent()) {

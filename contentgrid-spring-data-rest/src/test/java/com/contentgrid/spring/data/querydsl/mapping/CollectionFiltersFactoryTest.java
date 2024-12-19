@@ -78,6 +78,11 @@ class CollectionFiltersFactoryTest {
         public Class<? extends String> valueType(StringPath path) {
             return String.class;
         }
+
+        @Override
+        public String getFilterType() {
+            return null;
+        }
     }
 
     @Test
