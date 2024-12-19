@@ -12,11 +12,20 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.hateoas.mediatype.InputTypeFactory;
 import org.springframework.hateoas.mediatype.MessageResolver;
 
 @RequiredArgsConstructor
 public class AttributeRepresentationModelAssembler {
+
+    private static final InputTypeFactory INPUT_TYPE_FACTORY;
+
+    static {
+        INPUT_TYPE_FACTORY = SpringFactoriesLoader.loadFactories(InputTypeFactory.class,
+                AttributeRepresentationModelAssembler.class.getClassLoader()).get(0);
+    }
 
     private final CollectionFiltersMapping collectionFiltersMapping;
     private final MessageResolver messageResolver;
@@ -28,14 +37,11 @@ public class AttributeRepresentationModelAssembler {
             return Optional.empty();
         }
 
-        String type = jsonProperty.getTypeInformation().getType().getSimpleName();
-
         var attributes = new ArrayList<AttributeRepresentationModel>();
         var embedded = jsonProperty.findAnnotation(Embedded.class);
         if (embedded.isPresent()) {
             // TODO: incorrect if @JsonValue is present, use jsonProperty.nestedContainer() instead
             //  (but this one doesn't give us the java field names used in title, description and search params)
-            type = "object";
             property.nestedContainer()
                     .ifPresent(container -> container.doWithProperties(nestedProperty -> {
                         var path = new ArrayList<>(properties);
@@ -67,7 +73,7 @@ public class AttributeRepresentationModelAssembler {
                 .name(jsonProperty.getName())
                 .title(readTitle(information, properties))
                 .description(readDescription(information, properties))
-                .type(type)
+                .type(getType(jsonProperty))
                 .readOnly(jsonProperty.isReadOnly())
                 .required(jsonProperty.isRequired())
                 .attributes(attributes)
@@ -76,6 +82,15 @@ public class AttributeRepresentationModelAssembler {
                 .build();
 
         return Optional.of(attribute);
+    }
+
+    private String getType(Property property) {
+        // TODO: How to distinguish between decimals and integers?
+        var type = INPUT_TYPE_FACTORY.getInputType(property.getTypeInformation().getType());
+        if (type == null && property.findAnnotation(Embedded.class).isPresent()) {
+            type = "object";
+        }
+        return type;
     }
 
     private String readDescription(RootResourceInformation information, List<Property> properties) {
