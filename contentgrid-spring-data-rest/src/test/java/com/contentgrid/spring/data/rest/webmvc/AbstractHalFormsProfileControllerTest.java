@@ -319,6 +319,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                             "blueprint:search-param": [
                                                 {
                                                     name: "vat",
+                                                    title: "VAT number",
                                                     type: "case-insensitive-match"
                                                 }
                                             ]
@@ -349,6 +350,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                         "blueprint:search-param": [
                                                             {
                                                                 name: "content.mimetype",
+                                                                title: "Customer Document Mimetype",
                                                                 type: "exact-match"
                                                             }
                                                         ]
@@ -361,6 +363,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                         "blueprint:search-param": [
                                                             {
                                                                 name: "content.filename",
+                                                                title: "Customer Document Filename",
                                                                 type: "exact-match"
                                                             }
                                                         ]
@@ -574,6 +577,136 @@ abstract class AbstractHalFormsProfileControllerTest {
                                         _links: {
                                             "blueprint:target-entity": {
                                                 href: "http://localhost/profile/refunds"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                        """));
+    }
+
+    @Test
+    void profileController_entityInformation_entityNameWithDashes() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/profile/shipping-labels").accept(MediaTypes.HAL_FORMS_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().json("""
+                        {
+                            name: "shipping-label",
+                            description: "",
+                            _embedded: {
+                                "blueprint:attribute": [
+                                    {
+                                        name: "id",
+                                        type: "text",
+                                        readOnly: true
+                                    },
+                                    {
+                                        name: "from",
+                                        type: "text",
+                                        required: true,
+                                        _embedded: {
+                                            "blueprint:constraint": [
+                                                {
+                                                    type: "required"
+                                                }
+                                            ],
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "from",
+                                                    type: "case-insensitive-match"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "to",
+                                        type: "text",
+                                        required: true,
+                                        _embedded: {
+                                            "blueprint:constraint": [
+                                                {
+                                                    type: "required"
+                                                }
+                                            ],
+                                            "blueprint:search-param": [
+                                                {
+                                                    name: "to",
+                                                    type: "case-insensitive-match"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "barcode_picture",
+                                        type: "object",
+                                        _embedded: {
+                                            "blueprint:attribute": [
+                                                {
+                                                    name: "length",
+                                                    type: "number",
+                                                    readOnly: true,
+                                                    _embedded: {
+                                                        "blueprint:search-param": [] # assert empty, because CollectionFilterParam is missing on barcode_picture
+                                                    }
+                                                },
+                                                {
+                                                    name: "mimetype",
+                                                    type: "text",
+                                                    _embedded: {
+                                                        "blueprint:search-param": []
+                                                    }
+                                                },
+                                                {
+                                                    name: "filename",
+                                                    type: "text",
+                                                    _embedded: {
+                                                        "blueprint:search-param": []
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        name: "package",
+                                        type: "object",
+                                        _embedded: {
+                                            "blueprint:attribute": [
+                                                {
+                                                    name: "length",
+                                                    type: "number",
+                                                    readOnly: true,
+                                                    _embedded: {
+                                                        "blueprint:search-param": []
+                                                    }
+                                                },
+                                                {
+                                                    name: "mimetype",
+                                                    type: "text",
+                                                    _embedded: {
+                                                        "blueprint:search-param": []
+                                                    }
+                                                },
+                                                {
+                                                    name: "filename",
+                                                    type: "text",
+                                                    _embedded: {
+                                                        "blueprint:search-param": []
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "blueprint:relation": [
+                                    {
+                                        name: "parent",
+                                        description: "",
+                                        many_source_per_target: true,
+                                        many_target_per_source: false,
+                                        _links: {
+                                            "blueprint:target-entity": {
+                                                href: "http://localhost/profile/shipping-labels"
                                             }
                                         }
                                     }
