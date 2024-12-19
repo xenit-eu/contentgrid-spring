@@ -5,11 +5,9 @@ import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedContainer;
 import com.contentgrid.spring.data.rest.mapping.persistent.ThroughAssociationsContainer;
 import com.contentgrid.spring.data.rest.mapping.rest.DataRestBasedContainer;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
-import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSourceResolvable;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.core.mapping.ResourceMappings;
@@ -18,7 +16,6 @@ import org.springframework.hateoas.LinkRelation;
 import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.hateoas.mediatype.hal.HalLinkRelation;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
-import org.springframework.util.StringUtils;
 
 @RequiredArgsConstructor
 public class EntityRepresentationModelAssembler implements
@@ -74,34 +71,12 @@ public class EntityRepresentationModelAssembler implements
     }
 
     private String readDescription(RootResourceInformation information) {
-        var resolvable = new MessageSourceResolvable() {
-            @Override
-            public String[] getCodes() {
-                return new String[]{information.getResourceMetadata().getItemResourceDescription().getMessage()};
-            }
-
-            @Override
-            public String getDefaultMessage() {
-                return ""; // Returns null if empty string (null [default] = throws exception)
-            }
-        };
-        var description = messageResolver.resolve(resolvable);
+        var description = messageResolver.resolve(DescriptionMessageSourceResolvable.forEntity(information));
         return description == null ? "" : description;
     }
 
     private String readTitle(RootResourceInformation information) {
-        var resolvable = new MessageSourceResolvable() {
-            @Override
-            public String[] getCodes() {
-                return new String[]{information.getDomainType().getName() + "._title"};
-            }
-
-            @Override
-            public String getDefaultMessage() {
-                return ""; // Returns null if empty string (null [default] = throws exception)
-            }
-        };
-        return messageResolver.resolve(resolvable);
+        return messageResolver.resolve(TitleMessageSourceResolvable.forEntity(information));
     }
 
 }

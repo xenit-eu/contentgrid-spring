@@ -9,7 +9,6 @@ import jakarta.persistence.OneToMany;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSourceResolvable;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.core.mapping.ResourceMappings;
 import org.springframework.data.rest.webmvc.ProfileController;
@@ -58,36 +57,12 @@ public class RelationRepresentationModelAssembler {
     }
 
     private String readDescription(RootResourceInformation information, Property property) {
-        var resolvable = new MessageSourceResolvable() {
-            @Override
-            public String[] getCodes() {
-                // TODO: nested properties
-                return new String[]{information.getResourceMetadata().getItemResourceDescription().getMessage() + "." + property.getName()};
-            }
-
-            @Override
-            public String getDefaultMessage() {
-                return ""; // Returns null if empty string (null [default] = throws exception)
-            }
-        };
-        var description = messageResolver.resolve(resolvable);
+        var description = messageResolver.resolve(DescriptionMessageSourceResolvable.forProperty(information, property));
         return description == null ? "" : description;
     }
 
     private String readTitle(RootResourceInformation information, Property property) {
-        var resolvable = new MessageSourceResolvable() {
-            @Override
-            public String[] getCodes() {
-                // TODO: nested properties
-                return new String[]{information.getDomainType().getName() + "." + property.getName() + "._title"};
-            }
-
-            @Override
-            public String getDefaultMessage() {
-                return ""; // Returns null if empty string (null [default] = throws exception)
-            }
-        };
-        return messageResolver.resolve(resolvable);
+        return messageResolver.resolve(TitleMessageSourceResolvable.forProperty(information, property));
     }
 
 }

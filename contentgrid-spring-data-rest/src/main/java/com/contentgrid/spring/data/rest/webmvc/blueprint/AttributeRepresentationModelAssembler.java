@@ -10,7 +10,6 @@ import jakarta.persistence.Embedded;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.core.io.support.SpringFactoriesLoader;
@@ -103,40 +102,12 @@ public class AttributeRepresentationModelAssembler {
     }
 
     private String readDescription(RootResourceInformation information, List<Property> properties) {
-        var resolvable = new MessageSourceResolvable() {
-            @Override
-            public String[] getCodes() {
-                var message = properties.stream()
-                        .map(Property::getName)
-                        .collect(Collectors.joining("."));
-                return new String[]{information.getResourceMetadata().getItemResourceDescription().getMessage() + "." + message};
-            }
-
-            @Override
-            public String getDefaultMessage() {
-                return ""; // Returns null if empty string (null [default] = throws exception)
-            }
-        };
-        var description = messageResolver.resolve(resolvable);
+        var description = messageResolver.resolve(DescriptionMessageSourceResolvable.forNestedProperty(information, properties));
         return description == null ? "" : description;
     }
 
     private String readTitle(RootResourceInformation information, List<Property> properties) {
-        var resolvable = new MessageSourceResolvable() {
-            @Override
-            public String[] getCodes() {
-                var message = properties.stream()
-                        .map(Property::getName)
-                        .collect(Collectors.joining("."));
-                return new String[]{information.getDomainType().getName() + "." + message + "._title"};
-            }
-
-            @Override
-            public String getDefaultMessage() {
-                return ""; // Returns null if empty string (null [default] = throws exception)
-            }
-        };
-        return messageResolver.resolve(resolvable);
+        return messageResolver.resolve(TitleMessageSourceResolvable.forNestedProperty(information, properties));
     }
 
     private String readPrompt(RootResourceInformation information, String path) {
