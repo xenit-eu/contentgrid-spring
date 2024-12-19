@@ -5,6 +5,7 @@ import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedProperty;
 import com.contentgrid.spring.data.rest.validation.AllowedValues;
 import com.contentgrid.spring.data.rest.webmvc.blueprint.AttributeRepresentationModel.SearchParamRepresentationModel;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
+import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Embedded;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,13 +38,21 @@ public class AttributeRepresentationModelAssembler {
             return Optional.empty();
         }
 
+        // TODO: workaround that only works for com.contentgrid.spring.data.support.auditing.v1.UserMetadata properties
+        if (jsonProperty.findAnnotation(JsonValue.class)
+                .map(JsonValue::value)
+                .orElse(false)) {
+            return Optional.empty();
+        }
+
         var attributes = new ArrayList<AttributeRepresentationModel>();
         var embedded = jsonProperty.findAnnotation(Embedded.class);
         if (embedded.isPresent()) {
             // TODO: incorrect if @JsonValue is present, use jsonProperty.nestedContainer() instead
-            //  (but this one doesn't give us the java field names used in title, description and search params)
+            //  (but that one doesn't give us the java field names used for title, description and search params)
             property.nestedContainer()
                     .ifPresent(container -> container.doWithProperties(nestedProperty -> {
+                        // TODO: json path and java path might differ when @JsonValue is present
                         var path = new ArrayList<>(properties);
                         path.add(nestedProperty);
                         this.toModel(information, path)
@@ -63,8 +72,8 @@ public class AttributeRepresentationModelAssembler {
         ));
         
         var searchParams = new ArrayList<SearchParamRepresentationModel>();
-        var path = properties.stream().map(Property::getName).toArray(String[]::new);
-        collectionFiltersMapping.forProperty(information.getDomainType(), path).documented().filters()
+        var propertyNames = properties.stream().map(Property::getName).toArray(String[]::new);
+        collectionFiltersMapping.forProperty(information.getDomainType(), propertyNames).documented().filters()
                 .map(filter -> new SearchParamRepresentationModel(filter.getFilterName(), readPrompt(information, filter.getFilterName()),
                         filter.getFilterType()))
                 .forEachOrdered(searchParams::add);
