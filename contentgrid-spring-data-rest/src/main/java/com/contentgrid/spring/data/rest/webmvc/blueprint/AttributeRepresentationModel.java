@@ -28,15 +28,12 @@ public class AttributeRepresentationModel extends RepresentationModel<AttributeR
     @JsonInclude(Include.NON_EMPTY)
     private final String title;
 
-    @NonNull
     private final String type;
 
     private final String description;
 
-    @JsonInclude(Include.NON_DEFAULT)
     private final boolean readOnly;
 
-    @JsonInclude(Include.NON_DEFAULT)
     private final boolean required;
 
     @JsonIgnore

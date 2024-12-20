@@ -268,29 +268,45 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "id",
                                         type: "string",
-                                        readOnly: true
+                                        description: "",
+                                        readOnly: true,
+                                        required: false
                                     },
                                     {
                                         name: "audit_metadata",
                                         type: "object",
+                                        description: "",
                                         readOnly: true,
+                                        required: false,
                                         _embedded: {
                                             "blueprint:attribute": [
                                                 {
                                                     name: "created_by",
-                                                    type: "string"
+                                                    type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false
                                                 },
                                                 {
                                                     name: "created_date",
-                                                    type: "datetime"
+                                                    type: "datetime",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false
                                                 },
                                                 {
                                                     name: "last_modified_by",
-                                                    type: "string"
+                                                    type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false
                                                 },
                                                 {
                                                     name: "last_modified_date",
-                                                    type: "datetime"
+                                                    type: "datetime",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false
                                                 }
                                             ]
                                         }
@@ -299,13 +315,16 @@ abstract class AbstractHalFormsProfileControllerTest {
                                         name: "name",
                                         title: "Customer name",
                                         type: "string",
-                                        description: "Full name of the customer"
+                                        description: "Full name of the customer",
+                                        readOnly: false,
+                                        required: false
                                     },
                                     {
                                         name: "vat",
                                         title: "VAT number",
                                         type: "string",
                                         description: "VAT number of the customer",
+                                        readOnly: false,
                                         required: true,
                                         _embedded: {
                                             "blueprint:constraint": [
@@ -328,12 +347,17 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "content",
                                         type: "object",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false,
                                         _embedded: {
                                             "blueprint:attribute": [
                                                 {
                                                     name: "length",
                                                     type: "long",
+                                                    description: "",
                                                     readOnly: true,
+                                                    required: false,
                                                     _embedded: {
                                                         "blueprint:search-param": [
                                                             {
@@ -346,6 +370,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 {
                                                     name: "mimetype",
                                                     type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false,
                                                     _embedded: {
                                                         "blueprint:search-param": [
                                                             {
@@ -359,6 +386,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 {
                                                     name: "filename",
                                                     type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false,
                                                     _embedded: {
                                                         "blueprint:search-param": [
                                                             {
@@ -375,6 +405,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "birthday",
                                         type: "datetime",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false,
                                         _embedded: {
                                             "blueprint:search-param": [
                                                 {
@@ -387,6 +420,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "gender",
                                         type: "string",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false,
                                         _embedded: {
                                             "blueprint:constraint": [
                                                 {
@@ -406,14 +442,18 @@ abstract class AbstractHalFormsProfileControllerTest {
                                         name: "total_spend",
                                         title: "Total Amount Spent",
                                         type: "long",
-                                        description: "Total amount of money spent (in euros)"
+                                        description: "Total amount of money spent (in euros)",
+                                        readOnly: false,
+                                        required: false
                                     }
                                 ],
                                 "blueprint:relation": [
                                     {
                                         name: "orders",
+                                        description: "",
                                         many_source_per_target: false,
                                         many_target_per_source: true,
+                                        required: false,
                                         _links: {
                                             "blueprint:target-entity": {
                                                 href: "http://localhost/profile/orders"
@@ -422,8 +462,10 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     },
                                     {
                                         name: "invoices",
+                                        description: "",
                                         many_source_per_target: false,
                                         many_target_per_source: true,
+                                        required: false,
                                         _links: {
                                             "blueprint:target-entity": {
                                                 href: "http://localhost/profile/invoices"
@@ -449,29 +491,45 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "id",
                                         type: "string",
-                                        readOnly: true
+                                        description: "",
+                                        readOnly: true,
+                                        required: false
                                     },
                                     {
                                         name: "audit_metadata",
                                         type: "object",
+                                        description: "",
                                         readOnly: true,
+                                        required: false,
                                         _embedded: {
                                             "blueprint:attribute": [
                                                 {
                                                     name: "created_by",
-                                                    type: "string"
+                                                    type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false
                                                 },
                                                 {
                                                     name: "created_date",
-                                                    type: "datetime"
+                                                    type: "datetime",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false
                                                 },
                                                 {
                                                     name: "last_modified_by",
-                                                    type: "string"
+                                                    type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false
                                                 },
                                                 {
                                                     name: "last_modified_date",
-                                                    type: "datetime"
+                                                    type: "datetime",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false
                                                 }
                                             ]
                                         }
@@ -480,6 +538,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                         name: "number",
                                         type: "string",
                                         description: "Identifier of the invoice",
+                                        readOnly: false,
                                         required: true,
                                         _embedded: {
                                             "blueprint:constraint": [
@@ -497,11 +556,17 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     },
                                     {
                                         name: "draft",
-                                        type: "boolean"
+                                        type: "boolean",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false
                                     },
                                     {
                                         name: "paid",
                                         type: "boolean",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false,
                                         _embedded: {
                                             "blueprint:search-param": [
                                                 {
@@ -514,7 +579,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "content_length",
                                         type: "long",
+                                        description: "",
                                         readOnly: true,
+                                        required: false,
                                         _embedded: {
                                             "blueprint:search-param": [
                                                 {
@@ -526,24 +593,38 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     },
                                     {
                                         name: "content_mimetype",
-                                        type: "string"
+                                        type: "string",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false
                                     },
                                     {
                                         name: "content_filename",
-                                        type: "string"
+                                        type: "string",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false
                                     },
                                     {
                                         name: "attachment_length",
                                         type: "long",
-                                        readOnly: true
+                                        description: "",
+                                        readOnly: true,
+                                        required: false
                                     },
                                     {
                                         name: "attachment_mimetype",
-                                        type: "string"
+                                        type: "string",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false
                                     },
                                     {
                                         name: "attachment_filename",
-                                        type: "string"
+                                        type: "string",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false
                                     }
                                 ],
                                 "blueprint:relation": [
@@ -564,6 +645,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                         description: "Orders of the invoice",
                                         many_source_per_target: false,
                                         many_target_per_source: true,
+                                        required: false,
                                         _links: {
                                             "blueprint:target-entity": {
                                                 href: "http://localhost/profile/orders"
@@ -572,8 +654,10 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     },
                                     {
                                         name: "refund",
+                                        description: "",
                                         many_source_per_target: false,
                                         many_target_per_source: false,
+                                        required: false,
                                         _links: {
                                             "blueprint:target-entity": {
                                                 href: "http://localhost/profile/refunds"
@@ -599,11 +683,15 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "id",
                                         type: "string",
-                                        readOnly: true
+                                        description: "",
+                                        readOnly: true,
+                                        required: false
                                     },
                                     {
                                         name: "from",
                                         type: "string",
+                                        description: "",
+                                        readOnly: false,
                                         required: true,
                                         _embedded: {
                                             "blueprint:constraint": [
@@ -622,6 +710,8 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "to",
                                         type: "string",
+                                        description: "",
+                                        readOnly: false,
                                         required: true,
                                         _embedded: {
                                             "blueprint:constraint": [
@@ -640,12 +730,17 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "barcode_picture",
                                         type: "object",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false,
                                         _embedded: {
                                             "blueprint:attribute": [
                                                 {
                                                     name: "length",
                                                     type: "long",
+                                                    description: "",
                                                     readOnly: true,
+                                                    required: false,
                                                     _embedded: {
                                                         "blueprint:search-param": [] # assert empty, because CollectionFilterParam is missing on barcode_picture
                                                     }
@@ -653,6 +748,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 {
                                                     name: "mimetype",
                                                     type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false,
                                                     _embedded: {
                                                         "blueprint:search-param": []
                                                     }
@@ -660,6 +758,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 {
                                                     name: "filename",
                                                     type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false,
                                                     _embedded: {
                                                         "blueprint:search-param": []
                                                     }
@@ -670,12 +771,17 @@ abstract class AbstractHalFormsProfileControllerTest {
                                     {
                                         name: "package",
                                         type: "object",
+                                        description: "",
+                                        readOnly: false,
+                                        required: false,
                                         _embedded: {
                                             "blueprint:attribute": [
                                                 {
                                                     name: "length",
                                                     type: "long",
+                                                    description: "",
                                                     readOnly: true,
+                                                    required: false,
                                                     _embedded: {
                                                         "blueprint:search-param": []
                                                     }
@@ -683,6 +789,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 {
                                                     name: "mimetype",
                                                     type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false,
                                                     _embedded: {
                                                         "blueprint:search-param": []
                                                     }
@@ -690,6 +799,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 {
                                                     name: "filename",
                                                     type: "string",
+                                                    description: "",
+                                                    readOnly: false,
+                                                    required: false,
                                                     _embedded: {
                                                         "blueprint:search-param": []
                                                     }
@@ -704,6 +816,7 @@ abstract class AbstractHalFormsProfileControllerTest {
                                         description: "",
                                         many_source_per_target: true,
                                         many_target_per_source: false,
+                                        required: false,
                                         _links: {
                                             "blueprint:target-entity": {
                                                 href: "http://localhost/profile/shipping-labels"
