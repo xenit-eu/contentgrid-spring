@@ -12,20 +12,11 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSourceResolvable;
-import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
-import org.springframework.hateoas.mediatype.InputTypeFactory;
 import org.springframework.hateoas.mediatype.MessageResolver;
 
 @RequiredArgsConstructor
 public class AttributeRepresentationModelAssembler {
-
-    private static final InputTypeFactory INPUT_TYPE_FACTORY;
-
-    static {
-        INPUT_TYPE_FACTORY = SpringFactoriesLoader.loadFactories(InputTypeFactory.class,
-                AttributeRepresentationModelAssembler.class.getClassLoader()).get(0);
-    }
 
     private final CollectionFiltersMapping collectionFiltersMapping;
     private final MessageResolver messageResolver;
@@ -93,12 +84,11 @@ public class AttributeRepresentationModelAssembler {
     }
 
     private String getType(Property property) {
-        // TODO: How to distinguish between decimals and integers?
-        var type = INPUT_TYPE_FACTORY.getInputType(property.getTypeInformation().getType());
+        var type = DataType.from(property.getTypeInformation().getType());
         if (type == null && property.findAnnotation(Embedded.class).isPresent()) {
-            type = "object";
+            type = DataType.OBJECT;
         }
-        return type;
+        return type == null ? null : type.name().toLowerCase();
     }
 
     private String readDescription(RootResourceInformation information, List<Property> properties) {
