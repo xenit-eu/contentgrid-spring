@@ -354,8 +354,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                             "blueprint:attribute": [
                                                 {
                                                     name: "length",
+                                                    title: "Content Length",
                                                     type: "long",
-                                                    description: "",
+                                                    description: "Length of the content",
                                                     readOnly: true,
                                                     required: false,
                                                     _embedded: {
@@ -369,8 +370,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 },
                                                 {
                                                     name: "mimetype",
+                                                    title: "Content Mimetype",
                                                     type: "string",
-                                                    description: "",
+                                                    description: "Mimetype of the content",
                                                     readOnly: false,
                                                     required: false,
                                                     _embedded: {
@@ -385,8 +387,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 },
                                                 {
                                                     name: "filename",
+                                                    title: "Content Filename",
                                                     type: "string",
-                                                    description: "",
+                                                    description: "Filename of the content",
                                                     readOnly: false,
                                                     required: false,
                                                     _embedded: {
@@ -737,8 +740,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                             "blueprint:attribute": [
                                                 {
                                                     name: "length",
+                                                    title: "Content Length",
                                                     type: "long",
-                                                    description: "",
+                                                    description: "Length of the content",
                                                     readOnly: true,
                                                     required: false,
                                                     _embedded: {
@@ -747,8 +751,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 },
                                                 {
                                                     name: "mimetype",
+                                                    title: "Content Mimetype",
                                                     type: "string",
-                                                    description: "",
+                                                    description: "Mimetype of the content",
                                                     readOnly: false,
                                                     required: false,
                                                     _embedded: {
@@ -757,8 +762,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 },
                                                 {
                                                     name: "filename",
+                                                    title: "Content Filename",
                                                     type: "string",
-                                                    description: "",
+                                                    description: "Filename of the content",
                                                     readOnly: false,
                                                     required: false,
                                                     _embedded: {
@@ -778,8 +784,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                             "blueprint:attribute": [
                                                 {
                                                     name: "length",
+                                                    title: "Content Length",
                                                     type: "long",
-                                                    description: "",
+                                                    description: "Length of the content",
                                                     readOnly: true,
                                                     required: false,
                                                     _embedded: {
@@ -788,8 +795,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 },
                                                 {
                                                     name: "mimetype",
+                                                    title: "Content Mimetype",
                                                     type: "string",
-                                                    description: "",
+                                                    description: "Mimetype of the content",
                                                     readOnly: false,
                                                     required: false,
                                                     _embedded: {
@@ -798,8 +806,9 @@ abstract class AbstractHalFormsProfileControllerTest {
                                                 },
                                                 {
                                                     name: "filename",
+                                                    title: "Content Filename",
                                                     type: "string",
-                                                    description: "",
+                                                    description: "Filename of the content",
                                                     readOnly: false,
                                                     required: false,
                                                     _embedded: {

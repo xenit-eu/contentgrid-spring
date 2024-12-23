@@ -12,6 +12,7 @@ import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.core.mapping.ResourceMappings;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.hateoas.LinkRelation;
 import org.springframework.hateoas.mediatype.MessageResolver;
 import org.springframework.hateoas.mediatype.hal.HalLinkRelation;
@@ -63,7 +64,7 @@ public class EntityRepresentationModelAssembler implements
 
         return EntityRepresentationModel.builder()
                 .name(name)
-                .title(readTitle(information))
+                .title(readTitle(entityContainer.getTypeInformation()))
                 .description(readDescription(information))
                 .attributes(attributes)
                 .relations(relations)
@@ -75,7 +76,7 @@ public class EntityRepresentationModelAssembler implements
         return description == null ? "" : description;
     }
 
-    private String readTitle(RootResourceInformation information) {
+    private String readTitle(TypeInformation<?> information) {
         return messageResolver.resolve(TitleMessageSourceResolvable.forEntity(information));
     }
 

@@ -62,7 +62,8 @@ public class RelationRepresentationModelAssembler {
     }
 
     private String readTitle(RootResourceInformation information, Property property) {
-        return messageResolver.resolve(TitleMessageSourceResolvable.forProperty(information, property));
+        return messageResolver.resolve(TitleMessageSourceResolvable.forProperty(
+                information.getPersistentEntity().getTypeInformation(), property));
     }
 
 }

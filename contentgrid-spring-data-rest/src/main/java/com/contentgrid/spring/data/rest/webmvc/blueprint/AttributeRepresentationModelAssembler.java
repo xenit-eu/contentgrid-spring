@@ -13,6 +13,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.hateoas.mediatype.MessageResolver;
 
 @RequiredArgsConstructor
@@ -92,12 +93,27 @@ public class AttributeRepresentationModelAssembler {
     }
 
     private String readDescription(RootResourceInformation information, List<Property> properties) {
-        var description = messageResolver.resolve(DescriptionMessageSourceResolvable.forNestedProperty(information, properties));
+        String description = null;
+        if (properties.size() == 1) {
+            description = messageResolver.resolve(DescriptionMessageSourceResolvable.forProperty(information,
+                    properties.get(0)));
+        } else if (properties.size() > 1) {
+            var type = properties.get(properties.size() - 2).getTypeInformation();
+            var property = properties.get(properties.size() - 1);
+            description = messageResolver.resolve(DescriptionMessageSourceResolvable.forNestedProperty(type, property));
+        }
         return description == null ? "" : description;
     }
 
     private String readTitle(RootResourceInformation information, List<Property> properties) {
-        return messageResolver.resolve(TitleMessageSourceResolvable.forNestedProperty(information, properties));
+        TypeInformation<?> type;
+        if (properties.size() > 1) {
+            type = properties.get(properties.size() - 2).getTypeInformation();
+        } else {
+            type = information.getPersistentEntity().getTypeInformation();
+        }
+        return messageResolver.resolve(TitleMessageSourceResolvable.forProperty(type, properties.get(
+                properties.size() - 1)));
     }
 
     private String readPrompt(RootResourceInformation information, String path) {

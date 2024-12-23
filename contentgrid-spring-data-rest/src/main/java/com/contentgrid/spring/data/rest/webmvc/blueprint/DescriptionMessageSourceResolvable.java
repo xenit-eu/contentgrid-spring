@@ -1,31 +1,31 @@
 package com.contentgrid.spring.data.rest.webmvc.blueprint;
 
 import com.contentgrid.spring.data.rest.mapping.Property;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.Value;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.util.StringUtils;
 
 @Value
 public class DescriptionMessageSourceResolvable implements MessageSourceResolvable {
     String[] codes;
 
     public static DescriptionMessageSourceResolvable forEntity(RootResourceInformation information) {
-        return forNestedProperty(information, List.of());
+        // e.g. "rest.description.d\:person"
+        return new DescriptionMessageSourceResolvable(information.getResourceMetadata().getItemResourceDescription().getMessage());
     }
 
     public static DescriptionMessageSourceResolvable forProperty(RootResourceInformation information, Property property) {
-        return forNestedProperty(information, List.of(property));
+        // e.g. "rest.description.d\:person.firstName"
+        return new DescriptionMessageSourceResolvable(information.getResourceMetadata().getItemResourceDescription().getMessage() + "." + property.getName());
     }
 
-    public static DescriptionMessageSourceResolvable forNestedProperty(RootResourceInformation information, Collection<Property> properties) {
-        var message = properties.stream()
-                .map(Property::getName)
-                .map(name -> "." + name)
-                .collect(Collectors.joining());
-        return new DescriptionMessageSourceResolvable(information.getResourceMetadata().getItemResourceDescription().getMessage() + message);
+    public static DescriptionMessageSourceResolvable forNestedProperty(TypeInformation<?> information, Property property) {
+        // e.g. "rest.description.auditMetadata.createdDate"
+        var className = StringUtils.uncapitalize(information.getType().getSimpleName());
+        var code = "rest.description.%s.%s".formatted(className, property.getName());
+        return new DescriptionMessageSourceResolvable(code);
     }
 
     private DescriptionMessageSourceResolvable(String... codes) {

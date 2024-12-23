@@ -1,31 +1,21 @@
 package com.contentgrid.spring.data.rest.webmvc.blueprint;
 
 import com.contentgrid.spring.data.rest.mapping.Property;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.Value;
 import org.springframework.context.MessageSourceResolvable;
-import org.springframework.data.rest.webmvc.RootResourceInformation;
+import org.springframework.data.util.TypeInformation;
 
 @Value
 public class TitleMessageSourceResolvable implements MessageSourceResolvable {
     String[] codes;
 
-    public static TitleMessageSourceResolvable forEntity(RootResourceInformation information) {
-        return forNestedProperty(information, List.of());
+    public static TitleMessageSourceResolvable forEntity(TypeInformation<?> information) {
+        return new TitleMessageSourceResolvable(information.getType().getName() + "._title");
     }
 
-    public static TitleMessageSourceResolvable forProperty(RootResourceInformation information, Property property) {
-        return forNestedProperty(information, List.of(property));
-    }
-
-    public static TitleMessageSourceResolvable forNestedProperty(RootResourceInformation information, Collection<Property> properties) {
-        var message = properties.stream()
-                .map(Property::getName)
-                .map(name -> "." + name)
-                .collect(Collectors.joining());
-        return new TitleMessageSourceResolvable(information.getDomainType().getName() + message + "._title");
+    public static TitleMessageSourceResolvable forProperty(TypeInformation<?> information, Property property) {
+        var code = information.getType().getName() + "." + property.getName() + "._title";
+        return new TitleMessageSourceResolvable(code);
     }
 
     private TitleMessageSourceResolvable(String... codes) {
