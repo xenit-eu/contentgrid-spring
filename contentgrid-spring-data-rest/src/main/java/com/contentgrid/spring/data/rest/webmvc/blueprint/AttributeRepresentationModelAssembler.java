@@ -1,9 +1,12 @@
 package com.contentgrid.spring.data.rest.webmvc.blueprint;
 
+import com.contentgrid.spring.data.querydsl.sort.CollectionFilterSortHalFormsPayloadMetadataContributor;
+import com.contentgrid.spring.data.querydsl.sort.CollectionFilterSortHalFormsPayloadMetadataContributor.SortPropertyMetadata;
 import com.contentgrid.spring.data.rest.mapping.Property;
 import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedProperty;
 import com.contentgrid.spring.data.rest.validation.AllowedValues;
 import com.contentgrid.spring.data.rest.webmvc.blueprint.AttributeRepresentationModel.SearchParamRepresentationModel;
+import com.contentgrid.spring.data.rest.webmvc.blueprint.AttributeRepresentationModel.SortParamRepresentationModel;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
 import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Embedded;
@@ -21,6 +24,8 @@ public class AttributeRepresentationModelAssembler {
 
     private final CollectionFiltersMapping collectionFiltersMapping;
     private final MessageResolver messageResolver;
+    private final CollectionFilterSortHalFormsPayloadMetadataContributor
+            collectionFilterSortHalFormsPayloadMetadataContributor;
 
     public Optional<AttributeRepresentationModel> toModel(RootResourceInformation information, List<Property> properties) {
         var property = properties.get(properties.size() - 1);
@@ -69,6 +74,16 @@ public class AttributeRepresentationModelAssembler {
                         filter.getFilterType()))
                 .forEachOrdered(searchParams::add);
 
+        var sortParams = new ArrayList<SortParamRepresentationModel>();
+        var metadataStream = collectionFilterSortHalFormsPayloadMetadataContributor.contributeToSearchForm(information.getDomainType());
+        metadataStream.filter(SortPropertyMetadata.class::isInstance)
+                .map(SortPropertyMetadata.class::cast)
+                .flatMap(metadata -> metadata.getSortOptions().stream())
+                .filter(option -> jsonProperty.getName().equals(option.getProperty()))
+                .map(option -> new SortParamRepresentationModel(option.getValue(), option.getPrompt(),
+                        option.getDirection()))
+                .forEachOrdered(sortParams::add);
+
         var attribute = AttributeRepresentationModel.builder()
                 .name(jsonProperty.getName())
                 .title(readTitle(information, properties))
@@ -79,6 +94,7 @@ public class AttributeRepresentationModelAssembler {
                 .attributes(attributes)
                 .constraints(constraints)
                 .searchParams(searchParams)
+                .sortParams(sortParams)
                 .build();
 
         return Optional.of(attribute);

@@ -1,5 +1,6 @@
 package com.contentgrid.spring.data.rest.webmvc.blueprint;
 
+import com.contentgrid.spring.data.querydsl.sort.CollectionFilterSortHalFormsPayloadMetadataContributor;
 import com.contentgrid.spring.data.rest.mapping.DomainTypeMapping;
 import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedContainer;
 import com.contentgrid.spring.data.rest.mapping.persistent.ThroughAssociationsContainer;
@@ -27,16 +28,21 @@ public class EntityRepresentationModelAssembler implements
     private final AttributeRepresentationModelAssembler attributeAssembler;
     private final RelationRepresentationModelAssembler relationAssembler;
 
-    public EntityRepresentationModelAssembler(Repositories repositories, MessageResolver messageResolver,
-            RepositoryRestConfiguration repositoryRestConfiguration, ResourceMappings resourceMappings,
-            CollectionFiltersMapping collectionFiltersMapping) {
+    public EntityRepresentationModelAssembler(
+            Repositories repositories,
+            MessageResolver messageResolver,
+            RepositoryRestConfiguration repositoryRestConfiguration,
+            ResourceMappings resourceMappings,
+            CollectionFiltersMapping collectionFiltersMapping,
+            CollectionFilterSortHalFormsPayloadMetadataContributor contributor
+    ) {
         this.domainTypeMapping = new DomainTypeMapping(repositories)
                 .wrapWith(container -> new ThroughAssociationsContainer(container, repositories, 1))
                 .wrapWith(DataRestBasedContainer::new)
 //                .wrapWith(JacksonBasedContainer::new)
         ;
         this.messageResolver = messageResolver;
-        this.attributeAssembler = new AttributeRepresentationModelAssembler(collectionFiltersMapping, messageResolver);
+        this.attributeAssembler = new AttributeRepresentationModelAssembler(collectionFiltersMapping, messageResolver, contributor);
         this.relationAssembler = new RelationRepresentationModelAssembler(repositoryRestConfiguration, resourceMappings, messageResolver);
     }
 
