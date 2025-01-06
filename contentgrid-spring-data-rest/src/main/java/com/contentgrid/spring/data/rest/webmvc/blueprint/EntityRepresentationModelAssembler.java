@@ -1,7 +1,6 @@
 package com.contentgrid.spring.data.rest.webmvc.blueprint;
 
 import com.contentgrid.spring.data.rest.mapping.DomainTypeMapping;
-import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedContainer;
 import com.contentgrid.spring.data.rest.mapping.persistent.ThroughAssociationsContainer;
 import com.contentgrid.spring.data.rest.mapping.rest.DataRestBasedContainer;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
@@ -33,7 +32,7 @@ public class EntityRepresentationModelAssembler implements
         this.domainTypeMapping = new DomainTypeMapping(repositories)
                 .wrapWith(container -> new ThroughAssociationsContainer(container, repositories, 1))
                 .wrapWith(DataRestBasedContainer::new)
-//                .wrapWith(JacksonBasedContainer::new)
+                // no JacksonBasedContainer because we still need to access the java property names
         ;
         this.messageResolver = messageResolver;
         this.attributeAssembler = new AttributeRepresentationModelAssembler(collectionFiltersMapping, messageResolver);
@@ -48,7 +47,7 @@ public class EntityRepresentationModelAssembler implements
         var entityContainer = domainTypeMapping.forDomainType(information.getDomainType());
 
         entityContainer.doWithProperties(property -> {
-            var attribute = attributeAssembler.toModel(information, List.of(property));
+            var attribute = attributeAssembler.toModel(information, entityContainer, List.of(property));
             attribute.ifPresent(attributes::add);
         });
 
