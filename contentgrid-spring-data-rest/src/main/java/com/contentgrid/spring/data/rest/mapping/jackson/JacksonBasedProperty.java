@@ -5,38 +5,15 @@ import com.contentgrid.spring.data.rest.mapping.Property;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Predicate;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.TypeInformation;
 
+@RequiredArgsConstructor
 public class JacksonBasedProperty implements Property {
     private final Property delegate;
-    private final JacksonBasedProperty value;
-
-    public JacksonBasedProperty(Property delegate) {
-        this.delegate = delegate;
-        this.value = findJsonValue().orElse(null);
-    }
-
-    protected Optional<JacksonBasedProperty> findJsonValue() {
-        var values = new ArrayList<Property>();
-        delegate.nestedContainer()
-                .ifPresent(container -> {
-                    container.doWithProperties(property -> {
-                        var jsonValue = property.findAnnotation(JsonValue.class)
-                                .map(JsonValue::value)
-                                .orElse(false);
-                        if (jsonValue) {
-                            values.add(property);
-                        }
-                    });
-                });
-        return values.stream().findFirst()
-                .map(JacksonBasedProperty::new);
-    }
 
     protected Optional<String> preferredName() {
         return delegate.findAnnotation(JsonProperty.class)
@@ -51,9 +28,6 @@ public class JacksonBasedProperty implements Property {
 
     @Override
     public TypeInformation<?> getTypeInformation() {
-        if (value != null) {
-            return value.getTypeInformation();
-        }
         return delegate.getTypeInformation();
     }
 
@@ -81,9 +55,6 @@ public class JacksonBasedProperty implements Property {
 
     @Override
     public Optional<Container> nestedContainer() {
-        if (value != null) {
-            return value.nestedContainer();
-        }
         return delegate.nestedContainer()
                 .map(JacksonBasedContainer::new);
     }

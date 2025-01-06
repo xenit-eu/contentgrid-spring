@@ -5,8 +5,8 @@ import com.contentgrid.spring.data.rest.mapping.Property;
 import com.contentgrid.spring.data.rest.mapping.jackson.JacksonBasedProperty;
 import com.contentgrid.spring.data.rest.validation.AllowedValues;
 import com.contentgrid.spring.data.rest.webmvc.blueprint.AttributeRepresentationModel.SearchParamRepresentationModel;
+import com.contentgrid.spring.data.support.auditing.v1.UserMetadata;
 import com.contentgrid.spring.querydsl.mapping.CollectionFiltersMapping;
-import com.fasterxml.jackson.annotation.JsonValue;
 import jakarta.persistence.Embedded;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,21 +29,19 @@ public class AttributeRepresentationModelAssembler {
             return Optional.empty();
         }
 
-        // TODO: workaround that only works for com.contentgrid.spring.data.support.auditing.v1.UserMetadata properties
-        if (jsonProperty.findAnnotation(JsonValue.class)
-                .map(JsonValue::value)
-                .orElse(false)) {
+        // Workaround that removes nested properties from UserMetadata properties,
+        // consider refactoring JacksonBasedProperty/JacksonBasedContainer/propertyPath
+        // so that it supports @JsonValue in the general case if multiple embeddable
+        // properties are using @JsonValue.
+        if (UserMetadata.class.equals(container.getTypeInformation().getType())) {
             return Optional.empty();
         }
 
         var attributes = new ArrayList<AttributeRepresentationModel>();
         var embedded = jsonProperty.findAnnotation(Embedded.class);
         if (embedded.isPresent()) {
-            // TODO: incorrect if @JsonValue is present, use jsonProperty.nestedContainer() instead
-            //  (but that one doesn't give us the java field names used for title, description and search params)
             property.nestedContainer()
                     .ifPresent(nestedContainer -> nestedContainer.doWithProperties(nestedProperty -> {
-                        // TODO: json path and java path might differ when @JsonValue is present
                         var path = new ArrayList<>(propertyPath);
                         path.add(nestedProperty);
                         this.toModel(information, nestedContainer, path)
@@ -89,8 +87,15 @@ public class AttributeRepresentationModelAssembler {
 
     private String getType(Property property) {
         var type = DataType.from(property.getTypeInformation().getType());
-        if (type == null && property.findAnnotation(Embedded.class).isPresent()) {
+        if (property.findAnnotation(Embedded.class).isPresent()) {
             type = DataType.OBJECT;
+        }
+        // Workaround that renders UserMetadata properties as string properties,
+        // consider refactoring JacksonBasedProperty/JacksonBasedContainer/propertyPath
+        // so that it supports @JsonValue in the general case if multiple embeddable
+        // properties are using @JsonValue.
+        if (UserMetadata.class.equals(property.getTypeInformation().getType())) {
+            type = DataType.STRING;
         }
         return type == null ? null : type.name().toLowerCase();
     }
