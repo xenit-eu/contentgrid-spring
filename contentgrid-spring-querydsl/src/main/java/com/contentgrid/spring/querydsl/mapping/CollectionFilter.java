@@ -30,6 +30,15 @@ public interface CollectionFilter<T> {
     String getFilterName();
 
     /**
+     * Obtain the type of the filter
+     * <p>
+     * API clients can use the type name to know which search type belongs to each query parameter.
+     *
+     * @return The type of the filter
+     */
+    String getFilterType();
+
+    /**
      * Whether this filter is documented or not
      * <p>
      * Documented filter parameters are present in schemas and descriptions, undocumented parameters are hidden from

@@ -23,7 +23,7 @@ public class TestCollectionFiltersMapping implements CollectionFiltersMapping {
     }
 
     @Override
-    public Optional<CollectionFilter<?>> forProperty(Class<?> domainType, String... properties) {
+    public CollectionFilters forProperty(Class<?> domainType, String... properties) {
         throw new UnsupportedOperationException();
     }
 

@@ -26,4 +26,9 @@ public class None implements QuerydslPredicateFactory<Path<?>, Object> {
     public Class<Object> valueType(Path<?> path) {
         return Object.class;
     }
+
+    @Override
+    public String getFilterType() {
+        return null;
+    }
 }

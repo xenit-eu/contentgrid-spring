@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 
@@ -25,6 +26,9 @@ public class Text {
     @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
     private abstract static class AbstractStringPredicateFactory extends AbstractSimpleQuerydslPredicateFactory<StringPath, String> {
         private final BiFunction<StringPath, String, BooleanExpression> stringExpressionMapper;
+
+        @Getter
+        private final String filterType;
 
         @Override
         protected StringPath coercePath(Path<?> path) {
@@ -60,7 +64,7 @@ public class Text {
     public static class EqualsIgnoreCase extends AbstractStringPredicateFactory {
 
         public EqualsIgnoreCase() {
-            super(StringExpression::equalsIgnoreCase);
+            super(StringExpression::equalsIgnoreCase, "case-insensitive-match");
         }
 
         @Override
@@ -85,7 +89,7 @@ public class Text {
     public static class StartsWith extends AbstractStringPredicateFactory {
 
         public StartsWith() {
-            super(StringExpression::startsWith);
+            super(StringExpression::startsWith, "starts-with");
         }
     }
 
@@ -97,7 +101,7 @@ public class Text {
     public static class StartsWithIgnoreCase extends AbstractStringPredicateFactory {
 
         public StartsWithIgnoreCase() {
-            super(StringExpression::startsWithIgnoreCase);
+            super(StringExpression::startsWithIgnoreCase, "case-insensitive-starts-with");
         }
     }
 
@@ -109,7 +113,8 @@ public class Text {
     public static class EqualsNormalized extends AbstractStringPredicateFactory {
 
         public EqualsNormalized() {
-            super((expr, value) -> postgresNormalize(expr).eq(Normalizer.normalize(value, Form.NFKC)));
+            super((expr, value) -> postgresNormalize(expr).eq(Normalizer.normalize(value, Form.NFKC)),
+                    "exact-match");
         }
 
         @Override
@@ -137,7 +142,8 @@ public class Text {
     public static class EqualsIgnoreCaseNormalized extends AbstractStringPredicateFactory {
 
         public EqualsIgnoreCaseNormalized() {
-            super((expr, value) -> postgresNormalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFKC)));
+            super((expr, value) -> postgresNormalize(expr).equalsIgnoreCase(Normalizer.normalize(value, Form.NFKC)),
+                    "case-insensitive-match");
         }
 
         @Override
@@ -164,7 +170,8 @@ public class Text {
     public static class StartsWithNormalized extends AbstractStringPredicateFactory {
 
         protected StartsWithNormalized() {
-            super((expr, value) -> postgresNormalize(expr).startsWith(Normalizer.normalize(value, Form.NFKC)));
+            super((expr, value) -> postgresNormalize(expr).startsWith(Normalizer.normalize(value, Form.NFKC)),
+                    "starts-with");
         }
     }
 
@@ -176,7 +183,8 @@ public class Text {
     public static class StartsWithIgnoreCaseNormalized extends AbstractStringPredicateFactory {
 
         protected StartsWithIgnoreCaseNormalized() {
-            super((expr, value) -> postgresNormalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFKC)));
+            super((expr, value) -> postgresNormalize(expr).startsWithIgnoreCase(Normalizer.normalize(value, Form.NFKC)),
+                    "case-insensitive-starts-with");
         }
     }
 
@@ -186,14 +194,14 @@ public class Text {
      * <p>
      * Requires Postgres extension {@code unaccent} and a function named
      * {@code contentgrid_prefix_search_normalize} defined in a schema named {@code extensions}:
-     * <code>
+     * <pre>
      * CREATE SCHEMA extensions;
      * CREATE EXTENSION unaccent SCHEMA extensions;
      * CREATE OR REPLACE FUNCTION extensions.contentgrid_prefix_search_normalize(arg text)
      *   RETURNS text
      *   LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT
      * RETURN extensions.unaccent('extensions.unaccent', lower(normalize(arg, NFKC)));
-     * </code>
+     * </pre>
      * This predicate only supports {@link String}s, and can not be used with other types.
      */
     public static class ContentGridPrefixSearch extends AbstractStringPredicateFactory {
@@ -201,7 +209,8 @@ public class Text {
         protected ContentGridPrefixSearch() {
             // Using like() and manually append '%' to inner expression because startsWith() appends '%' to outer expression
             super((expr, value) -> contentGridPrefixSearchNormalize(expr)
-                    .like(contentGridPrefixSearchNormalizePattern(ConstantImpl.create(value), "{0%}")));
+                    .like(contentGridPrefixSearchNormalizePattern(ConstantImpl.create(value), "{0%}")),
+                    "prefix-match");
         }
     }
 

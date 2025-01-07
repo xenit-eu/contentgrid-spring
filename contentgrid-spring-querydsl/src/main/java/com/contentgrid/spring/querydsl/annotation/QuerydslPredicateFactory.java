@@ -52,4 +52,11 @@ public interface QuerydslPredicateFactory<T extends Path<?>,  S> {
     default Optional<Expression<? extends Comparable<?>>> sortExpression(T path) {
         return Optional.empty();
     }
+
+    /**
+     * Obtain the filter type of the predicate. API clients can use this to distinguish the query parameters
+     *
+     * @return Filter type of the predicate
+     */
+    String getFilterType();
 }

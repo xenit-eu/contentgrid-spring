@@ -16,7 +16,7 @@ public interface CollectionFiltersMapping {
     CollectionFilters forDomainType(Class<?> domainType);
 
     /**
-     * Locates the {@link CollectionFilter} that can be used for filtering on a particular property
+     * Locates the {@link CollectionFilter}s that can be used for filtering on a particular property
      * <p>
      * Collection filters for a property can be located e.g. {@code forProperty(Invoice.class, "number")}
      * <p>
@@ -30,7 +30,7 @@ public interface CollectionFiltersMapping {
      * @param properties Path of Java property names to follow to arrive at the property
      * @return The first collection filter for the property, if there is any
      */
-    Optional<CollectionFilter<?>> forProperty(Class<?> domainType, String ...properties);
+    CollectionFilters forProperty(Class<?> domainType, String ...properties);
 
     /**
      * Locates the {@link CollectionFilter} that can be used for filtering on the id of a related entity

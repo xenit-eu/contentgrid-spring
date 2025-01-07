@@ -110,4 +110,9 @@ public class Default implements QuerydslPredicateFactory<Path<?>, Object> {
         return Optional.empty();
     }
 
+    @Override
+    public String getFilterType() {
+        return "exact-match";
+    }
+
 }

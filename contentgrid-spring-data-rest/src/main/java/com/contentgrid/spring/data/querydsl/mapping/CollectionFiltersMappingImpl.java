@@ -34,7 +34,7 @@ class CollectionFiltersMappingImpl implements CollectionFiltersMapping {
     }
 
     @Override
-    public Optional<CollectionFilter<?>> forProperty(Class<?> domainType, String... properties) {
+    public CollectionFilters forProperty(Class<?> domainType, String... properties) {
         var persistentEntity = repositories.getPersistentEntity(domainType);
 
         var pathNavigator = createEntityPathNavigatorFor(persistentEntity);
@@ -42,7 +42,7 @@ class CollectionFiltersMappingImpl implements CollectionFiltersMapping {
             pathNavigator = pathNavigator.get(propertyName);
         }
 
-        return forPersistentEntity(persistentEntity).forPath(pathNavigator.getPath()).filters().findFirst();
+        return forPersistentEntity(persistentEntity).forPath(pathNavigator.getPath());
     }
 
     @Override

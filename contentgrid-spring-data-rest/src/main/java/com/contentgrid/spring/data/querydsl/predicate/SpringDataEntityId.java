@@ -45,4 +45,8 @@ class SpringDataEntityId extends AbstractSimpleQuerydslPredicateFactory<Path<Obj
         return DEFAULT.bind(path, values);
     }
 
+    @Override
+    public String getFilterType() {
+        return "exact-match";
+    }
 }

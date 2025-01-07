@@ -37,6 +37,7 @@ dependencies {
 
     implementation project(':contentgrid-spring-querydsl')
     implementation project(':contentgrid-spring-data-pagination')
+    implementation project(':contentgrid-spring-data-support')
 
     testAnnotationProcessor project(':contentgrid-spring-boot-starter-annotations')
 

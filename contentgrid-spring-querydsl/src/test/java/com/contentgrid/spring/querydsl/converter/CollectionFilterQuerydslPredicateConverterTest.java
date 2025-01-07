@@ -44,6 +44,7 @@ class CollectionFilterQuerydslPredicateConverterTest {
     <T> void typeConversion(Path<T> path, Collection<String> inputValues, Collection<T> outputValues) {
         var filter = TestCollectionFilter.<T>builder()
                 .filterName("test")
+                .filterType("test-match")
                 .path(path)
                 .build();
         var converter = new CollectionFilterQuerydslPredicateConverter(
@@ -70,6 +71,7 @@ class CollectionFilterQuerydslPredicateConverterTest {
     <T> void failedTypeConversion(Path<T> path, Collection<String> inputValues) {
         var filter = TestCollectionFilter.<T>builder()
                 .filterName("test")
+                .filterType("test-match")
                 .path(path)
                 .build();
         var converter = new CollectionFilterQuerydslPredicateConverter(

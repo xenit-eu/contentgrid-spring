@@ -42,6 +42,11 @@ public class JacksonBasedProperty implements Property {
     }
 
     @Override
+    public boolean isUnique() {
+        return delegate.isUnique();
+    }
+
+    @Override
     public boolean isReadOnly() {
         return delegate.isReadOnly() || delegate.findAnnotation(JsonProperty.class)
                 .map(prop -> prop.access() == Access.READ_ONLY)
