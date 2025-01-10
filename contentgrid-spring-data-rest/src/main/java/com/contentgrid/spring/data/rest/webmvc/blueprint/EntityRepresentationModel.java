@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.With;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.core.EmbeddedWrapper;
 import org.springframework.hateoas.server.core.EmbeddedWrappers;
@@ -47,9 +48,24 @@ public class EntityRepresentationModel extends RepresentationModel<EntityReprese
     public CollectionModel<EmbeddedWrapper> getEmbeddeds() {
         var embeddedWrappers = new EmbeddedWrappers(true);
 
-        return CollectionModel.of(List.of(
+        return new CollectionModel<>(List.of(
                 embeddedWrappers.wrap(attributes, BlueprintLinkRelations.ATTRIBUTE),
                 embeddedWrappers.wrap(relations, BlueprintLinkRelations.RELATION)
-        ));
+        )) {
+
+            /**
+             * Overriding this to make sure that the marker link added to signal the need for curie-ing is added to the
+             * outer representation model.
+             * <p>
+             * Copied from {@code org.springframework.hateoas.mediatype.hal.HalModelBuilder.HalRepresentationModel}
+             *
+             * @see <a href=https://github.com/spring-projects/spring-hateoas/commit/08bc96493e074f345566522216594df48db380a9>https://github.com/spring-projects/spring-hateoas/commit/08bc96493e074f345566522216594df48db380a9</a>
+             */
+            @Override
+            public CollectionModel<EmbeddedWrapper> add(Link link) {
+                EntityRepresentationModel.this.add(link);
+                return this;
+            }
+        };
     }
 }
