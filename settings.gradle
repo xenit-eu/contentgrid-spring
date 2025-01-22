@@ -1,7 +1,7 @@
 plugins {
     id "eu.xenit.enterprise-conventions.oss" version "0.5.2"
     id 'org.ajoberstar.reckon.settings' version '0.19.1'
-    id "io.freefair.lombok" version "8.11" apply false
+    id "io.freefair.lombok" version "8.12" apply false
 }
 
 dependencyResolutionManagement {
