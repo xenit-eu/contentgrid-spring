@@ -18,6 +18,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 public class EntityChangeHibernateEventListener implements PostInsertEventListener,
         PostUpdateEventListener, PostDeleteEventListener, PostCollectionUpdateEventListener,
@@ -52,57 +53,85 @@ public class EntityChangeHibernateEventListener implements PostInsertEventListen
 
     @Override
     public void onPostInsert(PostInsertEvent event) {
-        entityChangeEventPublisher.publish(
-                EntityChangeEvent.builder()
-                        .trigger(ChangeKind.CREATE)
-                        .domainType(deriveDomainType(event.getEntity()))
-                        .newEntity(event.getEntity())
-                        .build()
-        );
+        if (isExported(event.getEntity())) {
+            entityChangeEventPublisher.publish(
+                    EntityChangeEvent.builder()
+                            .trigger(ChangeKind.CREATE)
+                            .domainType(deriveDomainType(event.getEntity()))
+                            .newEntity(event.getEntity())
+                            .build()
+            );
+        }
     }
 
     @Override
     public void onPostUpdate(PostUpdateEvent event) {
-        Object entity = event.getEntity();
-        Object oldEntity = BeanUtils.instantiateClass(entity.getClass());
-        BeanUtils.copyProperties(entity, oldEntity);
-        event.getPersister().setPropertyValues(oldEntity, event.getOldState());
+        if (isExported(event.getEntity())) {
+            Object entity = event.getEntity();
+            Object oldEntity = BeanUtils.instantiateClass(entity.getClass());
+            BeanUtils.copyProperties(entity, oldEntity);
+            event.getPersister().setPropertyValues(oldEntity, event.getOldState());
 
-        entityChangeEventPublisher.publish(
-                EntityChangeEvent.builder()
-                        .trigger(ChangeKind.UPDATE)
-                        .domainType(deriveDomainType(entity))
-                        .oldEntity(oldEntity)
-                        .newEntity(entity)
-                        .build()
-        );
+            entityChangeEventPublisher.publish(
+                    EntityChangeEvent.builder()
+                            .trigger(ChangeKind.UPDATE)
+                            .domainType(deriveDomainType(entity))
+                            .oldEntity(oldEntity)
+                            .newEntity(entity)
+                            .build()
+            );
+        }
     }
 
     @Override
     public void onPostDelete(PostDeleteEvent event) {
-        entityChangeEventPublisher.publish(
-                EntityChangeEvent.builder()
-                        .trigger(ChangeKind.DELETE)
-                        .domainType(deriveDomainType(event.getEntity()))
-                        .oldEntity(event.getEntity())
-                        .build()
-        );
+        if (isExported(event.getEntity())) {
+            entityChangeEventPublisher.publish(
+                    EntityChangeEvent.builder()
+                            .trigger(ChangeKind.DELETE)
+                            .domainType(deriveDomainType(event.getEntity()))
+                            .oldEntity(event.getEntity())
+                            .build()
+            );
+        }
     }
 
     @Override
     public void onPostUpdateCollection(PostCollectionUpdateEvent event) {
-        entityChangeEventPublisher.publish(
-                EntityChangeEvent.builder()
-                        .trigger(ChangeKind.UPDATE)
-                        .domainType(deriveDomainType(event.getAffectedOwnerOrNull()))
-                        .oldEntity(event.getAffectedOwnerOrNull())
-                        .newEntity(event.getAffectedOwnerOrNull())
-                        .build()
-        );
+        if (isExported(event.getAffectedOwnerOrNull())) {
+            entityChangeEventPublisher.publish(
+                    EntityChangeEvent.builder()
+                            .trigger(ChangeKind.UPDATE)
+                            .domainType(deriveDomainType(event.getAffectedOwnerOrNull()))
+                            .oldEntity(event.getAffectedOwnerOrNull())
+                            .newEntity(event.getAffectedOwnerOrNull())
+                            .build()
+            );
+        }
     }
 
     private Class<?> deriveDomainType(Object entity) {
         return repositories.getPersistentEntity(entity.getClass()).getType();
+    }
+
+    private boolean isExported(Object entity) {
+        if (entity == null) {
+            return false;
+        }
+
+        var maybeRepository = repositories.getRepositoryFor(entity.getClass());
+        if (maybeRepository.isEmpty()) {
+            return false;
+        }
+
+        for (var repositoryInterface : maybeRepository.get().getClass().getInterfaces()) {
+            var repositoryRestResource = repositoryInterface.getAnnotation(RepositoryRestResource.class);
+            if (repositoryRestResource != null && !repositoryRestResource.exported()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }
