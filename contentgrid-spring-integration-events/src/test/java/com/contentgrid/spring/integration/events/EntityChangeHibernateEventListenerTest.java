@@ -5,11 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.contentgrid.spring.integration.events.TestConfig.TestMessageHandler;
 import com.contentgrid.spring.test.fixture.invoicing.InvoicingApplication;
 import com.contentgrid.spring.test.fixture.invoicing.model.Customer;
+import com.contentgrid.spring.test.fixture.invoicing.model.InternalEntity;
 import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.model.Order;
 import com.contentgrid.spring.test.fixture.invoicing.model.PromotionCampaign;
 import com.contentgrid.spring.test.fixture.invoicing.model.ShippingAddress;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
+import com.contentgrid.spring.test.fixture.invoicing.repository.InternalEntityRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.OrderRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.PromotionCampaignRepository;
@@ -46,6 +48,9 @@ class EntityChangeHibernateEventListenerTest {
 
     @Autowired
     ShippingAddressRepository shippingAddressRepository;
+
+    @Autowired
+    InternalEntityRepository internalEntityRepository;
 
     @Autowired
     TestMessageHandler testMessageHandler;
@@ -234,6 +239,16 @@ class EntityChangeHibernateEventListenerTest {
                 checkEvent("update", Order.class)
         );
 
+    }
+
+    @Test
+    void whenInternalEntityIsModified_noEventShouldBePublished() {
+        InternalEntity entity = internalEntityRepository.save(new InternalEntity()); // create
+        entity.setName("test");
+        entity = internalEntityRepository.save(entity); // update
+        internalEntityRepository.delete(entity); // delete
+
+        assertThat(testMessageHandler.messages()).isEmpty();
     }
 
 }
