@@ -1,6 +1,7 @@
 package com.contentgrid.spring.content.encryption;
 
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.table;
 
 import java.util.Collection;
@@ -21,7 +22,7 @@ public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionK
         if (contentId == null) {
             return null;
         }
-        var dekStorage = table("encryption.dek_storage");
+        var dekStorage = table(name("encryption", "dek_storage"));
         var result = dslContext.select(dekStorage.asterisk()).from(dekStorage)
                 .where(field("content_id").eq(contentId).and(field("kek_label").eq(wrappingKeyLabel)))
                 .fetchInto(ContentDataEncryptionKey.class);
@@ -38,7 +39,7 @@ public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionK
     @Override
     public S setKeys(S entity, ContentProperty contentProperty,
             Collection<UnencryptedSymmetricDataEncryptionKey> dataEncryptionKeys) {
-        var dekStorage = table("encryption.dek_storage");
+        var dekStorage = table(name("encryption", "dek_storage"));
         var contentId = (String)contentProperty.getContentId(entity);
         if (contentId == null) {
             throw new IllegalArgumentException("No value for contentId present.");
@@ -58,7 +59,7 @@ public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionK
             dslContext.insertInto(dekStorage)
                     .set(field("content_id"), contentId)
                     .set(field("algorithm"), dataEncryptionKey.getAlgorithm())
-                    .set(field("encryption_key"), dataEncryptionKey.getKeyData())
+                    .set(field("encrypted_dek"), dataEncryptionKey.getKeyData())
                     .set(field("iv"), dataEncryptionKey.getInitializationVector())
                     .set(field("kek_label"), wrappingKeyLabel)
                     .execute();
