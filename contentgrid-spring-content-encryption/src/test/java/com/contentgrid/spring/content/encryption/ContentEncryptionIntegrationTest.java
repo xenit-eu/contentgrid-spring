@@ -1,5 +1,12 @@
 package com.contentgrid.spring.content.encryption;
 
+import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.ALGORITHM;
+import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.CONTENT_ID;
+import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.DEK_STORAGE;
+import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.ENCRYPTED_DEK;
+import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.INITIALIZATION_VECTOR;
+import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.KEK_LABEL;
+import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.SCHEMA_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -20,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -98,14 +104,14 @@ public class ContentEncryptionIntegrationTest {
         stores.addStoreResolver(Invoice.class.getCanonicalName(), storeResolver);
 
         // Create table "encryption"."dek_storage"
-        dslContext.createSchemaIfNotExists("encryption").execute();
-        dslContext.createTableIfNotExists(DSL.name("encryption", "dek_storage"))
-                .column(DSL.field("content_id", String.class))
-                .column(DSL.field("kek_label", String.class))
-                .column(DSL.field("encrypted_dek", byte[].class))
-                .column(DSL.field("algorithm", String.class))
-                .column(DSL.field("iv", byte[].class))
-                .primaryKey("content_id", "kek_label")
+        dslContext.createSchemaIfNotExists(SCHEMA_NAME).execute();
+        dslContext.createTableIfNotExists(DEK_STORAGE)
+                .column(CONTENT_ID)
+                .column(KEK_LABEL)
+                .column(ENCRYPTED_DEK)
+                .column(ALGORITHM)
+                .column(INITIALIZATION_VECTOR)
+                .primaryKey(CONTENT_ID, KEK_LABEL)
                 .execute();
 
         // Create entities
