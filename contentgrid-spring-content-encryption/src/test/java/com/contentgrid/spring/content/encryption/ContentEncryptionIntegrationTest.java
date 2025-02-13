@@ -23,6 +23,8 @@ import com.contentgrid.spring.test.fixture.invoicing.model.Invoice;
 import com.contentgrid.spring.test.fixture.invoicing.repository.CustomerRepository;
 import com.contentgrid.spring.test.fixture.invoicing.repository.InvoiceRepository;
 import com.contentgrid.spring.test.security.WithMockJwt;
+import internal.org.springframework.content.encryption.engine.AesCtrEncryptionEngine;
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
@@ -31,6 +33,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -42,6 +45,7 @@ import org.springframework.content.commons.storeservice.StoreResolver;
 import org.springframework.content.commons.storeservice.Stores;
 import org.springframework.content.encryption.config.EncryptingContentStoreConfiguration;
 import org.springframework.content.encryption.config.EncryptingContentStoreConfigurer;
+import org.springframework.content.encryption.engine.ContentEncryptionEngine;
 import org.springframework.content.encryption.store.EncryptingContentStore;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.context.annotation.Bean;
@@ -49,6 +53,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {
@@ -73,6 +78,9 @@ public class ContentEncryptionIntegrationTest {
     private static final String TEXT = "Some unicode text 💩";
     private static final byte[] CONTENT = TEXT.getBytes(StandardCharsets.UTF_8);
     private static final String MIMETYPE = "text/plain;charset=UTF-8";
+    private static final String ENCRYPTED_TEXT = "Some encrypted text!";
+    private static final byte[] ENCRYPTED_CONTENT = ENCRYPTED_TEXT.getBytes(StandardCharsets.UTF_8);
+
     @Autowired
     private CustomerRepository customerRepository;
 
@@ -94,6 +102,9 @@ public class ContentEncryptionIntegrationTest {
     @Autowired
     private Stores stores;
 
+    @MockitoSpyBean
+    private ContentEncryptionEngine mockEncryptionEngine;
+
     @BeforeEach
     void setup() {
         // Register EncryptedContentStoreResolver since there are multiple stores for Invoice and Customer
@@ -102,6 +113,12 @@ public class ContentEncryptionIntegrationTest {
         stores.addStoreResolver("invoices", storeResolver);
         stores.addStoreResolver(Customer.class.getCanonicalName(), storeResolver); // when creating content link for _links
         stores.addStoreResolver(Invoice.class.getCanonicalName(), storeResolver);
+
+        // Mock encryption and decryption
+        Mockito.doReturn(new ByteArrayInputStream(ENCRYPTED_CONTENT))
+                .when(mockEncryptionEngine).encrypt(Mockito.any(), Mockito.any());
+        Mockito.doReturn(new ByteArrayInputStream(CONTENT))
+                .when(mockEncryptionEngine).decrypt(Mockito.any(), Mockito.any(), Mockito.any());
 
         // Create table "encryption"."dek_storage"
         dslContext.createSchemaIfNotExists(SCHEMA_NAME).execute();
@@ -151,7 +168,7 @@ public class ContentEncryptionIntegrationTest {
             // Assert content is encrypted
             assertThat(invoiceRepository.findByNumber(INVOICE_NUMBER_2)).hasValueSatisfying(invoice -> {
                 assertThat(invoiceContentStore.getResource(invoice.getContentId())).satisfies(resource -> {
-                    assertThat(resource.getContentAsByteArray()).isNotEqualTo(CONTENT);
+                    assertThat(resource.getContentAsByteArray()).isEqualTo(ENCRYPTED_CONTENT);
                 });
             });
         }
@@ -171,7 +188,7 @@ public class ContentEncryptionIntegrationTest {
             // Assert content is encrypted
             assertThat(invoiceRepository.findByNumber(INVOICE_NUMBER_1)).hasValueSatisfying(invoice -> {
                 assertThat(invoiceContentStore.getResource(invoice.getContentId())).satisfies(resource -> {
-                    assertThat(resource.getContentAsByteArray()).isNotEqualTo(CONTENT);
+                    assertThat(resource.getContentAsByteArray()).isEqualTo(ENCRYPTED_CONTENT);
                 });
             });
         }
@@ -191,7 +208,7 @@ public class ContentEncryptionIntegrationTest {
             // Assert content is encrypted
             assertThat(invoiceRepository.findByNumber(INVOICE_NUMBER_1)).hasValueSatisfying(invoice -> {
                 assertThat(invoiceContentStore.getResource(invoice.getContentId())).satisfies(resource -> {
-                    assertThat(resource.getContentAsByteArray()).isNotEqualTo(CONTENT);
+                    assertThat(resource.getContentAsByteArray()).isEqualTo(ENCRYPTED_CONTENT);
                 });
             });
         }
@@ -232,7 +249,7 @@ public class ContentEncryptionIntegrationTest {
             // Assert content is encrypted
             assertThat(customerRepository.findByVat(ORG_INBEV_VAT)).hasValueSatisfying(customer -> {
                 assertThat(customerContentStore.getResource(customer.getContent().getId())).satisfies(resource -> {
-                    assertThat(resource.getContentAsByteArray()).isNotEqualTo(CONTENT);
+                    assertThat(resource.getContentAsByteArray()).isEqualTo(ENCRYPTED_CONTENT);
                 });
             });
         }
@@ -252,7 +269,7 @@ public class ContentEncryptionIntegrationTest {
             // Assert content is encrypted
             assertThat(customerRepository.findByVat(ORG_XENIT_VAT)).hasValueSatisfying(customer -> {
                 assertThat(customerContentStore.getResource(customer.getContent().getId())).satisfies(resource -> {
-                    assertThat(resource.getContentAsByteArray()).isNotEqualTo(CONTENT);
+                    assertThat(resource.getContentAsByteArray()).isEqualTo(ENCRYPTED_CONTENT);
                 });
             });
         }
@@ -272,7 +289,7 @@ public class ContentEncryptionIntegrationTest {
             // Assert content is encrypted
             assertThat(customerRepository.findByVat(ORG_XENIT_VAT)).hasValueSatisfying(customer -> {
                 assertThat(customerContentStore.getResource(customer.getContent().getId())).satisfies(resource -> {
-                    assertThat(resource.getContentAsByteArray()).isNotEqualTo(CONTENT);
+                    assertThat(resource.getContentAsByteArray()).isEqualTo(ENCRYPTED_CONTENT);
                 });
             });
         }
@@ -300,12 +317,18 @@ public class ContentEncryptionIntegrationTest {
         @Configuration
         public static class Config {
             @Bean
+            public ContentEncryptionEngine defaultContentEncryptionEngine() {
+                return new AesCtrEncryptionEngine(128);
+            }
+
+            @Bean
             public EncryptingContentStoreConfigurer<EncryptedCustomerContentStore> customerContentStoreEncryptingContentStoreConfigurer(
-                    DSLContext dslContext) {
+                    DSLContext dslContext, ContentEncryptionEngine contentEncryptionEngine) {
                 return new EncryptingContentStoreConfigurer<>() {
                     @Override
                     public void configure(EncryptingContentStoreConfiguration<EncryptedCustomerContentStore> config) {
                         config
+                                .contentEncryptionEngine(contentEncryptionEngine)
                                 .dataEncryptionKeyAccessor(
                                         new TableStorageDataEncryptionKeyAccessor<>(dslContext, "none"))
                                 .unencryptedDataEncryptionKeys()
@@ -316,11 +339,12 @@ public class ContentEncryptionIntegrationTest {
 
             @Bean
             public EncryptingContentStoreConfigurer<EncryptedInvoiceContentStore> invocieContentStoreEncryptingContentStoreConfigurer(
-                    DSLContext dslContext) {
+                    DSLContext dslContext, ContentEncryptionEngine contentEncryptionEngine) {
                 return new EncryptingContentStoreConfigurer<>() {
                     @Override
                     public void configure(EncryptingContentStoreConfiguration<EncryptedInvoiceContentStore> config) {
                         config
+                                .contentEncryptionEngine(contentEncryptionEngine)
                                 .dataEncryptionKeyAccessor(
                                         new TableStorageDataEncryptionKeyAccessor<>(dslContext, "none"))
                                 .unencryptedDataEncryptionKeys()
