@@ -6,7 +6,6 @@ import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey
 import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.ENCRYPTED_DEK;
 import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.INITIALIZATION_VECTOR;
 import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.KEK_LABEL;
-import static com.contentgrid.spring.content.encryption.ContentDataEncryptionKey.SCHEMA_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -120,8 +119,7 @@ public class ContentEncryptionIntegrationTest {
         Mockito.doReturn(new ByteArrayInputStream(CONTENT))
                 .when(mockEncryptionEngine).decrypt(Mockito.any(), Mockito.any(), Mockito.any());
 
-        // Create table "encryption"."dek_storage"
-        dslContext.createSchemaIfNotExists(SCHEMA_NAME).execute();
+        // Create table "_dek_storage"
         dslContext.createTableIfNotExists(DEK_STORAGE)
                 .column(CONTENT_ID)
                 .column(KEK_LABEL)
