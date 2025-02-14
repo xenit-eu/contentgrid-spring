@@ -1,0 +1,36 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom(annotationProcessor)
+    }
+
+    testAnnotationProcessor {
+        extendsFrom(annotationProcessor)
+    }
+}
+
+dependencies {
+    annotationProcessor platform(project(':contentgrid-spring-boot-platform'))
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation platform(project(':contentgrid-spring-boot-platform'))
+
+    implementation 'com.github.paulcwarren:spring-content-encryption'
+    implementation 'org.springframework.boot:spring-boot-starter-jooq'
+
+    testAnnotationProcessor project(':contentgrid-spring-boot-starter-annotations')
+    testCompileOnly 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.github.paulcwarren:spring-content-rest'
+    testImplementation project(':contentgrid-spring-test')
+    testImplementation testFixtures(project(':contentgrid-spring-data-rest'))
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

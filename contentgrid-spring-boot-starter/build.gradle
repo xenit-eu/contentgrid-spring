@@ -13,6 +13,7 @@ dependencies {
     api project(':contentgrid-spring-data-support')
     api project(':contentgrid-spring-querydsl')
     api project(':contentgrid-spring-common')
+    api project(':contentgrid-spring-content-encryption')
 
     implementation project(':contentgrid-automations-rest')
     implementation project(':contentgrid-spring-swagger-ui')
@@ -27,11 +28,13 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
     api 'org.springframework.boot:spring-boot-starter-actuator'
     api 'org.springframework.boot:spring-boot-starter-data-rest'
+    api 'org.springframework.boot:spring-boot-starter-jooq'
     api 'org.springframework.data:spring-data-rest-hal-explorer'
 
     api "com.github.paulcwarren:spring-content-rest-boot-starter"
     api "com.github.paulcwarren:spring-content-fs-boot-starter"
     api "com.github.paulcwarren:spring-content-s3-boot-starter"
+    api "com.github.paulcwarren:spring-content-encryption"
 
     api 'com.querydsl:querydsl-jpa::jakarta'
 
