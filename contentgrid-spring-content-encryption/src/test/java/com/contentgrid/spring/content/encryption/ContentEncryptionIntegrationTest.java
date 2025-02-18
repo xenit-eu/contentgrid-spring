@@ -328,7 +328,7 @@ public class ContentEncryptionIntegrationTest {
                         config
                                 .contentEncryptionEngine(contentEncryptionEngine)
                                 .dataEncryptionKeyAccessor(
-                                        new TableStorageDataEncryptionKeyAccessor<>(dslContext, "none"))
+                                        new TableStorageDataEncryptionKeyAccessor<>(dslContext))
                                 .unencryptedDataEncryptionKeys()
                         ;
                     }
@@ -344,7 +344,7 @@ public class ContentEncryptionIntegrationTest {
                         config
                                 .contentEncryptionEngine(contentEncryptionEngine)
                                 .dataEncryptionKeyAccessor(
-                                        new TableStorageDataEncryptionKeyAccessor<>(dslContext, "none"))
+                                        new TableStorageDataEncryptionKeyAccessor<>(dslContext))
                                 .unencryptedDataEncryptionKeys()
                         ;
                     }

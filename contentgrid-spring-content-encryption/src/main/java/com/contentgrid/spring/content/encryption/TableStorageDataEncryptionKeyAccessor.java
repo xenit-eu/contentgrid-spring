@@ -13,11 +13,12 @@ import org.jooq.DSLContext;
 import org.springframework.content.commons.mappingcontext.ContentProperty;
 import org.springframework.content.encryption.keys.DataEncryptionKeyAccessor;
 import org.springframework.content.encryption.keys.StoredDataEncryptionKey.UnencryptedSymmetricDataEncryptionKey;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionKeyAccessor<S, UnencryptedSymmetricDataEncryptionKey> {
     private final DSLContext dslContext;
-    private final String wrappingKeyLabel;
+    private static final String WRAPPING_KEY_LABEL = "";
 
     @Override
     public Collection<UnencryptedSymmetricDataEncryptionKey> findKeys(S entity, ContentProperty contentProperty) {
@@ -26,7 +27,7 @@ public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionK
             return null;
         }
         var result = dslContext.select(DEK_STORAGE.asterisk()).from(DEK_STORAGE)
-                .where(CONTENT_ID.eq(contentId).and(KEK_LABEL.eq(wrappingKeyLabel)))
+                .where(CONTENT_ID.eq(contentId).and(KEK_LABEL.eq(WRAPPING_KEY_LABEL)))
                 .fetchInto(ContentDataEncryptionKey.class);
         if (result.isEmpty()) {
             return null; // Not encrypted
@@ -39,6 +40,7 @@ public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionK
     }
 
     @Override
+    @Transactional
     public S setKeys(S entity, ContentProperty contentProperty,
             Collection<UnencryptedSymmetricDataEncryptionKey> dataEncryptionKeys) {
         var contentId = (String)contentProperty.getContentId(entity);
@@ -50,7 +52,7 @@ public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionK
             throw new IllegalArgumentException("Multiple unencrypted versions of the same data key provided.");
         }
         dslContext.delete(DEK_STORAGE)
-                .where(CONTENT_ID.eq(contentId).and(KEK_LABEL.eq(wrappingKeyLabel)))
+                .where(CONTENT_ID.eq(contentId).and(KEK_LABEL.eq(WRAPPING_KEY_LABEL)))
                 .execute();
         for (var dataEncryptionKey : dataEncryptionKeys) {
             if (dataEncryptionKey == null) {
@@ -62,7 +64,7 @@ public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionK
                     .set(ALGORITHM, dataEncryptionKey.getAlgorithm())
                     .set(ENCRYPTED_DEK, dataEncryptionKey.getKeyData())
                     .set(INITIALIZATION_VECTOR, dataEncryptionKey.getInitializationVector())
-                    .set(KEK_LABEL, wrappingKeyLabel)
+                    .set(KEK_LABEL, WRAPPING_KEY_LABEL)
                     .execute();
         }
 
