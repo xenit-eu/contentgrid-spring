@@ -212,6 +212,35 @@ public class ContentEncryptionIntegrationTest {
         }
 
         @Test
+        void updateInvoiceContent() throws Exception {
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).encrypt(Mockito.any(), Mockito.any());
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).decrypt(Mockito.any(), Mockito.any(), Mockito.any());
+
+            mockMvc.perform(post("/invoices/{id}/content", INVOICE_1_ID)
+                            .contentType(MIMETYPE)
+                            .content(CONTENT))
+                    .andExpect(status().isCreated());
+
+            // Assert get returns unencrypted content
+            mockMvc.perform(get("/invoices/{id}/content", INVOICE_1_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().bytes(CONTENT));
+
+            // Update content
+            mockMvc.perform(put("/invoices/{id}/content", INVOICE_1_ID)
+                            .contentType(MIMETYPE)
+                            .content("abc".getBytes(StandardCharsets.UTF_8)))
+                    .andExpect(status().isOk());
+
+            // Assert get returns updated content
+            mockMvc.perform(get("/invoices/{id}/content", INVOICE_1_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("abc"));
+        }
+
+        @Test
         void deleteInvoiceContent() throws Exception {
             postInvoiceContent();
 
@@ -290,6 +319,35 @@ public class ContentEncryptionIntegrationTest {
                     assertThat(resource.getContentAsByteArray()).isEqualTo(ENCRYPTED_CONTENT);
                 });
             });
+        }
+
+        @Test
+        void updateCustomerContent() throws Exception {
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).encrypt(Mockito.any(), Mockito.any());
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).decrypt(Mockito.any(), Mockito.any(), Mockito.any());
+
+            mockMvc.perform(post("/customers/{id}/content", XENIT_ID)
+                            .contentType(MIMETYPE)
+                            .content(CONTENT))
+                    .andExpect(status().isCreated());
+
+            // Assert get returns unencrypted content
+            mockMvc.perform(get("/customers/{id}/content", XENIT_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().bytes(CONTENT));
+
+            // Update content
+            mockMvc.perform(put("/customers/{id}/content", XENIT_ID)
+                            .contentType(MIMETYPE)
+                            .content("abc".getBytes(StandardCharsets.UTF_8)))
+                    .andExpect(status().isOk());
+
+            // Assert get returns updated content
+            mockMvc.perform(get("/customers/{id}/content", XENIT_ID))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("abc"));
         }
 
         @Test
