@@ -54,15 +54,17 @@ public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionK
 
         dataEncryptionKeys.stream().findFirst()
                 .ifPresentOrElse(dataEncryptionKey -> {
-                    dslContext.mergeInto(DEK_STORAGE)
-                            .using(dslContext.selectOne()) // dummy select from dummy source
-                            .on(CONTENT_ID.eq(contentId).and(KEK_LABEL.eq(WRAPPING_KEY_LABEL)))
-                            .whenMatchedThenUpdate()
+                    dslContext.insertInto(DEK_STORAGE)
+                            .set(CONTENT_ID, contentId)
+                            .set(KEK_LABEL, WRAPPING_KEY_LABEL)
                             .set(ALGORITHM, dataEncryptionKey.getAlgorithm())
                             .set(ENCRYPTED_DEK, dataEncryptionKey.getKeyData())
                             .set(INITIALIZATION_VECTOR, dataEncryptionKey.getInitializationVector())
-                            .whenNotMatchedThenInsert(CONTENT_ID, KEK_LABEL, ALGORITHM, ENCRYPTED_DEK, INITIALIZATION_VECTOR)
-                            .values(contentId, WRAPPING_KEY_LABEL, dataEncryptionKey.getAlgorithm(), dataEncryptionKey.getKeyData(), dataEncryptionKey.getInitializationVector())
+                            .onConflict(CONTENT_ID, KEK_LABEL)
+                            .doUpdate()
+                            .set(ALGORITHM, dataEncryptionKey.getAlgorithm())
+                            .set(ENCRYPTED_DEK, dataEncryptionKey.getKeyData())
+                            .set(INITIALIZATION_VECTOR, dataEncryptionKey.getInitializationVector())
                             .execute();
                 }, () -> {
                     dslContext.delete(DEK_STORAGE)
