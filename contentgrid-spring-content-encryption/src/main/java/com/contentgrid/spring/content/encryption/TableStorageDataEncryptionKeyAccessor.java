@@ -51,22 +51,24 @@ public class TableStorageDataEncryptionKeyAccessor<S> implements DataEncryptionK
             // Multiple versions of the same data key, but all unencrypted!
             throw new IllegalArgumentException("Multiple unencrypted versions of the same data key provided.");
         }
-        dslContext.delete(DEK_STORAGE)
-                .where(CONTENT_ID.eq(contentId).and(KEK_LABEL.eq(WRAPPING_KEY_LABEL)))
-                .execute();
-        for (var dataEncryptionKey : dataEncryptionKeys) {
-            if (dataEncryptionKey == null) {
-                continue;
-            }
 
-            dslContext.insertInto(DEK_STORAGE)
-                    .set(CONTENT_ID, contentId)
-                    .set(ALGORITHM, dataEncryptionKey.getAlgorithm())
-                    .set(ENCRYPTED_DEK, dataEncryptionKey.getKeyData())
-                    .set(INITIALIZATION_VECTOR, dataEncryptionKey.getInitializationVector())
-                    .set(KEK_LABEL, WRAPPING_KEY_LABEL)
-                    .execute();
-        }
+        dataEncryptionKeys.stream().findFirst()
+                .ifPresentOrElse(dataEncryptionKey -> {
+                    dslContext.mergeInto(DEK_STORAGE)
+                            .using(dslContext.selectOne()) // dummy select from dummy source
+                            .on(CONTENT_ID.eq(contentId).and(KEK_LABEL.eq(WRAPPING_KEY_LABEL)))
+                            .whenMatchedThenUpdate()
+                            .set(ALGORITHM, dataEncryptionKey.getAlgorithm())
+                            .set(ENCRYPTED_DEK, dataEncryptionKey.getKeyData())
+                            .set(INITIALIZATION_VECTOR, dataEncryptionKey.getInitializationVector())
+                            .whenNotMatchedThenInsert(CONTENT_ID, KEK_LABEL, ALGORITHM, ENCRYPTED_DEK, INITIALIZATION_VECTOR)
+                            .values(contentId, WRAPPING_KEY_LABEL, dataEncryptionKey.getAlgorithm(), dataEncryptionKey.getKeyData(), dataEncryptionKey.getInitializationVector())
+                            .execute();
+                }, () -> {
+                    dslContext.delete(DEK_STORAGE)
+                            .where(CONTENT_ID.eq(contentId).and(KEK_LABEL.eq(WRAPPING_KEY_LABEL)))
+                            .execute();
+                });
 
         return entity;
     }

@@ -26,14 +26,14 @@ public class InvoicingApplication {
 
         @Bean
         @ServiceConnection
-        PostgreSQLContainer postgreSQLContainer() {
-            return new PostgreSQLContainer();
+        PostgreSQLContainer<?> postgreSQLContainer() {
+            return new PostgreSQLContainer<>("postgres:15");
         }
 
         @Bean
         @ServiceConnection
         RabbitMQContainer rabbitMQContainer() {
-            return new RabbitMQContainer();
+            return new RabbitMQContainer("rabbitmq:4");
         }
     }
 
