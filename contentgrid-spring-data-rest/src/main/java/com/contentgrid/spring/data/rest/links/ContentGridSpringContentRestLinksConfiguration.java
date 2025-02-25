@@ -8,6 +8,7 @@ import org.springframework.content.rest.config.RestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.hateoas.mediatype.MessageResolver;
 
@@ -15,6 +16,7 @@ import org.springframework.hateoas.mediatype.MessageResolver;
 @Import(ContentGridSpringDataLinksConfiguration.class)
 public class ContentGridSpringContentRestLinksConfiguration {
     @Bean
+    @Order(0)
     ContentGridLinkCollector<?> contentGridSpringContentLinkCollector(
             PersistentEntities entities, Stores stores, MappingContext mappingContext,
             RestConfiguration restConfiguration, ContentPropertyToRequestMappingContext requestMappingContext,
