@@ -11,4 +11,10 @@ public class ContentGridApplicationPropertiesConfiguration {
     ContentGridApplicationProperties contentgridApplicationProperties() {
         return new ContentGridApplicationProperties();
     }
+
+    @Bean
+    @ConfigurationProperties(prefix = "contentgrid.extension")
+    ContentGridExtensionProperties contentGridExtensionProperties() {
+        return new ContentGridExtensionProperties();
+    }
 }
