@@ -5,6 +5,7 @@ import com.contentgrid.spring.data.rest.webmvc.ProfileLinksResource;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
@@ -34,12 +35,13 @@ public class ContentGridSpringDataLinksConfiguration {
         return new RepositoryRestConfigurer() {
             @Override
             public LinkCollector customizeLinkCollector(LinkCollector collector) {
-                return new AggregateLinkCollector(collector, collectors);
+                return new AggregateLinkCollector(collector, () -> collectors.orderedStream().iterator());
             }
         };
     }
 
     @Bean
+    @Order(0)
     ContentGridLinkCollector<?> contentGridRelationLinkCollector(PersistentEntities entities, Associations associations,
             SelfLinkProvider selfLinkProvider, MessageResolver resolver) {
         return new SpringDataAssociationLinkCollector(entities, associations, selfLinkProvider, resolver);
