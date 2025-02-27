@@ -37,6 +37,7 @@ import com.contentgrid.spring.test.fixture.invoicing.store.ShippingLabelContentS
 import com.contentgrid.spring.test.security.WithMockJwt;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -56,6 +57,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -1199,15 +1202,20 @@ class InvoicingApplicationTests {
             @DisplayName("GET /{repository}/{entityId}/{contentProperty}")
             class Get {
 
+                private Invoice storeContent(Invoice invoice, byte[] content, String filename, String mimetype) {
+                    var stream = new ByteArrayInputStream(content);
+                    invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
+                    invoice.setContentFilename(filename);
+                    invoice.setContentMimetype(mimetype);
+                    return invoices.save(invoice);
+                }
+
                 @Test
                 void getInvoiceContent() throws Exception {
                     var filename = "💩 and 📝.txt";
                     var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
-                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
-                    invoicesContent.setContent(invoice, PropertyPath.from("content"), stream);
-                    invoice.setContentMimetype(MIMETYPE_PLAINTEXT_UTF8);
-                    invoice.setContentFilename(filename);
-                    invoices.save(invoice);
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(invoice, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
 
                     var encodedFilename = UriUtils.encodeQuery(filename, StandardCharsets.UTF_8);
                     mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
@@ -1220,6 +1228,86 @@ class InvoicingApplicationTests {
                             (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
                             .andExpect(headers().string("Content-Disposition",
                                     is("form-data; name=\"attachment\"; filename*=UTF-8''%s".formatted(encodedFilename)))) */
+                    ;
+                }
+
+                @ParameterizedTest
+                @CsvSource({
+                        "0,4",
+                        "5,9",
+                })
+                void getInvoiceContent_rangeRequest_http206(int start, int end) throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(invoice, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
+
+                    // end is inclusive in range header, but exclusive in Arrays#copyOfRange
+                    var expected = Arrays.copyOfRange(byteArray, start, end + 1);
+
+                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.RANGE, "bytes=%s-%s".formatted(start, end)))
+                            .andExpect(status().isPartialContent())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().bytes(expected))
+                    ;
+                }
+
+                @Test
+                void getInvoiceContent_rangeRequest_upToLastByte_http206() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(invoice, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
+                    var start = 5;
+                    var end = byteArray.length;
+                    var expected = Arrays.copyOfRange(byteArray, start, end);
+
+                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.RANGE, "bytes=%s-".formatted(start)))
+                            .andExpect(status().isPartialContent())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().bytes(expected))
+                    ;
+                }
+
+                @Test
+                void getInvoiceContent_rangeRequest_lastNBytes_http206() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(invoice, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
+                    var length = 5;
+                    var end = byteArray.length;
+                    var expected = Arrays.copyOfRange(byteArray, end - length, end);
+
+                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.RANGE, "bytes=-%s".formatted(length)))
+                            .andExpect(status().isPartialContent())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().bytes(expected))
+                    ;
+                }
+
+                @ParameterizedTest
+                @CsvSource({
+                        "50,54", // start > length
+                        "10,9",  // start > end
+                        "-1,9",  // start < 0
+                })
+                void getInvoiceContent_invalidRangeRequest_http416(int start, int end) throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var invoice = invoices.findById(invoiceId(INVOICE_NUMBER_1)).orElseThrow();
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(invoice, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
+
+                    mockMvc.perform(get("/invoices/{id}/content", invoiceId(INVOICE_NUMBER_1))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.RANGE, "bytes=%s-%s".formatted(start, end)))
+                            .andExpect(status().isRequestedRangeNotSatisfiable())
                     ;
                 }
 
@@ -1765,15 +1853,20 @@ class InvoicingApplicationTests {
             @DisplayName("GET /{repository}/{entityId}/{contentProperty}")
             class Get {
 
+                private Customer storeContent(Customer customer, byte[] content, String filename, String mimetype) {
+                    var stream = new ByteArrayInputStream(content);
+                    customersContent.setContent(customer, PropertyPath.from("content"), stream);
+                    customer.getContent().setFilename(filename);
+                    customer.getContent().setMimetype(mimetype);
+                    return customers.save(customer);
+                }
+
                 @Test
                 void getCustomerContent() throws Exception {
                     var filename = "💩 and 📝.txt";
                     var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
-                    var stream = new ByteArrayInputStream(EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8));
-                    customersContent.setContent(customer, PropertyPath.from("content"), stream);
-                    customer.getContent().setMimetype(MIMETYPE_PLAINTEXT_UTF8);
-                    customer.getContent().setFilename(filename);
-                    customers.save(customer);
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(customer, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
 
                     var encodedFilename = UriUtils.encodeQuery(filename, StandardCharsets.UTF_8);
                     mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
@@ -1786,6 +1879,85 @@ class InvoicingApplicationTests {
                             (it should be `Content-Disposition: attachment` or `Content-Disposition: inline` with a filename, never `form-data`)
                             .andExpect(headers().string("Content-Disposition",
                                     is("form-data; name=\"attachment\"; filename*=UTF-8''%s".formatted(encodedFilename)))) */
+                    ;
+                }
+
+                @ParameterizedTest
+                @CsvSource({
+                        "0,4",
+                        "5,9",
+                })
+                void getInvoiceContent_rangeRequest_http206(int start, int end) throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(customer, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
+
+                    var expected = Arrays.copyOfRange(byteArray, start, end + 1);
+
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.RANGE, "bytes=%s-%s".formatted(start, end)))
+                            .andExpect(status().isPartialContent())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().bytes(expected))
+                    ;
+                }
+
+                @Test
+                void getInvoiceContent_rangeRequest_upToLastByte_http206() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(customer, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
+                    var start = 5;
+                    var end = byteArray.length;
+                    var expected = Arrays.copyOfRange(byteArray, start, end);
+
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.RANGE, "bytes=%s-".formatted(start)))
+                            .andExpect(status().isPartialContent())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().bytes(expected))
+                    ;
+                }
+
+                @Test
+                void getInvoiceContent_rangeRequest_lastNBytes_http206() throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(customer, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
+                    var length = 5;
+                    var end = byteArray.length;
+                    var expected = Arrays.copyOfRange(byteArray, end - length, end);
+
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.RANGE, "bytes=-%s".formatted(length)))
+                            .andExpect(status().isPartialContent())
+                            .andExpect(content().contentType(MIMETYPE_PLAINTEXT_UTF8))
+                            .andExpect(content().bytes(expected))
+                    ;
+                }
+
+                @ParameterizedTest
+                @CsvSource({
+                        "50,54", // start > length
+                        "10,9",  // start > end
+                        "-1,9",  // start < 0
+                })
+                void getInvoiceContent_invalidRangeRequest_http416(int start, int end) throws Exception {
+                    var filename = "💩 and 📝.txt";
+                    var customer = customers.findById(customerIdByVat(ORG_XENIT_VAT)).orElseThrow();
+                    var byteArray = EXT_ASCII_TEXT.getBytes(StandardCharsets.UTF_8);
+                    storeContent(customer, byteArray, filename, MIMETYPE_PLAINTEXT_UTF8);
+
+                    mockMvc.perform(get("/customers/{id}/content", customerIdByVat(ORG_XENIT_VAT))
+                                    .accept(MediaType.ALL_VALUE)
+                                    .header(HttpHeaders.RANGE, "bytes=%s-%s".formatted(start, end)))
+                            .andExpect(status().isRequestedRangeNotSatisfiable())
                     ;
                 }
 
