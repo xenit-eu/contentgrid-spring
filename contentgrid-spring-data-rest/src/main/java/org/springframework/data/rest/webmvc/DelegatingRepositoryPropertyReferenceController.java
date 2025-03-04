@@ -171,7 +171,11 @@ public class DelegatingRepositoryPropertyReferenceController {
             var inverseSide = repositories.getPersistentEntity(property.getAssociationTargetType());
             for (PersistentProperty<? extends PersistentProperty<?>> inverseProperty : inverseSide.getPersistentProperties(
                     ManyToMany.class)) {
-                if(Objects.equals(property.getName(), inverseProperty.findAnnotation(ManyToMany.class).mappedBy())) {
+                if (
+                        Objects.equals(property.getOwner().getType(), inverseProperty.getActualType()) &&
+                                Objects.equals(property.getName(),
+                                        inverseProperty.findAnnotation(ManyToMany.class).mappedBy())
+                ) {
                     return Optional.of(inverseProperty.getName());
                 }
             }
