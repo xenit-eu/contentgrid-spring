@@ -45,6 +45,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework:spring-webflux'
     testImplementation 'jakarta.transaction:jakarta.transaction-api'
     testImplementation project(':contentgrid-spring-boot-autoconfigure')
     testImplementation project(':contentgrid-spring-data-support')
