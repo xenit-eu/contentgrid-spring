@@ -25,6 +25,7 @@ import com.contentgrid.spring.test.security.WithMockJwt;
 import internal.org.springframework.content.encryption.engine.AesCtrEncryptionEngine;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 import org.jooq.DSLContext;
@@ -49,7 +50,9 @@ import org.springframework.content.encryption.store.EncryptingContentStore;
 import org.springframework.content.rest.StoreRestResource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -251,6 +254,43 @@ public class ContentEncryptionIntegrationTest {
             mockMvc.perform(get("/invoices/{id}/content", INVOICE_1_ID))
                     .andExpect(status().isNotFound());
         }
+
+        @Test
+        void getInvoiceContentRange() throws Exception {
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).encrypt(Mockito.any(), Mockito.any());
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).decrypt(Mockito.any(), Mockito.any(), Mockito.any());
+
+            mockMvc.perform(post("/invoices/{id}/content", INVOICE_1_ID)
+                            .contentType(MIMETYPE)
+                            .content(CONTENT))
+                    .andExpect(status().isCreated());
+
+            mockMvc.perform(get("/invoices/{id}/content", INVOICE_1_ID)
+                            .accept(MediaType.ALL)
+                            .header(HttpHeaders.RANGE, "bytes=5-9"))
+                    .andExpect(status().isPartialContent())
+                    .andExpect(content().bytes(Arrays.copyOfRange(CONTENT, 5, 10)));
+        }
+
+        @Test
+        void getInvoiceContent_invalidRange_http416() throws Exception {
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).encrypt(Mockito.any(), Mockito.any());
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).decrypt(Mockito.any(), Mockito.any(), Mockito.any());
+
+            mockMvc.perform(post("/invoices/{id}/content", INVOICE_1_ID)
+                            .contentType(MIMETYPE)
+                            .content(CONTENT))
+                    .andExpect(status().isCreated());
+
+            mockMvc.perform(get("/invoices/{id}/content", INVOICE_1_ID)
+                            .accept(MediaType.ALL)
+                            .header(HttpHeaders.RANGE, "bytes=50-54"))
+                    .andExpect(status().isRequestedRangeNotSatisfiable());
+        }
     }
 
     @Nested
@@ -360,6 +400,43 @@ public class ContentEncryptionIntegrationTest {
             // Assert content is deleted
             mockMvc.perform(get("/customers/{id}/content", XENIT_ID))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void getCustomerContentRange() throws Exception {
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).encrypt(Mockito.any(), Mockito.any());
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).decrypt(Mockito.any(), Mockito.any(), Mockito.any());
+
+            mockMvc.perform(post("/customers/{id}/content", XENIT_ID)
+                            .contentType(MIMETYPE)
+                            .content(CONTENT))
+                    .andExpect(status().isCreated());
+
+            mockMvc.perform(get("/customers/{id}/content", XENIT_ID)
+                            .accept(MediaType.ALL)
+                            .header(HttpHeaders.RANGE, "bytes=5-9"))
+                    .andExpect(status().isPartialContent())
+                    .andExpect(content().bytes(Arrays.copyOfRange(CONTENT, 5, 10)));
+        }
+
+        @Test
+        void getCustomerContent_invalidRange_http416() throws Exception {
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).encrypt(Mockito.any(), Mockito.any());
+            Mockito.doCallRealMethod()
+                    .when(mockEncryptionEngine).decrypt(Mockito.any(), Mockito.any(), Mockito.any());
+
+            mockMvc.perform(post("/customers/{id}/content", XENIT_ID)
+                            .contentType(MIMETYPE)
+                            .content(CONTENT))
+                    .andExpect(status().isCreated());
+
+            mockMvc.perform(get("/customers/{id}/content", XENIT_ID)
+                            .accept(MediaType.ALL)
+                            .header(HttpHeaders.RANGE, "bytes=50-54"))
+                    .andExpect(status().isRequestedRangeNotSatisfiable());
         }
     }
 
