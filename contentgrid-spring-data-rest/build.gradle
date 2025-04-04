@@ -27,6 +27,7 @@ dependencies {
 
     implementation 'org.projectlombok:lombok'
     implementation 'com.querydsl:querydsl-core'
+    implementation 'com.querydsl:querydsl-jpa:jakarta'
     implementation 'jakarta.persistence:jakarta.persistence-api'
     implementation 'jakarta.servlet:jakarta.servlet-api'
     implementation 'jakarta.validation:jakarta.validation-api'

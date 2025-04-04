@@ -32,6 +32,11 @@ class CollectionFilterImpl<T> implements CollectionFilter<T> {
     private final QuerydslPredicateFactory<Path<?>, Object> predicateFactory;
 
     @Override
+    public Class<? extends QuerydslPredicateFactory<Path<?>, Object>> getPredicateFactoryClass() {
+        return (Class<? extends QuerydslPredicateFactory<Path<?>, Object>>) predicateFactory.getClass();
+    }
+
+    @Override
     public AnnotatedElement getAnnotatedElement() {
         return originalPath.getAnnotatedElement();
     }

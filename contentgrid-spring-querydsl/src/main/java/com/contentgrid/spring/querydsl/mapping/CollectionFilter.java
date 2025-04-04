@@ -1,5 +1,6 @@
 package com.contentgrid.spring.querydsl.mapping;
 
+import com.contentgrid.spring.querydsl.annotation.QuerydslPredicateFactory;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Path;
@@ -56,6 +57,8 @@ public interface CollectionFilter<T> {
      * This method is primarily useful for reverse lookups from Path back to a filter
      */
     Path<T> getPath();
+
+    Class<? extends QuerydslPredicateFactory<Path<?>, ?>> getPredicateFactoryClass();
 
     /**
      * Obtain the Java property that was annotated with
