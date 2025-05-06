@@ -3,6 +3,7 @@ package com.contentgrid.spring.data.rest.messages;
 import java.lang.reflect.Field;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +25,7 @@ public class ContentGridRestMessagesConfiguration {
      */
     @Bean
     static BeanPostProcessor contentGridHateoasRestMessagesPostProcessor(
-            @Lazy ContentGridRestMessages restMessages
+            ObjectProvider<ContentGridRestMessages> restMessages
     ) {
         return new HateoasMessageResolverBeanPostProcessor(restMessages);
     }
@@ -50,13 +51,13 @@ public class ContentGridRestMessagesConfiguration {
             ReflectionUtils.makeAccessible(MESSAGE_SOURCE_ACCESSOR_MESSAGE_SOURCE_FIELD);
         }
 
-        private final ContentGridRestMessages contentGridRestMessages;
+        private final ObjectProvider<ContentGridRestMessages> contentGridRestMessages;
 
         @Override
         public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
             if (bean instanceof MessageResolver messageResolver) {
                 var messageSource = extractMessageSource(messageResolver);
-                injectParentMessageSource(messageSource, contentGridRestMessages);
+                injectParentMessageSource(messageSource, contentGridRestMessages.getObject());
             }
             return bean;
         }
