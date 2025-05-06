@@ -14,7 +14,8 @@ import org.springframework.data.rest.core.support.SelfLinkProvider;
 @Import(ContentGridDomainTypeMappingConfiguration.class)
 public class ContentGridSpringDataRestAffordancesConfiguration {
     @Bean
-    public BeanPostProcessor replaceSelfLinkProviderWithAffordanceInjectingSelfLinkProvider(ObjectProvider<DomainTypeToHalFormsPayloadMetadataConverter> payloadMetadataConverter) {
+    public static BeanPostProcessor replaceSelfLinkProviderWithAffordanceInjectingSelfLinkProvider(
+            ObjectProvider<DomainTypeToHalFormsPayloadMetadataConverter> payloadMetadataConverter) {
         return new BeanPostProcessor() {
             @Override
             public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {

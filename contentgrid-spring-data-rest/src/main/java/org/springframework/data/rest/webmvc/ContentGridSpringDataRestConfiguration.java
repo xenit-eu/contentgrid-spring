@@ -29,7 +29,8 @@ import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
 public class ContentGridSpringDataRestConfiguration {
 
     @Bean
-    public BeanPostProcessor replaceRepositoryPropertyReferenceController(ApplicationContext applicationContext) {
+    public static BeanPostProcessor replaceRepositoryPropertyReferenceController(
+            ApplicationContext applicationContext) {
         return new BeanPostProcessor() {
 
             @Override
@@ -50,7 +51,7 @@ public class ContentGridSpringDataRestConfiguration {
     }
     
     @Bean
-    public BeanPostProcessor replaceProfileController() {
+    public static BeanPostProcessor replaceProfileController() {
         return new BeanPostProcessor() {
             @Override
             public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
@@ -63,7 +64,8 @@ public class ContentGridSpringDataRestConfiguration {
     }
 
     @Bean
-    public BeanPostProcessor replaceQuerydslWithCollectionFilterParamPredicateResolver(ApplicationContext applicationContext) {
+    public static BeanPostProcessor replaceQuerydslWithCollectionFilterParamPredicateResolver(
+            ApplicationContext applicationContext) {
         return new BeanPostProcessor() {
             @Override
             public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
