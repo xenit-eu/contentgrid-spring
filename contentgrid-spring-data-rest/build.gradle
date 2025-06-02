@@ -52,6 +52,7 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:minio'
     testImplementation 'com.github.paulcwarren:spring-content-s3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     testFixturesAnnotationProcessor project(':contentgrid-spring-boot-starter-annotations')
 
@@ -65,6 +66,7 @@ dependencies {
     testFixturesImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testFixturesImplementation 'org.testcontainers:postgresql'
     testFixturesImplementation 'org.testcontainers:rabbitmq'
+    testFixturesRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 
     testFixturesRuntimeOnly 'org.postgresql:postgresql'
