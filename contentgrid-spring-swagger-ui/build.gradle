@@ -15,7 +15,7 @@ dependencies {
     implementation platform(project(':contentgrid-spring-boot-platform'))
 
     implementation 'org.springframework:spring-webmvc'
-    implementation 'org.webjars:swagger-ui:5.24.0'
+    implementation 'org.webjars:swagger-ui:5.24.1'
     implementation 'org.webjars:webjars-locator-core'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
