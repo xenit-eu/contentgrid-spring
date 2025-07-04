@@ -23,7 +23,7 @@ jobs:
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.SONATYPE_CENTRAL_PASSWORD }}
           JRELEASER_NEXUS2_USERNAME: ${{ secrets.SONATYPE_CENTRAL_USERNAME }}
           JRELEASER_NEXUS2_PASSWORD: ${{ secrets.SONATYPE_CENTRAL_PASSWORD }}
-        run: ./gradlew jreleaserConfig --stacktrace
+        run: ./gradlew jreleaserConfig
       - name: Upload reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
