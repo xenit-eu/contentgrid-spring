@@ -1,5 +1,5 @@
 plugins {
-    id "eu.xenit.enterprise-conventions.oss" version "0.5.2"
+    id "eu.xenit.enterprise-conventions.oss" version "0.6.1"
     id 'org.ajoberstar.reckon.settings' version '0.19.2'
     id "io.freefair.lombok" version "8.14" apply false
     id 'org.jreleaser' version '1.19.0' apply false
