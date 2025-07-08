@@ -32,12 +32,6 @@ publishing {
             }
         }
     }
-
-    repositories {
-        maven {
-            url = uri("${rootDir}/build/staging-deploy")
-        }
-    }
 }
 
 pluginManager.withPlugin('java-library') {
